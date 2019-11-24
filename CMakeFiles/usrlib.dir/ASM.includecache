@@ -1,0 +1,10 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/Libraries/usr/startup_stm32f429_439xx.S
+

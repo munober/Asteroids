@@ -1,0 +1,10 @@
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/rebuild_cache.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/edit_cache.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/flash.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/ugfxlib.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/Demo.bin.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/stmutilitieslib.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/rtoslib.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/Demo.elf.dir
+/DIST/home/lab_espl_stud04/espl_workspace/Demo_STM_CMAKE/CMakeFiles/stmperipheralslib.dir
