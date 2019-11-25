@@ -25,7 +25,7 @@
 /* convenience functions and init includes */
 
 #include "ESPL_functions.h"
-#include "Demo.h"
+#include "main.h"
 
 /* ESPL Excercise Code */
 #include "exercise3TaskCode.h"

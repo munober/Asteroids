@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project( Asteroids C )
+project( Asteroids )
 
 message(${CMAKE_CURRENT_LIST_FILE})
 
@@ -43,5 +43,5 @@ add_custom_target(flash
 )
 add_dependencies(flash ${PROJECT_NAME}.bin)
 
+# SET_TARGET_PROPERTIES(${PROJECT_NAME}.elf PROPERTIES LINKER_LANGUAGE C)
 SET_TARGET_PROPERTIES(Asteroids.elf PROPERTIES LINKER_LANGUAGE C)
-

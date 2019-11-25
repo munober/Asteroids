@@ -1,7 +1,4 @@
 /**
- * This is the main file of the ESPLaboratory Demo project.
- * It implements simple sample functions for the usage of UART,
- * writing to the display and processing user inputs.
  *
  * @author: Alex Hoffman alex.hoffman@tum.de (RCS, TUM)
  * 			Jonathan M��ller-Boruttau,
