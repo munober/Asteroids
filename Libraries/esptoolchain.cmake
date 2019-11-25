@@ -90,7 +90,8 @@ file(GLOB UGFX_SRCS
 )
 
 #can use find_program multiple times on same target. First hit will be used. Allows randomly searching at (our) default locations.
-find_program(ARM_GCC arm-none-eabi-gcc ${CURRENT_PATH}/../../../bin/gcc-arm/gcc/bin NO_DEFAULT_PATH)
+find_program(ARM_GCC arm-none-eabi-gcc ${CURRENT_PATH}/../../../../bin/ NO_DEFAULT_PATH)
+# find_program(ARM_GCC arm-none-eabi-gcc /usr/bin NO_DEFAULT_PATH)
 find_program(ARM_GCC arm-none-eabi-gcc /DIST/it/sw/amd64/gcc-arm/gcc/bin/ NO_DEFAULT_PATH)
 find_program(ARM_GCC arm-none-eabi-gcc NO_DEFAULT_PATH)
 find_program(ARM_GCC arm-none-eabi-gcc)
