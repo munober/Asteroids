@@ -1,5 +1,13 @@
-build/
-RemoteSystemTempFiles/
-.metadata/**
-old cmake crap/
+build
+RemoteSystemTempFiles
+.metadata
 CMakeLists.txt
+.project
+.cproject
+*.bin
+*.elf
+*.lst
+*.hex
+Makefile
+CMakeFiles
+cmake_install.cmake
