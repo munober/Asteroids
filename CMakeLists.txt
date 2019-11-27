@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(Demo)
+project(Asteroids)
 
 message(${CMAKE_CURRENT_LIST_FILE})
 
