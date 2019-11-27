@@ -1,4 +1,5 @@
 build/
 RemoteSystemTempFiles/
-.metadata/
+.metadata/**
 old cmake crap/
+CMakeLists.txt

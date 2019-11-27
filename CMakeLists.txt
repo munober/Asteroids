@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project( Asteroids )
+project(Demo)
 
 message(${CMAKE_CURRENT_LIST_FILE})
 
@@ -16,17 +16,11 @@ enable_language(ASM)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/code ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
- add_library(usrlib OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/usr)
- add_library(rtoslib OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/FreeRTOS)
- add_library(stmperipheralslib OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/STM32F4)
- add_library(stmutilitieslib OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/STM32F4)
- add_library(ugfxlib OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/ugfx)
-
-# add_library(usrlib OBJECT ${SRCS} ${USR_SRCS})
-# add_library(rtoslib OBJECT ${RTOS_SRCS})
-# add_library(stmperipheralslib OBJECT ${PERIPH_SRCS})
-# add_library(stmutilitieslib OBJECT ${UTILITIES_SRCS})
-# add_library(ugfxlib OBJECT ${UGFX_SRCS})
+add_library(usrlib OBJECT ${SRCS} ${USR_SRCS})
+add_library(rtoslib OBJECT ${RTOS_SRCS})
+add_library(stmperipheralslib OBJECT ${PERIPH_SRCS})
+add_library(stmutilitieslib OBJECT ${UTILITIES_SRCS})
+add_library(ugfxlib OBJECT ${UGFX_SRCS})
 
 add_executable(${PROJECT_NAME}.elf $<TARGET_OBJECTS:usrlib> $<TARGET_OBJECTS:rtoslib> $<TARGET_OBJECTS:stmperipheralslib> $<TARGET_OBJECTS:stmutilitieslib> $<TARGET_OBJECTS:ugfxlib>)
 
@@ -43,5 +37,3 @@ add_custom_target(flash
 )
 add_dependencies(flash ${PROJECT_NAME}.bin)
 
-# SET_TARGET_PROPERTIES(${PROJECT_NAME}.elf PROPERTIES LINKER_LANGUAGE C)
- SET_TARGET_PROPERTIES(Asteroids.elf PROPERTIES LINKER_LANGUAGE C)

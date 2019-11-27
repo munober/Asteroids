@@ -465,7 +465,7 @@ void exercise1Display(void * params) {
 				gdispDrawString(SLIDING_TEXT_X(str_slide[j]) + SCREEN_SLIDE_X, SLIDING_TEXT_Y(j) + SCREEN_SLIDE_Y, str_slide[j],
 												font1, Black);
 			// Displaying text below figures
-			char str[1][70] = {"EXERCISE 2"};
+			char str[1][70] = {"ASTEROIDS"};
 			for (unsigned char i = 0; i < 1; i++)
 							gdispDrawString(TEXT_X(str[i]) + SCREEN_SLIDE_X, TEXT_Y(i) + SCREEN_SLIDE_Y, str[i],
 									font1, Black);
