@@ -79,7 +79,6 @@ void exercise3Display(void * params);
 
 // Exercise 3.2.2
 void circleBlinkDynamic(void *params);
-void circleBlinkStatic(void * params);
 
 // Exercise 3.2.3
 void timesButtonAPressed(void * params);
@@ -93,11 +92,6 @@ void increaseVariable(void * params);
 void sendPositionUART(void * params);
 void receivePositionUART(void * params);
 
-// Exercise 3.3
-void ex4task1(void * params);
-void ex4task2(void * params);
-void ex4task3(void * params);
-void ex4task4(void * params);
 
 // General
 QueueHandle_t ESPL_RxQueue; // Already defined in ESPL_Functions.h
@@ -148,14 +142,6 @@ locked_buttons_t buttonCounts;
 locked_joystick_t joystickUart;
 locked_string_t printString;
 
-// Exercise 3.3
-TaskHandle_t ex4task1Handle;
-TaskHandle_t ex4task2Handle;
-TaskHandle_t ex4task3Handle;
-TaskHandle_t ex4task4Handle;
-QueueHandle_t ex4TaskQueue;
-SemaphoreHandle_t	start_task3;
-
 
 int main(void){
 
@@ -201,7 +187,6 @@ int main(void){
 
 	// Exercise 3.2.2
 	xTaskCreate(circleBlinkDynamic, "circleBlinkDynamic", 1000, NULL, 1, &circleBlinkDynamicHandle);
-	xTaskCreateStatic(circleBlinkStatic, "circleBlinkStatic", 200, NULL, 2, xStack, &xTaskBuffer);
 
 	// Exercise 3.2.3
 	xTaskCreate(timesButtonAPressed, "timesButtonAPressed", 1000, NULL, 1, &timesButtonAPressedHandle);
@@ -216,13 +201,6 @@ int main(void){
 	xTaskCreate(receivePositionUART, "receivePositionUART", 1000, NULL, 4, &receivePositionUARTHandle);
 	UARTjoystickQueue = xQueueCreate(BUTTON_QUEUE_LENGTH, sizeof(struct buttons));
 
-	// Exercise 3.3
-	xTaskCreate(ex4task1, "ex4task1", 1000, NULL, 1, &ex4task1Handle);
-	xTaskCreate(ex4task2, "ex4task2", 1000, NULL, 2, &ex4task2Handle);
-	xTaskCreate(ex4task3, "ex4task3", 1000, NULL, 3, &ex4task3Handle);
-	xTaskCreate(ex4task4, "ex4task4", 1000, NULL, 4, &ex4task4Handle);
-	start_task3 = xSemaphoreCreateBinary();
-
 	// Initial task suspends
 	vTaskSuspend(exercise1DisplayHandle);
 	vTaskSuspend(exercise2DisplayHandle);
@@ -231,10 +209,6 @@ int main(void){
     vTaskSuspend(timesButtonBPressedHandle);
     vTaskSuspend(receivePositionUARTHandle);
     vTaskSuspend(sendPositionUARTHandle);
-    vTaskSuspend(ex4task1Handle);
-    vTaskSuspend(ex4task2Handle);
-    vTaskSuspend(ex4task3Handle);
-    vTaskSuspend(ex4task4Handle);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
@@ -311,20 +285,12 @@ void basicStateMachine(void * params) {
 				vTaskSuspend(timesButtonBPressedHandle);
 				vTaskSuspend(receivePositionUARTHandle);
 				vTaskSuspend(sendPositionUARTHandle);
-			    vTaskSuspend(ex4task1Handle);
-			    vTaskSuspend(ex4task2Handle);
-			    vTaskSuspend(ex4task3Handle);
-			    vTaskSuspend(ex4task4Handle);
 				vTaskSuspend(exercise2DisplayHandle);
 				vTaskSuspend(exercise3DisplayHandle);
 				vTaskResume(exercise1DisplayHandle);
 				state_changed = 0;
 				break;
 			case STATE_TWO:
-			    vTaskSuspend(ex4task1Handle);
-			    vTaskSuspend(ex4task2Handle);
-			    vTaskSuspend(ex4task3Handle);
-			    vTaskSuspend(ex4task4Handle);
 				vTaskSuspend(exercise1DisplayHandle);
 				vTaskSuspend(exercise3DisplayHandle);
 				vTaskResume(exercise2DisplayHandle);
@@ -342,10 +308,6 @@ void basicStateMachine(void * params) {
 				vTaskSuspend(exercise1DisplayHandle);
 				vTaskSuspend(exercise2DisplayHandle);
 				vTaskResume(exercise3DisplayHandle);
-				vTaskResume(ex4task1Handle);
-				vTaskResume(ex4task2Handle);
-				vTaskResume(ex4task3Handle);
-				vTaskResume(ex4task4Handle);
 				state_changed = 0;
 				break;
 			default:
@@ -628,16 +590,6 @@ void circleBlinkDynamic(void *params){
 	}
 }
 
-void circleBlinkStatic(void *params){
-	TickType_t xLastTickTime;
-	xLastTickTime = xTaskGetTickCount();
-	const TickType_t delayPeriod = 1000;
-	while (1) {
-		xSemaphoreGive(BlinkCircle1Hz);
-		vTaskDelayUntil(&xLastTickTime, delayPeriod);
-	}
-}
-
 //Exercise 3.2.3
 void timesButtonAPressed(void * params){
 	TickType_t xLastTickTime;
@@ -808,67 +760,6 @@ void receivePositionUART(void * params){
 	}
 }
 
-// Exercise 3.3
-void ex4task1(void * params){
-	TickType_t xLastTickTime;
-	xLastTickTime = xTaskGetTickCount();
-	TickType_t first_exec;
-	first_exec = xLastTickTime;
-	const TickType_t delay = 1;
-	while(1){
-		if((xTaskGetTickCount() - first_exec) < 15){
-			xSemaphoreTake(printString.lock, portMAX_DELAY);
-			strcat(printString.print[xTaskGetTickCount() - first_exec], "1 ");
-			xSemaphoreGive(printString.lock);
-		}
-		vTaskDelayUntil(&xLastTickTime, delay);
-	}
-}
-void ex4task2(void * params){
-	TickType_t xLastTickTime;
-	xLastTickTime = xTaskGetTickCount();
-	TickType_t first_exec;
-	first_exec = xLastTickTime;
-	const TickType_t delay = 2;
-	while(1){
-		if((xTaskGetTickCount() - first_exec) < 15){
-			xSemaphoreTake(printString.lock, portMAX_DELAY);
-			strcat(printString.print[xTaskGetTickCount() - first_exec], "2 ");
-			xSemaphoreGive(printString.lock);
-			xSemaphoreGive(start_task3 );
-		}
-		vTaskDelayUntil(&xLastTickTime, delay);
-	}
-}
-void ex4task3(void * params){
-	TickType_t xLastTickTime;
-	xLastTickTime = xTaskGetTickCount();
-	TickType_t first_exec;
-	first_exec = xLastTickTime;
-	while(1){
-		if((xTaskGetTickCount() - first_exec) < 15){
-			xSemaphoreTake(start_task3, portMAX_DELAY);
-			xSemaphoreTake(printString.lock, portMAX_DELAY);
-			strcat(printString.print[xTaskGetTickCount() - first_exec], "3 ");
-			xSemaphoreGive(printString.lock);
-		}
-	}
-}
-void ex4task4(void * params){
-	TickType_t xLastTickTime;
-	xLastTickTime = xTaskGetTickCount();
-	TickType_t first_exec;
-	first_exec = xLastTickTime;
-	const TickType_t delay = 4;
-	while(1){
-		if((xTaskGetTickCount() - first_exec) < 15){
-			xSemaphoreTake(printString.lock, portMAX_DELAY);
-			strcat(printString.print[xTaskGetTickCount() - first_exec], "4 ");
-			xSemaphoreGive(printString.lock);
-		}
-		vTaskDelayUntil(&xLastTickTime, delay);
-	}
-}
 
 void checkButtons(void * params) {
 	TickType_t xLastWakeTime;

@@ -28,7 +28,6 @@
 #include "main.h"
 
 /* ESPL Excercise Code */
-#include "exercise3TaskCode.h"
 #include "buttonDebounce.h"
 #include "staticFunctions.h"
 #include "buttons.h"
