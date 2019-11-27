@@ -36,14 +36,8 @@ typedef struct locked_joystick{
 	struct coord joystick;
 }locked_joystick_t;
 
-typedef struct locked_string{
-	SemaphoreHandle_t lock;
-	char print[16][70];
-}locked_string_t;
-
 
 locked_buttons_t initButtons(void);
 locked_joystick_t initJoystick(void);
-locked_string_t initString(void);
 
 #endif /* INCLUDE_BUTTONS_H_ */
