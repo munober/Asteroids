@@ -12,7 +12,7 @@ struct coord {
 };
 
 struct asteroid {
-    struct coord a1;
+    struct coord position;
 };
 
 void drawTaskSingle(void * params);
