@@ -13,22 +13,14 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include "mainMenu.h"
+#include "pauseMenu.h"
+#include "singlePlayer.h"
 
-#define DISPLAY_SIZE_X  		320
-#define DISPLAY_SIZE_Y  		240
-
-#define TEXT_X(TEXT)	 		DISPLAY_SIZE_X / 2 - (gdispGetStringWidth(TEXT, font1) / 2)
-#define TEXT_Y(LINE)	 		DISPLAY_SIZE_Y / 2 - (gdispGetFontMetric(font1, fontHeight) * -(LINE + 0.5)) + 65
 
 #define STATE_QUEUE_LENGTH 		 1
 #define BUTTON_QUEUE_LENGTH		20
-#define STATE_COUNT 3
-#define STATE_ONE   1
-#define STATE_TWO   2
-#define STATE_THREE	3
 
-#define NEXT_TASK   1
-#define PREV_TASK   2
 
 #define STACK_SIZE 200
 
@@ -44,6 +36,8 @@ void frameSwapTask(void * params);
 void basicStateMachine(void * params);
 void checkButtons(void * params);
 void mainMenu(void * params);
+void pauseMenu(void * params);
+void singlePlayer(void * params);
 
 // Exercise 3.2.5
 void sendPositionUART(void * params);
@@ -62,6 +56,8 @@ TaskHandle_t frameSwapHandle;
 TaskHandle_t mainMenuHandle;
 TaskHandle_t singlePlayerDisplay;
 TaskHandle_t stateMachineHandle;
+TaskHandle_t pauseMenuHandle;
+TaskHandle_t singlePlayerHandle;
 
 // Exercise 3.2.5
 TaskHandle_t sendPositionUARTHandle;
@@ -87,7 +83,8 @@ int main(void){
 
 	// Display tasks for the different exercises
 	xTaskCreate(mainMenu, "mainMenu", 1000, NULL, 2, &mainMenuHandle);
-
+	xTaskCreate(pauseMenu, "pauseMenu", 1000, NULL, 2, &pauseMenuHandle);
+	xTaskCreate(singlePlayer, "singlePlayer", 1000, NULL, 2, &singlePlayerHandle);
 	// Exercise 3.2.5
 	xTaskCreate(sendPositionUART, "sendPositionUART", 1000, NULL, 4, &sendPositionUARTHandle);
 	xTaskCreate(receivePositionUART, "receivePositionUART", 1000, NULL, 4, &receivePositionUARTHandle);
@@ -96,6 +93,8 @@ int main(void){
 	vTaskSuspend(mainMenuHandle);
     vTaskSuspend(receivePositionUARTHandle);
     vTaskSuspend(sendPositionUARTHandle);
+    vTaskSuspend(pauseMenuHandle);
+    vTaskSuspend(singlePlayerHandle);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
@@ -117,24 +116,24 @@ void frameSwapTask(void * params) {
 	}
 }
 
-void changeState(volatile unsigned char *state, unsigned char forwards) {
-	switch (forwards) {
-	case 0:
-		if (*state == 0)
-			*state = STATE_COUNT;
-		else
-			(*state)--;
-		break;
-	case 1:
-		if (*state == STATE_COUNT)
-			*state = 0;
-		else
-			(*state)++;
-		break;
-	default:
-		break;
-	}
-}
+//void changeState(volatile unsigned char *state, unsigned char forwards) {
+//	switch (forwards) {
+//	case 0:
+//		if (*state == 0)
+//			*state = STATE_COUNT;
+//		else
+//			(*state)--;
+//		break;
+//	case 1:
+//		if (*state == STATE_COUNT)
+//			*state = 0;
+//		else
+//			(*state)++;
+//		break;
+//	default:
+//		break;
+//	}
+//}
 
 void basicStateMachine(void * params) {
 	unsigned char current_state = 1; // Default state
@@ -145,37 +144,44 @@ void basicStateMachine(void * params) {
 			goto initial_state;
 
 		// Handle state machine input
-		if (xQueueReceive(StateQueue, &input, portMAX_DELAY) == pdTRUE) {
-			if (input == NEXT_TASK) {
-				changeState(&current_state, 1);
-				state_changed = 1;
-			}
-			else if (input == PREV_TASK) {
-				changeState(&current_state, 0);
-				changeState(&current_state, 0);
-				state_changed = 1;
-			}
+		if (xQueueReceive(StateQueue, &current_state, portMAX_DELAY) == pdTRUE) {
+//			if (input == NEXT_TASK) {
+//				changeState(&current_state, 1);
+//				state_changed = 1;
+//			}
+//			else if (input == PREV_TASK) {
+//				changeState(&current_state, 0);
+//				state_changed = 1;
+//			}
+			//current_state = input;
+			state_changed = 1;
 		}
 		initial_state:
 		// Handle current state
 		if (state_changed) {
 			switch (current_state) {
-			case STATE_ONE:
+			case MAIN_MENU_STATE:
 				vTaskSuspend(receivePositionUARTHandle);
 				vTaskSuspend(sendPositionUARTHandle);
+				vTaskSuspend(pauseMenuHandle);
+				vTaskSuspend(singlePlayerHandle);
 				vTaskResume(mainMenuHandle);
 				state_changed = 0;
 				break;
-			case STATE_TWO:
-				vTaskSuspend(mainMenuHandle);
-				vTaskResume(sendPositionUARTHandle);
-				vTaskResume(receivePositionUARTHandle);
-				state_changed = 0;
-				break;
-			case STATE_THREE:
+			case PAUSE_MENU_STATE:
 				vTaskSuspend(receivePositionUARTHandle);
 				vTaskSuspend(sendPositionUARTHandle);
 				vTaskSuspend(mainMenuHandle);
+				vTaskSuspend(singlePlayerHandle);
+				vTaskResume(pauseMenuHandle);
+				state_changed = 0;
+				break;
+			case SINGLE_PLAYER_STATE:
+				vTaskSuspend(receivePositionUARTHandle);
+				vTaskSuspend(sendPositionUARTHandle);
+				vTaskSuspend(mainMenuHandle);
+				vTaskSuspend(pauseMenuHandle);
+				vTaskResume(singlePlayerHandle);
 				state_changed = 0;
 				break;
 			default:
@@ -184,32 +190,6 @@ void basicStateMachine(void * params) {
 		}
 	}
 }
-
-void mainMenu(void * params) {
-	struct buttons buttonStatus; // joystick queue input buffer
-	const unsigned char next_state_signal = NEXT_TASK;
-
-	while (1) {
-
-		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
-			while (xQueueReceive(ButtonQueue, &buttonStatus, 0) == pdTRUE);
-
-			// State machine input
-			if (buttonCount(BUT_E)){
-				xQueueSend(StateQueue, &next_state_signal, 100);
-			}
-
-            // Clear background
-		    gdispClear(White);
-
-			// Displaying text below figures
-			char str[1][70] = {"ASTEROIDS FROM TEO espl"};
-			for (unsigned char i = 0; i < 1; i++)
-							gdispDrawString(TEXT_X(str[i]) , TEXT_Y(i), str[i],	font1, Black);
-		}
-	}
-}
-
 
 
 // Exercise 3.2.5
@@ -332,12 +312,12 @@ void checkButtons(void * params) {
 				ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 		buttonStatus.joystick_direct.y = (uint8_t) 255
 				- (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
-		buttonStatus.A = buttonCount(BUT_A);
-		buttonStatus.B = buttonCount(BUT_B);
-		buttonStatus.C = buttonCount(BUT_C);
-		buttonStatus.D = buttonCount(BUT_D);
+		buttonStatus.A = 0;
+		buttonStatus.B = 0;
+		buttonStatus.C = 0;
+		buttonStatus.D = 0;
 		buttonStatus.E = 0;
-		buttonStatus.K = buttonCount(BUT_K);
+		buttonStatus.K = 0;
 		xQueueSend(ButtonQueue, &buttonStatus, 0);
 		vTaskDelayUntil(&xLastWakeTime, PollingRate);
 	}
