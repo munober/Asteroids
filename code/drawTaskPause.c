@@ -21,8 +21,6 @@ void drawTaskPause(void * params) {
 
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
 			while (xQueueReceive(ButtonQueue, &buttonStatus, 0) == pdTRUE);
-
-			// State machine input
 			if (buttonCount(BUT_A)){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			}
@@ -30,13 +28,21 @@ void drawTaskPause(void * params) {
 				xQueueSend(StateQueue, &next_state_signal_single, 100);
 			}
 
-            // Clear background
-		    gdispClear(White);
-
-			// Displaying text below figures
+			gdispClear(Black);
+			char resume[1][20] = {"Resume"};
+			char quit[1][20] = {"Quit"};
 			char str[1][70] = {"pause menu, A for main menu, C for single player"};
-			for (unsigned char i = 0; i < 1; i++)
-							gdispDrawString(TEXT_X(str[i]) , TEXT_Y(i), str[i],	font1, Black);
+
+//			gdispDrawString(120, 90, resume[1],	font1, Yellow);
+//			gdispDrawString(120, 150, quit[1],	font1, White);
+//			gdispDrawString(120, 210, quit[1],	font1, White);
+
+			for (unsigned char i = 0; i < 1; i++){
+				gdispDrawString(120, 90, resume[i],	font1, Yellow);
+				gdispDrawString(120, 150, quit[i],	font1, White);
+				gdispDrawString(TEXT_X(str[i]), 210, str[i],	font1, White);
+			}
+
 		}
 	}
 }

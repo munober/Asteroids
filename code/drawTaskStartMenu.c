@@ -30,13 +30,21 @@ void drawTaskStartMenu(void * params) {
 				xQueueSend(StateQueue, &next_state_signal_single, 100);
 			}
 
-            // Clear background
-		    gdispClear(White);
+			gdispClear(Black);
 
-			// Displaying text below figures
-			char str[1][70] = {"START menu, B for pause menu, C for single player"};
-			for (unsigned char i = 0; i < 1; i++)
-							gdispDrawString(TEXT_X(str[i]) , TEXT_Y(i), str[i],	font1, Black);
+			char single [1][20] = {"Singleplayer"};
+			char multi [1][20] = {"Multiplayer"};
+			char settings [1][20] = {"Settings"};
+			char cheats [1][20] = {"Cheats"};
+			char str[1][70] = {"SINGLE player, A for main menu, B for pause menu"};
+
+			for (unsigned char i = 0; i < 1; i++){
+				gdispDrawString(120, 30, single[i],	font1, Yellow);
+				gdispDrawString(120, 90, multi[i],	font1, White);
+				gdispDrawString(120, 150, settings[i],	font1, White);
+				gdispDrawString(120, 210, cheats[i],	font1, White);
+				gdispDrawString(TEXT_X(str[i]) , 230, str[i],	font1, Black);
+			}
 		}
 	}
 }
