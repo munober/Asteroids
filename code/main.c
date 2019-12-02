@@ -21,7 +21,7 @@
 #define TEXT_Y(LINE)	 		DISPLAY_SIZE_Y / 2 - (gdispGetFontMetric(font1, fontHeight) * -(LINE + 0.5)) + 65
 
 #define STATE_QUEUE_LENGTH 		 1
-
+#define BUTTON_QUEUE_LENGTH		20
 #define STATE_COUNT 3
 #define STATE_ONE   1
 #define STATE_TWO   2
@@ -167,7 +167,7 @@ void basicStateMachine(void * params) {
 				state_changed = 0;
 				break;
 			case STATE_TWO:
-				vTaskSuspendmainMenuHandle);
+				vTaskSuspend(mainMenuHandle);
 				vTaskResume(sendPositionUARTHandle);
 				vTaskResume(receivePositionUARTHandle);
 				state_changed = 0;
@@ -299,14 +299,14 @@ void receivePositionUART(void * params){
 			checksum = buffer[1] ^ buffer[2] ^ buffer[3] ^ buffer[4] ^ buffer[5]
 					^ buffer[6] ^ buffer[7] ^ buffer[8];
 			if (input == stopByte && checksum == buffer[9]) {
-				buttonStatus_internal.joystick.x = buffer[1];
-				buttonStatus_internal.joystick.y = buffer[2];
-				buttonStatus_internal.A = buffer[3];
-				buttonStatus_internal.B = buffer[4];
-				buttonStatus_internal.C = buffer[5];
-				buttonStatus_internal.D = buffer[6];
-				buttonStatus_internal.E = buffer[7];
-				buttonStatus_internal.K = buffer[8];
+//				buttonStatus_internal.joystick.x = buffer[1];
+//				buttonStatus_internal.joystick.y = buffer[2];
+//				buttonStatus_internal.A = buffer[3];
+//				buttonStatus_internal.B = buffer[4];
+//				buttonStatus_internal.C = buffer[5];
+//				buttonStatus_internal.D = buffer[6];
+//				buttonStatus_internal.E = buffer[7];
+//				buttonStatus_internal.K = buffer[8];
 			}
 			pos = 0;
 			break;
