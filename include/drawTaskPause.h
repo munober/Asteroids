@@ -1,11 +1,16 @@
 /*
- *  Created on: Nov 27, 2019
- *      Author: Freddy
+ * drawTaskPause.h
+ *
+ *  Created on: Dec 2, 2019
+ *      Author: lab_espl_stud04
  */
 
-#ifndef __DRAWTASKPAUSE_H__
-#define __DRAWTASKPAUSE_H__
+#ifndef INCLUDE_DRAWTASKPAUSE_H_
+#define INCLUDE_DRAWTASKPAUSE_H_
 
-void drawTaskPause(void * params);
 
-#endif
+
+
+
+#endif /* INCLUDE_DRAWTASKPAUSE_H_ */
+

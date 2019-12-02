@@ -1,23 +1,20 @@
 /*
- *  Created on: Nov 27, 2019
- *      Author: Freddy
- *      This task draws the screen of the single player mode
+ * drawTaskSingle.c
+ *
+ *  Created on: Dec 2, 2019
+ *      Author: lab_espl_stud04
  */
 
+#include "includes.h"
 #include "drawTaskSingle.h"
-#include "gfx.h"
-#include "ESPL_functions.h"
 
-#define DISPLAY_SIZE_X  320
-#define DISPLAY_SIZE_Y  240
-#define DISPLAY_CENTER_X DISPLAY_SIZE_X/2
-#define DISPLAY_CENTER_Y DISPLAY_SIZE_Y/2
+extern QueueHandle_t ButtonQueue;
+extern QueueHandle_t StateQueue;
+extern font_t font1;
+extern SemaphoreHandle_t DrawReady;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
-
-// Load font for ugfx
-extern font_t font1;
 
 // This is defines the players ship shape
 static const point form[] = {
@@ -56,9 +53,10 @@ static const point type_3[] = {
 
 // Asteroid shapes LARGE
 
-extern SemaphoreHandle_t DrawReady;
-
 void drawTaskSingle(void * params) {
+	struct buttons buttonStatus; // joystick queue input buffer
+	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
+	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 
 	unsigned int exeCount = 0;
 
@@ -79,9 +77,14 @@ void drawTaskSingle(void * params) {
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
+			if (buttonCount(BUT_A)){
+				xQueueSend(StateQueue, &next_state_signal_menu, 100);
+			}
+			if (buttonCount(BUT_B)){
+				xQueueSend(StateQueue, &next_state_signal_pause, 100);
+			}
 
 			exeCount++;
-
 /*
 * The following sets the movement of the asteroids. With the modulo operator it can be assured
 * the asteroids return to the starting position and therefore move in a loop. The value after

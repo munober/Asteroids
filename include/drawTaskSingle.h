@@ -1,10 +1,15 @@
 /*
- *  Created on: Nov 27, 2019
- *      Author: Freddy
+ * drawTaskSingle.h
+ *
+ *  Created on: Dec 2, 2019
+ *      Author: lab_espl_stud04
  */
 
-#ifndef __DRAWTASKSINGLE_H__
-#define __DRAWTASKSINGLE_H__
+#ifndef INCLUDE_DRAWTASKSINGLE_H_
+#define INCLUDE_DRAWTASKSINGLE_H_
+
+#define DISPLAY_CENTER_X DISPLAY_SIZE_X/2
+#define DISPLAY_CENTER_Y DISPLAY_SIZE_Y/2
 
 struct coord_draw {
 	uint8_t x;
@@ -24,6 +29,5 @@ struct asteroid {
     hit_counter remain_hits;
 };
 
-void drawTaskSingle(void * params);
+#endif /* INCLUDE_DRAWTASKSINGLE_H_ */
 
-#endif
