@@ -9,33 +9,37 @@
 #include "drawTaskSingle.h"
 #include "drawTaskPause.h"
 #include "stateMachineTask.h"
-
+#include "checkJoystickTask.h"
 
 #define STATE_QUEUE_LENGTH 		 1
 #define BUTTON_QUEUE_LENGTH		20
-
-
+#define JOYSTICK_QUEUE_LENGTH	30
 #define STACK_SIZE 200
+
 font_t font1;
+
 void frameSwapTask(void * params);
 void stateMachineTask(void * params);
 void checkButtons(void * params);
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
 void drawTaskPause (void * params);
+void checkJoystickTask (void * params);
 
+QueueHandle_t ButtonQueue;
+QueueHandle_t StateQueue;
+QueueHandle_t JoystickAngleQueue;
+QueueHandle_t JoystickPulseQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 SemaphoreHandle_t DrawReady; // After swapping buffer calll drawing
 
-QueueHandle_t ButtonQueue;
-QueueHandle_t StateQueue;
 TaskHandle_t frameSwapHandle;
 TaskHandle_t stateMachineTaskHandle;
-
 TaskHandle_t drawTaskStartMenuHandle;
 TaskHandle_t drawTaskSingleHandle;
 TaskHandle_t drawTaskPauseHandle;
+TaskHandle_t checkJoystickTaskHandle;
 
 int main(void){
 
@@ -45,6 +49,8 @@ int main(void){
 	// General
 	ButtonQueue = xQueueCreate(BUTTON_QUEUE_LENGTH, sizeof(struct buttons));
 	StateQueue = xQueueCreate(STATE_QUEUE_LENGTH, sizeof(unsigned char));
+	JoystickAngleQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(double));
+	JoystickPulseQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(unsigned char));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
@@ -58,6 +64,8 @@ int main(void){
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
+
+	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
 
     vTaskSuspend(drawTaskStartMenuHandle);
     vTaskSuspend(drawTaskSingleHandle);

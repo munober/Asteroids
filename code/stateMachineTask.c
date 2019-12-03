@@ -7,7 +7,6 @@
 #include "includes.h"
 #include "stateMachineTask.h"
 
-extern QueueHandle_t ButtonQueue;
 extern QueueHandle_t StateQueue;
 extern TaskHandle_t drawTaskStartMenuHandle;
 extern TaskHandle_t drawTaskSingleHandle;
