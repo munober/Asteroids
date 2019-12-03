@@ -8,7 +8,6 @@
 #include "includes.h"
 #include "drawTaskSingle.h"
 
-extern QueueHandle_t ButtonQueue;
 extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
@@ -18,35 +17,35 @@ extern SemaphoreHandle_t DrawReady;
 
 // This is defines the players ship shape
 static const point form[] = {
-		{-3, 0},
+		{-3, 3},
 		{0, -6},
-		{3, 0},
+		{3, 3},
 };
 
 // Asteroid shapes SMALL
 
 static const point type_1[] = {
-		{-5, 0},
-		{0, -5},
-		{5, 0},
-		{3, 2},
-		{4, -2}
+		{0, 3},
+		{2, 1},
+		{1, -2},
+		{-1, -2},
+		{-2, 1}
 };
 
 static const point type_2[] = {
-		{-3, 2},
-		{1, -3},
-		{5, 0},
-		{3, 2},
-		{4, -2}
+		{0, 3},
+		{2, 1},
+		{1, -2},
+		{-1, -2},
+		{-2, 1}
 };
 
 static const point type_3[] = {
-		{0, 2},
-		{0, 0},
-		{5, 0},
-		{3, 0},
-		{0, -2}
+		{0, 3},
+		{2, 1},
+		{1, -2},
+		{-1, -2},
+		{-2, 1}
 };
 
 // Asteroid shapes MEDIUM
@@ -54,9 +53,9 @@ static const point type_3[] = {
 // Asteroid shapes LARGE
 
 void drawTaskSingle(void * params) {
-	struct buttons buttonStatus; // joystick queue input buffer
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
+	char str[100]; // buffer for messages to draw to display
 
 	unsigned int exeCount = 0;
 
@@ -123,12 +122,16 @@ void drawTaskSingle(void * params) {
 			gdispClear(Black);
 
 			// Score board
-			char score [1][20] = {"9000"};
-			gdispDrawString(0, 10, score[1],	font1, White);
+			sprintf(str, "Score: 9000");
+			gdispDrawString(5, 10, str,	font1, White);
 
 			// Life count
-			char lifes [1][20] = {"Lifes: 3"};
-			gdispDrawString(290, 10, lifes[1],	font1, White);
+			sprintf(str, "Lifes: 3");
+			gdispDrawString(280, 10, str, font1, White);
+
+			// Debug print line
+//			sprintf(str, "asteroid_6 position x: %d | y: %d", asteroid_6.position.x, asteroid_6.position.y);
+//			gdispDrawString(0, 11, str, font1, White);
 
 			// Players ship
 			gdispFillConvexPoly(DISPLAY_CENTER_X, DISPLAY_CENTER_Y, form, NUM_POINTS, White);

@@ -12,8 +12,8 @@
 #define DISPLAY_CENTER_Y DISPLAY_SIZE_Y/2
 
 struct coord_draw {
-	uint8_t x;
-	uint8_t y;
+	uint16_t x;
+	uint16_t y;
 };
 
 typedef enum {
