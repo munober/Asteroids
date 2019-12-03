@@ -31,9 +31,9 @@ void drawTaskPause(void * params) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
 
 			if (xQueueReceive(JoystickAngleQueue, &angle, portMAX_DELAY) == pdTRUE)
-				sprintf(str, "Angle: %f | Pulse: %c", angle, pulse);
+				sprintf(str, "Angle: %5d | Pulse: %c", angle, pulse);
 			if (xQueueReceive(JoystickPulseQueue, &pulse, portMAX_DELAY) == pdTRUE)
-				sprintf(str, "Angle: %f | Pulse: %c", angle, pulse);
+				sprintf(str, "Angle: %5d | Pulse: %c", angle, pulse);
 
 			if (buttonCount(BUT_A)){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);

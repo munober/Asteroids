@@ -28,13 +28,12 @@ void checkJoystickTask (void * params){
 	unsigned char pulse = JOYSTICK_PULSE_NULL;
 
 	while (1) {
-		joystick.x = (double) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-		joystick.y = (double) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+		joystick.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+		joystick.y = (uint8_t) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 
 		// CURRENT JOYSTICK ANGLE OUTPUT
-//		angle = CONVERT_TO_DEG * atan ((joystick.y - OFFSET_X) / (joystick.x - OFFSET_Y));
-		angle = atan(num) * CONVERT_TO_DEG;
-		xQueueSend(JoystickAngleQueue, &angle, portMAX_DELAY);
+		angle = atan ((joystick.y - OFFSET_X) / (joystick.x - OFFSET_Y)) * CONVERT_TO_DEG;
+		xQueueSend(JoystickAngleQueue, &angle, 0);
 
 		// SEND UP/DOWN/LEFT/RIGHT PULSE
 		if(angle >= 45.0 && angle <= 135.0)
@@ -48,7 +47,7 @@ void checkJoystickTask (void * params){
 		else
 			pulse = JOYSTICK_PULSE_NULL;
 
-		xQueueSend(JoystickPulseQueue, &pulse, portMAX_DELAY);
+		xQueueSend(JoystickPulseQueue, &pulse, 0);
 		vTaskDelayUntil(&xLastWakeTime, PollingRate);
 	}
 }
