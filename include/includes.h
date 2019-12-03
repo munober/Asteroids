@@ -37,9 +37,18 @@
 #define SINGLE_PLAYER_STATE			2
 #define PAUSE_MENU_STATE  			3
 
-
 #define DISPLAY_SIZE_X  		320
 #define DISPLAY_SIZE_Y  		240
 
 #define TEXT_X(TEXT)	 		DISPLAY_SIZE_X / 2 - (gdispGetStringWidth(TEXT, font1) / 2)
 #define TEXT_Y(LINE)	 		DISPLAY_SIZE_Y / 2 - (gdispGetFontMetric(font1, fontHeight) * -(LINE + 0.5)) + 65
+
+#define PI 						3.14159265
+#define CONVERT_TO_DEG			180.0 / PI
+#define CONVERT_TO_RAD			PI / 180.0
+
+#define JOYSTICK_PULSE_UP			1
+#define JOYSTICK_PULSE_LEFT			2
+#define JOYSTICK_PULSE_DOWN			3
+#define JOYSTICK_PULSE_RIGHT		4
+#define JOYSTICK_PULSE_NULL			5
