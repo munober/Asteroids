@@ -11,6 +11,11 @@
 #define DISPLAY_CENTER_X DISPLAY_SIZE_X/2
 #define DISPLAY_CENTER_Y DISPLAY_SIZE_Y/2
 
+typedef enum {
+	false = 0,
+	true = 1
+} boolean;
+
 struct coord_draw {
 	uint16_t x;
 	uint16_t y;
