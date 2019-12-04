@@ -10,44 +10,105 @@
 #include "includes.h"
 #include "checkJoystickTask.h"
 
-#define OFFSET_X		0.0
-#define OFFSET_Y		0.0
-
-//extern QueueHandle_t ButtonQueue;
-//extern QueueHandle_t StateQueue;
-extern QueueHandle_t JoystickAngleQueue;
-extern QueueHandle_t JoystickPulseQueue;
+extern QueueHandle_t JoystickQueue;
 
 void checkJoystickTask (void * params){
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-	const TickType_t PollingRate = 20;
-	struct coord joystick = { { 0 } };
-	double angle = 45.0;
-	double num = 1.0;
-	unsigned char pulse = JOYSTICK_PULSE_NULL;
+	const TickType_t PollingRate = 10;
+	struct joystick_angle_pulse joystick_internal;
+	struct joystick_angle_pulse joystick_internal_old;
 
 	while (1) {
-		joystick.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-		joystick.y = (uint8_t) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+		joystick_internal.axis.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+		joystick_internal.axis.y = (uint8_t) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 
-		// CURRENT JOYSTICK ANGLE OUTPUT
-		angle = atan ((joystick.y - OFFSET_X) / (joystick.x - OFFSET_Y)) * CONVERT_TO_DEG;
-		xQueueSend(JoystickAngleQueue, &angle, 0);
+		// SEND UP/LEFT/DOWN/RIGHT PULSE
 
-		// SEND UP/DOWN/LEFT/RIGHT PULSE
-		if(angle >= 45.0 && angle <= 135.0)
-			pulse = JOYSTICK_PULSE_UP;
-		else if(angle >= 135.0 && angle <= 225.0)
-			pulse = JOYSTICK_PULSE_LEFT;
-		else if(angle >= 225.0 && angle <= 315.0)
-			pulse = JOYSTICK_PULSE_DOWN;
-		else if(angle >= 315.0 && angle <= 45.0)
-			pulse = JOYSTICK_PULSE_RIGHT;
-		else
-			pulse = JOYSTICK_PULSE_NULL;
+		// X AXIS
+		if (joystick_internal.axis.y < 120){
+			joystick_internal.pulse.y = JOYSTICK_PULSE_UP;
+		}
+		else if (joystick_internal.axis.y > 140){
+			joystick_internal.pulse.y = JOYSTICK_PULSE_DOWN;
+		}
 
-		xQueueSend(JoystickPulseQueue, &pulse, 0);
+		// Y AXIS
+		if (joystick_internal.axis.x < 120){
+			joystick_internal.pulse.x = JOYSTICK_PULSE_LEFT;
+		}
+		else if (joystick_internal.axis.x > 140){
+			joystick_internal.pulse.x = JOYSTICK_PULSE_RIGHT;
+		}
+		if(joystick_internal.axis.y >= 120 && joystick_internal.axis.y <= 140){
+			if(joystick_internal.axis.x >= 120 && joystick_internal.axis.x <= 140){
+				joystick_internal.pulse.y = JOYSTICK_PULSE_NULL;
+				joystick_internal.pulse.x = JOYSTICK_PULSE_NULL;
+			}
+		}
+
+		// CURRENT JOYSTICK ANGLE
+		switch(joystick_internal.pulse.x){
+		case JOYSTICK_PULSE_LEFT:
+			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
+				joystick_internal.angle = JOYSTICK_ANGLE_NW;
+			}
+			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
+				joystick_internal.angle = JOYSTICK_ANGLE_SW;
+			}
+			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_NULL)
+				joystick_internal.angle = JOYSTICK_ANGLE_W;
+			break;
+		case JOYSTICK_PULSE_RIGHT:
+			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
+				joystick_internal.angle = JOYSTICK_ANGLE_NE;
+			}
+			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
+				joystick_internal.angle = JOYSTICK_ANGLE_SE;
+			}
+			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_NULL)
+				joystick_internal.angle = JOYSTICK_ANGLE_E;
+			break;
+		case JOYSTICK_PULSE_NULL:
+			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
+				joystick_internal.angle = JOYSTICK_ANGLE_N;
+			}
+			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
+				joystick_internal.angle = JOYSTICK_ANGLE_S;
+			}
+			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_NULL)
+				joystick_internal.angle = JOYSTICK_ANGLE_NULL;
+			break;
+		}
+
+
+		// This piece of code is kinda odd and doesnt work properly, but dont delete it yet.
+
+//		if(joystick_internal.axis.x <= 128){
+//			if(joystick_internal.axis.y <= 128){
+//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y)/(joystick_internal.axis.x));
+//				joystick_internal.angle = joystick_internal.angle + 90;
+//			}
+//			else{
+//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y - 128)/(joystick_internal.axis.x));
+//				joystick_internal.angle = joystick_internal.angle + 180;
+//			}
+//		}
+//		else{
+//			if(joystick_internal.axis.y <= 128){
+//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y)/(joystick_internal.axis.x - 128));
+//				joystick_internal.angle = joystick_internal.angle + 0;
+//			}
+//			else{
+//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y - 128)/(joystick_internal.axis.x - 128));
+//				joystick_internal.angle = joystick_internal.angle + 270;
+//			}
+//		}
+
+		if(joystick_internal_old.angle != joystick_internal.angle){
+			xQueueSend(JoystickQueue, &joystick_internal, 0);
+			memcpy(&joystick_internal_old, &joystick_internal, sizeof(struct joystick_angle_pulse));
+		}
 		vTaskDelayUntil(&xLastWakeTime, PollingRate);
 	}
 }

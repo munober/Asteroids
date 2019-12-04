@@ -89,7 +89,6 @@ void drawTaskSingle(void * params) {
 			if (buttonCount(BUT_E)){
 				xQueueSend(StateQueue, &next_state_signal_pause, 100);
 			}
-
 			exeCount++;
 /*
 * The following sets the movement of the asteroids. With the modulo operator it can be assured
