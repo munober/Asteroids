@@ -51,33 +51,33 @@ void checkJoystickTask (void * params){
 		switch(joystick_internal.pulse.x){
 		case JOYSTICK_PULSE_LEFT:
 			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
-				joystick_internal.angle = 135;
+				joystick_internal.angle = JOYSTICK_ANGLE_NW;
 			}
 			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
-				joystick_internal.angle = 225;
+				joystick_internal.angle = JOYSTICK_ANGLE_SW;
 			}
 			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_NULL)
-				joystick_internal.angle = 180;
+				joystick_internal.angle = JOYSTICK_ANGLE_W;
 			break;
 		case JOYSTICK_PULSE_RIGHT:
 			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
-				joystick_internal.angle = 45;
+				joystick_internal.angle = JOYSTICK_ANGLE_NE;
 			}
 			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
-				joystick_internal.angle = 315;
+				joystick_internal.angle = JOYSTICK_ANGLE_SE;
 			}
 			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_NULL)
-				joystick_internal.angle = 0;
+				joystick_internal.angle = JOYSTICK_ANGLE_E;
 			break;
 		case JOYSTICK_PULSE_NULL:
 			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
-				joystick_internal.angle = 90;
+				joystick_internal.angle = JOYSTICK_ANGLE_N;
 			}
 			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
-				joystick_internal.angle = 270;
+				joystick_internal.angle = JOYSTICK_ANGLE_S;
 			}
 			else if(joystick_internal.pulse.y == JOYSTICK_PULSE_NULL)
-				joystick_internal.angle = 0;
+				joystick_internal.angle = JOYSTICK_ANGLE_NULL;
 			break;
 		}
 
