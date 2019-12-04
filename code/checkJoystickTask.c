@@ -17,6 +17,7 @@ void checkJoystickTask (void * params){
 	xLastWakeTime = xTaskGetTickCount();
 	const TickType_t PollingRate = 10;
 	struct joystick_angle_pulse joystick_internal;
+	struct joystick_angle_pulse joystick_internal_old;
 
 	while (1) {
 		joystick_internal.axis.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
@@ -104,7 +105,10 @@ void checkJoystickTask (void * params){
 //			}
 //		}
 
-		xQueueSend(JoystickQueue, &joystick_internal, 0);
+		if(joystick_internal_old.angle != joystick_internal.angle){
+			xQueueSend(JoystickQueue, &joystick_internal, 0);
+			memcpy(&joystick_internal_old, &joystick_internal, sizeof(struct joystick_angle_pulse));
+		}
 		vTaskDelayUntil(&xLastWakeTime, PollingRate);
 	}
 }
