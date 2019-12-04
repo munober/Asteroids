@@ -33,6 +33,11 @@ struct players_ship {
 	player_status state;
 };
 
+struct player_input{
+	uint8_t thrust;
+	uint16_t angle;
+};
+
 struct asteroid {
     struct coord_draw position;
     hit_counter remain_hits;

@@ -8,10 +8,12 @@
 #include "includes.h"
 #include "drawTaskSingle.h"
 #include "math.h"
+#include "determinePlayerPosition.h"
 
 extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
+extern QueueHandle_t JoystickQueue;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
@@ -55,6 +57,9 @@ static const point type_3[] = {
 
 // Asteroid shapes LARGE
 
+uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle, uint16_t current_x, uint16_t current_y);
+uint16_t determinePlayerPositionY(uint8_t thrust, uint16_t angle, uint16_t current_x, uint16_t current_y);
+
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
@@ -63,12 +68,19 @@ void drawTaskSingle(void * params) {
 
 	TickType_t hit_timestamp;
 	hit_timestamp = xTaskGetTickCount();
+	TickType_t thrust_reset_timer;
+	thrust_reset_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
+	const TickType_t thrust_reset_threshold = 300;
 
 	unsigned int exeCount = 0;
 
 	// Spawn player in display center
 	struct players_ship player;
+	struct player_input input;
+	input.thrust = 0;
+	input.angle = 1;
+	// Position will be handled by function determinePlayerPosition
 	player.position.x = DISPLAY_CENTER_X;
 	player.position.y = DISPLAY_CENTER_Y;
 	player.state = fine;
@@ -88,13 +100,36 @@ void drawTaskSingle(void * params) {
 	struct asteroid asteroid_7 = { { 0 } };
 	asteroid_7.remain_hits = one;
 
+	struct joystick_angle_pulse joystick_internal;
+
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
+
+			// Handling button logic down here. Also thrust and angle.
 			if(life_count != 0){
 				if (buttonCount(BUT_E)){
 					xQueueSend(StateQueue, &next_state_signal_pause, 100);
 				}
+				if(buttonCount(BUT_A)){
+					input.thrust = 1;
+					thrust_reset_timer = xTaskGetTickCount();
+				}
+				else if(xTaskGetTickCount() - thrust_reset_timer >= thrust_reset_threshold){
+					input.thrust = 0;
+				}
 			}
+
+			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
+				input.angle = joystick_internal.angle;
+			}
+
+			struct coord_draw temp;
+//			memcpy(&temp, &player.position, sizeof(struct coord_draw));
+			temp.x = player.position.x;
+			temp.y = player.position.y;
+			player.position.x += determinePlayerPositionX(&input.thrust, &input.angle, &temp.x, &temp.y);
+			player.position.y += determinePlayerPositionY(&input.thrust, &input.angle, &temp.x, &temp.y);
+
 			exeCount++;
 /*
 * The following sets the movement of the asteroids. With the modulo operator it can be assured
@@ -185,9 +220,9 @@ void drawTaskSingle(void * params) {
 			sprintf(str, "Lifes: %d", life_count);
 			gdispDrawString(280, 10, str, font1, White);
 
-			// Debug print line
-//			sprintf(str, "asteroid_6 position x: %d | y: %d", asteroid_6.position.x, asteroid_6.position.y);
-//			gdispDrawString(0, 11, str, font1, White);
+			// Debug print line for angle and thrust
+			sprintf(str, "Angle: %d | Thrust: %d", input.angle, input.thrust);
+			gdispDrawString(0, 230, str, font1, White);
 
 			// Players ship
 			if(life_count != 0){
