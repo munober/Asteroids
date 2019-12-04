@@ -17,12 +17,21 @@ struct coord_draw {
 };
 
 typedef enum {
+	fine = 0,
+	hit = 1
+} player_status;
+
+typedef enum {
 	none = 0,
 	one = 1,
 	two = 2,
 	three = 3
-
 } hit_counter;
+
+struct players_ship {
+	struct coord_draw position;
+	player_status state;
+};
 
 struct asteroid {
     struct coord_draw position;

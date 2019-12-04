@@ -7,6 +7,7 @@
 
 #include "includes.h"
 #include "drawTaskSingle.h"
+#include "math.h"
 
 extern QueueHandle_t StateQueue;
 extern font_t font1;
@@ -28,7 +29,7 @@ static const point type_1[] = {
 		{0, 3},
 		{2, 1},
 		{1, -2},
-		{-1, -2},
+		{-2, -2},
 		{-2, 1}
 };
 
@@ -36,7 +37,7 @@ static const point type_2[] = {
 		{0, 3},
 		{2, 1},
 		{1, -2},
-		{-1, -2},
+		{-2, -2},
 		{-2, 1}
 };
 
@@ -44,7 +45,7 @@ static const point type_3[] = {
 		{0, 3},
 		{2, 1},
 		{1, -2},
-		{-1, -2},
+		{-2, -2},
 		{-2, 1}
 };
 
@@ -58,6 +59,12 @@ void drawTaskSingle(void * params) {
 	char str[100]; // buffer for messages to draw to display
 
 	unsigned int exeCount = 0;
+
+	// Spawn player in display center
+	struct players_ship player;
+	player.position.x = DISPLAY_CENTER_X;
+	player.position.y = DISPLAY_CENTER_Y;
+	player.state = fine;
 
 	struct asteroid asteroid_1 = { { 0 } };
 	asteroid_1.remain_hits = one;
@@ -119,6 +126,30 @@ void drawTaskSingle(void * params) {
 			asteroid_7.position.x = 280 - exeCount % 250;
 			asteroid_7.position.y = 240 - exeCount % 250;
 
+			// Check if players ship was hit by asteroid
+			// Threshold zone is a square around the players ship center with 6px side length
+			if ((abs(asteroid_1.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_1.position.y - player.position.y) <= 3))
+				player.state = hit;
+			if ((abs(asteroid_2.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_2.position.y - player.position.y) <= 3))
+				player.state = hit;
+			if ((abs(asteroid_3.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_3.position.y - player.position.y) <= 3))
+				player.state = hit;
+			if ((abs(asteroid_4.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_4.position.y - player.position.y) <= 3))
+				player.state = hit;
+			if ((abs(asteroid_5.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_5.position.y - player.position.y) <= 3))
+				player.state = hit;
+			if ((abs(asteroid_6.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_6.position.y - player.position.y) <= 3))
+				player.state = hit;
+			if ((abs(asteroid_7.position.x - player.position.x) <= 3)
+					&& (abs(asteroid_7.position.y - player.position.y) <= 3))
+				player.state = hit;
+
 			gdispClear(Black);
 
 			// Score board
@@ -134,7 +165,9 @@ void drawTaskSingle(void * params) {
 //			gdispDrawString(0, 11, str, font1, White);
 
 			// Players ship
-			gdispFillConvexPoly(DISPLAY_CENTER_X, DISPLAY_CENTER_Y, form, NUM_POINTS, White);
+			if (player.state == fine)
+				gdispFillConvexPoly(player.position.x, player.position.y, form,
+						NUM_POINTS, White);
 
 			// Asteroid 1
 			gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y, type_1,
