@@ -15,6 +15,7 @@ extern SemaphoreHandle_t DrawReady;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
+#define HIT_LIMIT				20
 
 // This is defines the players ship shape
 static const point form[] = {
@@ -128,26 +129,26 @@ void drawTaskSingle(void * params) {
 			/* Check if players ship was hit by asteroid
 			 * Threshold zone is a square around the players ship center with 6px side length
 			 */
-			if ((abs(asteroid_1.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_1.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_1.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_1.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
-			if ((abs(asteroid_2.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_2.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_2.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_2.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
-			if ((abs(asteroid_3.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_3.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_3.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_3.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
-			if ((abs(asteroid_4.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_4.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_4.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_4.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
-			if ((abs(asteroid_5.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_5.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_5.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_5.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
-			if ((abs(asteroid_6.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_6.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_6.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_6.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
-			if ((abs(asteroid_7.position.x - player.position.x) <= 3)
-					&& (abs(asteroid_7.position.y - player.position.y) <= 3))
+			if ((abs(asteroid_7.position.x - player.position.x) <= HIT_LIMIT)
+					&& (abs(asteroid_7.position.y - player.position.y) <= HIT_LIMIT))
 				player.state = hit;
 
 			gdispClear(Black);
@@ -165,19 +166,25 @@ void drawTaskSingle(void * params) {
 //			gdispDrawString(0, 11, str, font1, White);
 
 			// Players ship
-			if (player.state == fine)
-				gdispFillConvexPoly(player.position.x, player.position.y, form,
-						NUM_POINTS, White);
-			else if (player.state == hit) {
-				life_count--;
-				if (life_count == 0) {
-					sprintf(str, "GAME OVER");
-					gdispDrawString(DISPLAY_CENTER_X - 20, DISPLAY_CENTER_Y,
-							str, font1, White);
-					vTaskDelay(three_seconds);
+			if(life_count != 0){
+				if (player.state == fine)
+					gdispFillConvexPoly(player.position.x, player.position.y, form,
+							NUM_POINTS, White);
+				else if (player.state == hit) {
+					if(life_count != 0)
+						life_count--;
+					player.state = fine; // Reset the players ship if not yet game over
+				}
+			}
+
+			if (life_count == 0) {
+				sprintf(str, "GAME OVER. Press D to quit.");
+				gdispDrawString(DISPLAY_CENTER_X - 20, DISPLAY_CENTER_Y,
+						str, font1, White);
+//					vTaskDelay(three_seconds);
+				if (buttonCount(BUT_D)){
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);
 				}
-				player.state = fine; // Reset the players ship if not yet game over
 			}
 
 			// Asteroid 1
