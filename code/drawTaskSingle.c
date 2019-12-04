@@ -57,6 +57,8 @@ void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	char str[100]; // buffer for messages to draw to display
+	unsigned int life_count = 3;
+	const TickType_t three_seconds = 3000 / portTICK_PERIOD_MS;
 
 	unsigned int exeCount = 0;
 
@@ -83,10 +85,7 @@ void drawTaskSingle(void * params) {
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
-			if (buttonCount(BUT_A)){
-				xQueueSend(StateQueue, &next_state_signal_menu, 100);
-			}
-			if (buttonCount(BUT_B)){
+			if (buttonCount(BUT_E)){
 				xQueueSend(StateQueue, &next_state_signal_pause, 100);
 			}
 
@@ -126,8 +125,9 @@ void drawTaskSingle(void * params) {
 			asteroid_7.position.x = 280 - exeCount % 250;
 			asteroid_7.position.y = 240 - exeCount % 250;
 
-			// Check if players ship was hit by asteroid
-			// Threshold zone is a square around the players ship center with 6px side length
+			/* Check if players ship was hit by asteroid
+			 * Threshold zone is a square around the players ship center with 6px side length
+			 */
 			if ((abs(asteroid_1.position.x - player.position.x) <= 3)
 					&& (abs(asteroid_1.position.y - player.position.y) <= 3))
 				player.state = hit;
@@ -157,7 +157,7 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(5, 10, str,	font1, White);
 
 			// Life count
-			sprintf(str, "Lifes: 3");
+			sprintf(str, "Lifes: %d", life_count);
 			gdispDrawString(280, 10, str, font1, White);
 
 			// Debug print line
@@ -168,6 +168,17 @@ void drawTaskSingle(void * params) {
 			if (player.state == fine)
 				gdispFillConvexPoly(player.position.x, player.position.y, form,
 						NUM_POINTS, White);
+			else if (player.state == hit) {
+				life_count--;
+				if (life_count == 0) {
+					sprintf(str, "GAME OVER");
+					gdispDrawString(DISPLAY_CENTER_X - 20, DISPLAY_CENTER_Y,
+							str, font1, White);
+					vTaskDelay(three_seconds);
+					xQueueSend(StateQueue, &next_state_signal_menu, 100);
+				}
+				player.state = fine; // Reset the players ship if not yet game over
+			}
 
 			// Asteroid 1
 			gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y, type_1,
