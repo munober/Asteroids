@@ -11,6 +11,13 @@
 #include "checkJoystickTask.h"
 
 extern QueueHandle_t JoystickQueue;
+extern QueueHandle_t JoystickAngle360Queue;
+
+float rotationAngle(float x, float y){
+	float angle;
+	angle = atan2f(y, x);
+	return angle;
+}
 
 void checkJoystickTask (void * params){
 	TickType_t xLastWakeTime;
@@ -18,10 +25,13 @@ void checkJoystickTask (void * params){
 	const TickType_t PollingRate = 10;
 	struct joystick_angle_pulse joystick_internal;
 	struct joystick_angle_pulse joystick_internal_old;
+	struct joystick_angle_pulse joystick_internal_old_angle;
+	float send_threshold = 5;
+	float temp = 0;
 
 	while (1) {
-		joystick_internal.axis.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-		joystick_internal.axis.y = (uint8_t) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+		joystick_internal.axis.x = (float) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+		joystick_internal.axis.y = (float) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 
 		// SEND UP/LEFT/DOWN/RIGHT PULSE
 
@@ -47,7 +57,7 @@ void checkJoystickTask (void * params){
 			}
 		}
 
-		// CURRENT JOYSTICK ANGLE
+		// CURRENT JOYSTICK ANGLE IN ONE OF 8 VALUES
 		switch(joystick_internal.pulse.x){
 		case JOYSTICK_PULSE_LEFT:
 			if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
@@ -81,34 +91,15 @@ void checkJoystickTask (void * params){
 			break;
 		}
 
+		temp = rotationAngle(joystick_internal.axis.x, joystick_internal.axis.y);
+		xQueueSend(JoystickAngle360Queue, &temp, 0);
 
-		// This piece of code is kinda odd and doesnt work properly, but dont delete it yet.
-
-//		if(joystick_internal.axis.x <= 128){
-//			if(joystick_internal.axis.y <= 128){
-//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y)/(joystick_internal.axis.x));
-//				joystick_internal.angle = joystick_internal.angle + 90;
-//			}
-//			else{
-//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y - 128)/(joystick_internal.axis.x));
-//				joystick_internal.angle = joystick_internal.angle + 180;
-//			}
-//		}
-//		else{
-//			if(joystick_internal.axis.y <= 128){
-//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y)/(joystick_internal.axis.x - 128));
-//				joystick_internal.angle = joystick_internal.angle + 0;
-//			}
-//			else{
-//				joystick_internal.angle = CONVERT_TO_DEG * atan((joystick_internal.axis.y - 128)/(joystick_internal.axis.x - 128));
-//				joystick_internal.angle = joystick_internal.angle + 270;
-//			}
-//		}
-
+		// Use this because it makes interaction more responsive
 		if(joystick_internal_old.angle != joystick_internal.angle){
 			xQueueSend(JoystickQueue, &joystick_internal, 0);
 			memcpy(&joystick_internal_old, &joystick_internal, sizeof(struct joystick_angle_pulse));
 		}
+
 		vTaskDelayUntil(&xLastWakeTime, PollingRate);
 	}
 }

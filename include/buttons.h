@@ -15,9 +15,14 @@ struct coord {
 	uint8_t y;
 };
 
+struct coord_float {
+	float x;
+	float y;
+};
+
 typedef struct joystick_angle_pulse {
-	struct coord axis;
-	uint16_t angle;
+	struct coord_float axis;
+	uint8_t angle;
 	struct coord pulse;
 }joystick_angle_pulse_t;
 

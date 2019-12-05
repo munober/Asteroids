@@ -14,6 +14,7 @@ extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t JoystickQueue;
+extern QueueHandle_t JoystickAngle360Queue;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
@@ -101,6 +102,7 @@ void drawTaskSingle(void * params) {
 	asteroid_7.remain_hits = one;
 
 	struct joystick_angle_pulse joystick_internal;
+	float angle_float = 0;
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
@@ -122,6 +124,8 @@ void drawTaskSingle(void * params) {
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 				input.angle = joystick_internal.angle;
 			}
+
+			while (xQueueReceive(JoystickAngle360Queue, &angle_float, 0) == pdTRUE);
 
 			struct coord_draw temp;
 //			memcpy(&temp, &player.position, sizeof(struct coord_draw));
@@ -221,7 +225,7 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(280, 10, str, font1, White);
 
 			// Debug print line for angle and thrust
-			sprintf(str, "Angle: %d | Thrust: %d", input.angle, input.thrust);
+			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
 			gdispDrawString(0, 230, str, font1, White);
 
 			// Players ship

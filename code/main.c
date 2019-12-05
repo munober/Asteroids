@@ -29,6 +29,7 @@ void checkJoystickTask (void * params);
 QueueHandle_t ButtonQueue;
 QueueHandle_t StateQueue;
 QueueHandle_t JoystickQueue;
+QueueHandle_t JoystickAngle360Queue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 SemaphoreHandle_t DrawReady; // After swapping buffer calll drawing
@@ -49,6 +50,7 @@ int main(void){
 	ButtonQueue = xQueueCreate(BUTTON_QUEUE_LENGTH, sizeof(struct buttons));
 	StateQueue = xQueueCreate(STATE_QUEUE_LENGTH, sizeof(unsigned char));
 	JoystickQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct joystick_angle_pulse));
+	JoystickAngle360Queue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(float));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
