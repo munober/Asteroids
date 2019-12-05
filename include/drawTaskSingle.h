@@ -35,6 +35,7 @@ typedef enum {
 
 struct players_ship {
 	struct coord_draw position;
+	struct coord_draw position_old;
 	player_status state;
 };
 

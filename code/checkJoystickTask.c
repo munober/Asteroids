@@ -12,6 +12,7 @@
 
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t JoystickAngle360Queue;
+//extern QueueHandle_t PlayerNavigationQueue;
 
 float rotationAngle(float x, float y){
 	float angle;
@@ -25,13 +26,15 @@ void checkJoystickTask (void * params){
 	const TickType_t PollingRate = 10;
 	struct joystick_angle_pulse joystick_internal;
 	struct joystick_angle_pulse joystick_internal_old;
-	struct joystick_angle_pulse joystick_internal_old_angle;
 	float send_threshold = 5;
-	float temp = 0;
+	struct coord send_direct;
 
 	while (1) {
 		joystick_internal.axis.x = (uint8_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 		joystick_internal.axis.y = (uint8_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+//		send_direct.x = (uint8_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+//		send_direct.y = (uint8_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+//		xQueueSend(PlayerNavigationQueue, &send_direct, 0);
 
 		// SEND UP/LEFT/DOWN/RIGHT PULSE
 
@@ -91,13 +94,8 @@ void checkJoystickTask (void * params){
 			break;
 		}
 
-		temp = rotationAngle(joystick_internal.axis.x, joystick_internal.axis.y);
-		xQueueSend(JoystickAngle360Queue, &temp, 0);
-
 		// Use this because it makes interaction more responsive
-		if(joystick_internal_old.angle != joystick_internal.angle ||
-				joystick_internal_old.pulse.x != joystick_internal.pulse.x ||
-				joystick_internal_old.pulse.y != joystick_internal.pulse.y){
+		if(joystick_internal_old.angle != joystick_internal.angle){
 			xQueueSend(JoystickQueue, &joystick_internal, 0);
 			memcpy(&joystick_internal_old, &joystick_internal, sizeof(struct joystick_angle_pulse));
 		}

@@ -32,6 +32,7 @@ void checkJoystickTask (void * params);
 QueueHandle_t StateQueue;
 QueueHandle_t JoystickQueue;
 QueueHandle_t JoystickAngle360Queue;
+QueueHandle_t PlayerNavigationQueue;
 QueueHandle_t LifeCountQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
@@ -55,6 +56,7 @@ int main(void){
 	StateQueue = xQueueCreate(STATE_QUEUE_LENGTH, sizeof(unsigned char));
 	JoystickQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct joystick_angle_pulse));
 	JoystickAngle360Queue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(float));
+	PlayerNavigationQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct coord));
 	LifeCountQueue = xQueueCreate(10, sizeof(unsigned int));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();

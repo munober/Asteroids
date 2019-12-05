@@ -16,6 +16,7 @@ extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t JoystickAngle360Queue;
 extern QueueHandle_t LifeCountQueue;
+extern QueueHandle_t PlayerNavigationQueue;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
@@ -57,10 +58,10 @@ static const point type_6[] = { { 0, 3 }, { 3, 2 }, { 3, -1 }, { 2, -4 },
 //static const point type_9[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
 //		1 } };
 
-uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle,
-		uint16_t current_x, uint16_t current_y);
-uint16_t determinePlayerPositionY(uint8_t thrust, uint16_t angle,
-		uint16_t current_x, uint16_t current_y);
+//uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle,
+//		uint16_t current_x, uint16_t current_y);
+//uint16_t determinePlayerPositionY(uint8_t thrust, uint16_t angle,
+//		uint16_t current_x, uint16_t current_y);
 
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
@@ -74,9 +75,12 @@ void drawTaskSingle(void * params) {
 
 	TickType_t hit_timestamp;
 	TickType_t thrust_reset_timer;
+	TickType_t inertia_timer;
 	thrust_reset_timer = xTaskGetTickCount();
+	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
 	const TickType_t thrust_reset_threshold = 300;
+	const TickType_t inertia_threshold = 1000;
 
 	unsigned int exeCount = 0;
 
@@ -88,6 +92,8 @@ void drawTaskSingle(void * params) {
 	// Position will be handled by function determinePlayerPosition
 	player.position.x = DISPLAY_CENTER_X;
 	player.position.y = DISPLAY_CENTER_Y;
+	player.position_old.x = player.position.x;
+	player.position_old.y = player.position.y;
 	player.state = fine;
 
 	struct asteroid asteroid_1 = { { 0 } };
@@ -107,6 +113,8 @@ void drawTaskSingle(void * params) {
 
 	struct joystick_angle_pulse joystick_internal;
 	float angle_float = 0;
+	struct coord joy_direct;
+	unsigned int moved = 0;
 
 	while (1) {
 		// Reading life count down here.
@@ -134,15 +142,71 @@ void drawTaskSingle(void * params) {
 				input.angle = joystick_internal.angle;
 			}
 
-			xQueueReceive(JoystickAngle360Queue, &angle_float, 0);
-//			struct coord_draw temp;
-//			memcpy(&temp, &player.position, sizeof(struct coord_draw));
-//			temp.x = player.position.x;
-//			temp.y = player.position.y;
-//			player.position.x += determinePlayerPositionX(&input.thrust,
-//					&input.angle, &temp.x, &temp.y);
-//			player.position.y += determinePlayerPositionY(&input.thrust,
-//					&input.angle, &temp.x, &temp.y);
+//			Read joystick input directly in here
+			joy_direct.x = (uint8_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+			joy_direct.y = (uint8_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+
+//			Make player show up at the other side of the screen when reaching border
+			if(player.position.x >= DISPLAY_SIZE_X){
+				player.position.x = 0;
+			}
+			else if(player.position.x <= 0){
+				player.position.x = DISPLAY_SIZE_X;
+			}
+			if(player.position.y >= DISPLAY_SIZE_Y){
+				player.position.y = 0;
+			}
+			else if(player.position.y <= 0){
+				player.position.y = DISPLAY_SIZE_Y;
+			}
+
+//			Player movement input
+			if(input.thrust){
+				if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
+					player.position.x += (joy_direct.x - 128) / 16;
+					player.position.y += (joy_direct.y - 128) / 16;
+					if (joy_direct.x - 128 > 10 || joy_direct.y - 128 > 10){
+						inertia_timer = xTaskGetTickCount();
+					}
+					moved = 1;
+				}
+			}
+			if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
+				player.position.x += (joy_direct.x - 128) / 32;
+				player.position.y += (joy_direct.y - 128) / 32;
+				if (joy_direct.x - 128 > 10 || joy_direct.y - 128 > 10){
+					inertia_timer = xTaskGetTickCount();
+				}
+				moved = 1;
+			}
+
+//			Player inertia
+			if((xTaskGetTickCount() - inertia_timer < inertia_threshold) && moved != 0){
+				switch((player.position.x - player.position_old.x) > 0){
+				case 1:
+					player.position.x++;
+					break;
+				case 0:
+					player.position.x--;
+					break;
+				default:
+					break;
+				}
+				switch((player.position.y - player.position_old.y) > 0){
+				case 1:
+					player.position.y++;
+					break;
+				case 0:
+					player.position.y--;
+					break;
+				default:
+					break;
+				}
+			}
+			else{
+				player.position_old.x = player.position.x;
+				player.position_old.y = player.position.y;
+			}
 
 			exeCount++;
 			/*
@@ -239,7 +303,7 @@ void drawTaskSingle(void * params) {
 			// Debug print line for angle and thrust
 			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
 			gdispDrawString(0, 230, str, font1, White);
-			sprintf(str2, "Axis X: %i | Axis Y: %i", joystick_internal.axis.x, joystick_internal.axis.y);
+			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
 			gdispDrawString(0, 220, str2, font1, White);
 
 			// Players ship
@@ -255,6 +319,9 @@ void drawTaskSingle(void * params) {
 					if (xTaskGetTickCount() - hit_timestamp > delay_hit) {
 						player.state = fine; // Reset the players ship if not yet game over
 						life_count_lock = false; // Unlock the life counter
+						player.position.x = DISPLAY_CENTER_X; // Reset player coordinates
+						player.position.y = DISPLAY_CENTER_Y; // Reset player coordinates
+						moved = 0; // Stop inertia until joystick input
 					}
 				}
 
