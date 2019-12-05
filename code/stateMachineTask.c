@@ -11,6 +11,7 @@ extern QueueHandle_t StateQueue;
 extern TaskHandle_t drawTaskStartMenuHandle;
 extern TaskHandle_t drawTaskSingleHandle;
 extern TaskHandle_t drawTaskPauseHandle;
+extern TaskHandle_t drawTaskCheatsHandle;
 
 void stateMachineTask(void * params) {
 	unsigned char current_state = 1; // Default state
@@ -30,19 +31,29 @@ void stateMachineTask(void * params) {
 			case MAIN_MENU_STATE:
 			    vTaskSuspend(drawTaskSingleHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskResume(drawTaskStartMenuHandle);
 				state_changed = 0;
 				break;
 			case SINGLE_PLAYER_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskResume(drawTaskSingleHandle);
 				state_changed = 0;
 				break;
 			case PAUSE_MENU_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskResume(drawTaskPauseHandle);
+				state_changed = 0;
+				break;
+			case CHEATS_MENU_STATE:
+			    vTaskSuspend(drawTaskStartMenuHandle);
+			    vTaskSuspend(drawTaskSingleHandle);
+			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskResume(drawTaskCheatsHandle);
 				state_changed = 0;
 				break;
 			default:

@@ -15,6 +15,7 @@ extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t JoystickAngle360Queue;
+extern QueueHandle_t LifeCountQueue;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
@@ -66,6 +67,8 @@ void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	char str[100]; // buffer for messages to draw to display
 	unsigned int life_count = 3;
+	unsigned int life_readin = 3;
+	unsigned int restart_lives = 3;
 	boolean life_count_lock = false;
 
 	TickType_t hit_timestamp;
@@ -105,9 +108,13 @@ void drawTaskSingle(void * params) {
 	float angle_float = 0;
 
 	while (1) {
+		// Reading life count down here.
+		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
+			life_count = life_readin;
+		}
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
-
 			// Handling button logic down here. Also thrust and angle.
+			restart_lives = life_readin;
 			if (life_count != 0) {
 				if (buttonCount(BUT_E)) {
 					xQueueSend(StateQueue, &next_state_signal_pause, 100);
@@ -224,8 +231,8 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(5, 10, str, font1, White);
 
 			// Life count
-			sprintf(str, "Lifes: %d", life_count);
-			gdispDrawString(280, 10, str, font1, White);
+			sprintf(str, "Lives: %d", life_count);
+			gdispDrawString(260, 10, str, font1, White);
 
 			// Debug print line for angle and thrust
 			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
@@ -283,7 +290,7 @@ void drawTaskSingle(void * params) {
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1,
 						Black);
 				if (buttonCount(BUT_D)) {
-					life_count = 3;
+					life_count = restart_lives;
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);
 				}
 			}

@@ -8,28 +8,31 @@
 #include "drawTaskStartMenu.h"
 #include "drawTaskSingle.h"
 #include "drawTaskPause.h"
+#include "drawTaskCheats.h"
 #include "stateMachineTask.h"
 #include "checkJoystickTask.h"
 
 #define STATE_QUEUE_LENGTH 		 1
 #define BUTTON_QUEUE_LENGTH		20
 #define JOYSTICK_QUEUE_LENGTH	30
-#define STACK_SIZE 200
+#define STACK_SIZE				200
 
 font_t font1;
 
 void frameSwapTask(void * params);
 void stateMachineTask(void * params);
-void checkButtons(void * params);
+//void checkButtons(void * params);
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
 void drawTaskPause (void * params);
+void drawTaskCheats(void * params);
 void checkJoystickTask (void * params);
 
-QueueHandle_t ButtonQueue;
+//QueueHandle_t ButtonQueue;
 QueueHandle_t StateQueue;
 QueueHandle_t JoystickQueue;
 QueueHandle_t JoystickAngle360Queue;
+QueueHandle_t LifeCountQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 SemaphoreHandle_t DrawReady; // After swapping buffer calll drawing
@@ -39,6 +42,7 @@ TaskHandle_t stateMachineTaskHandle;
 TaskHandle_t drawTaskStartMenuHandle;
 TaskHandle_t drawTaskSingleHandle;
 TaskHandle_t drawTaskPauseHandle;
+TaskHandle_t drawTaskCheatsHandle;
 TaskHandle_t checkJoystickTaskHandle;
 
 int main(void){
@@ -47,10 +51,11 @@ int main(void){
 	ESPL_SystemInit();
 	font1 = gdispOpenFont("DejaVuSans24*");
 	// General
-	ButtonQueue = xQueueCreate(BUTTON_QUEUE_LENGTH, sizeof(struct buttons));
+//	ButtonQueue = xQueueCreate(BUTTON_QUEUE_LENGTH, sizeof(struct buttons));
 	StateQueue = xQueueCreate(STATE_QUEUE_LENGTH, sizeof(unsigned char));
 	JoystickQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct joystick_angle_pulse));
 	JoystickAngle360Queue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(float));
+	LifeCountQueue = xQueueCreate(10, sizeof(unsigned int));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
@@ -59,17 +64,19 @@ int main(void){
 	// Core tasks
 	xTaskCreate(frameSwapTask, "frameSwapper", 1000, NULL, 5, &frameSwapHandle);
 	xTaskCreate(stateMachineTask, "stateMachineTask", 1000, NULL, 3, &stateMachineTaskHandle);
-	xTaskCreate(checkButtons, "checkButtons", 1000, NULL, 4, NULL);
+//	xTaskCreate(checkButtons, "checkButtons", 1000, NULL, 4, NULL);
 
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
+	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
 
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
 
     vTaskSuspend(drawTaskStartMenuHandle);
     vTaskSuspend(drawTaskSingleHandle);
     vTaskSuspend(drawTaskPauseHandle);
+    vTaskSuspend(drawTaskCheatsHandle);
 
 	vTaskStartScheduler();
 }
@@ -90,32 +97,32 @@ void frameSwapTask(void * params) {
 	}
 }
 
-void checkButtons(void * params) {
-	TickType_t xLastWakeTime;
-	xLastWakeTime = xTaskGetTickCount();
-	struct buttons buttonStatus = { { 0 } };
-	const TickType_t PollingRate = 20;
-
-	while (TRUE) {
-		// Remember last joystick values
-		buttonStatus.joystick.x = (uint8_t)(
-				ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-		buttonStatus.joystick.y = (uint8_t) 255
-				- (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
-		buttonStatus.joystick_direct.x = (uint8_t)(
-				ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-		buttonStatus.joystick_direct.y = (uint8_t) 255
-				- (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
-		buttonStatus.A = 0;
-		buttonStatus.B = 0;
-		buttonStatus.C = 0;
-		buttonStatus.D = 0;
-		buttonStatus.E = 0;
-		buttonStatus.K = 0;
-		xQueueSend(ButtonQueue, &buttonStatus, 0);
-		vTaskDelayUntil(&xLastWakeTime, PollingRate);
-	}
-}
+//void checkButtons(void * params) {
+//	TickType_t xLastWakeTime;
+//	xLastWakeTime = xTaskGetTickCount();
+//	struct buttons buttonStatus = { { 0 } };
+//	const TickType_t PollingRate = 20;
+//
+//	while (TRUE) {
+//		// Remember last joystick values
+//		buttonStatus.joystick.x = (uint8_t)(
+//				ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+//		buttonStatus.joystick.y = (uint8_t) 255
+//				- (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
+//		buttonStatus.joystick_direct.x = (uint8_t)(
+//				ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+//		buttonStatus.joystick_direct.y = (uint8_t) 255
+//				- (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
+//		buttonStatus.A = 0;
+//		buttonStatus.B = 0;
+//		buttonStatus.C = 0;
+//		buttonStatus.D = 0;
+//		buttonStatus.E = 0;
+//		buttonStatus.K = 0;
+//		xQueueSend(ButtonQueue, &buttonStatus, 0);
+//		vTaskDelayUntil(&xLastWakeTime, PollingRate);
+//	}
+//}
 
 void vApplicationIdleHook() {
 	while (TRUE) {

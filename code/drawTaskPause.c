@@ -12,6 +12,7 @@
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
+extern QueueHandle_t LifeCountQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 
@@ -47,7 +48,7 @@ void drawTaskPause(void * params) {
 			gdispClear(Black);
 
 			for (unsigned char i = 0; i < 1; i++){
-				gdispDrawString(TEXT_X(status_debug[i]), 0, status_debug[i], font1, White);
+//				gdispDrawString(TEXT_X(status_debug[i]), 0, status_debug[i], font1, White);
 				gdispDrawString(TEXT_X(user_help[i]), 60, user_help[i],font1, White);
 			}
 

@@ -19,6 +19,7 @@ extern SemaphoreHandle_t DrawReady;
 
 void drawTaskStartMenu(void * params) {
 	const unsigned char next_state_signal_single = SINGLE_PLAYER_STATE;
+	const unsigned char next_state_signal_cheats = CHEATS_MENU_STATE;
 	unsigned int menu_select = SINGLEPLAYER_SELECT;
 
 	struct joystick_angle_pulse joystick_internal;
@@ -72,6 +73,8 @@ void drawTaskStartMenu(void * params) {
 					gdispDrawString(120, 210, cheats[i],	font1, White);
 					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
 				}
+				if (buttonCount(BUT_E))
+					xQueueSend(StateQueue, &next_state_signal_single, 100);
 				break;
 			case MULTIPLAYER_SELECT:
 				for (unsigned char i = 0; i < 1; i++){
@@ -99,11 +102,17 @@ void drawTaskStartMenu(void * params) {
 					gdispDrawString(120, 210, cheats[i],	font1, Yellow);
 					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
 				}
+				if (buttonCount(BUT_E))
+					xQueueSend(StateQueue, &next_state_signal_cheats, 100);
 				break;
 			}
-			if (buttonCount(BUT_E) && menu_select == SINGLEPLAYER_SELECT){
-				xQueueSend(StateQueue, &next_state_signal_single, 100);
-			}
+
+//			if (buttonCount(BUT_E) && menu_select == SINGLEPLAYER_SELECT){
+//				xQueueSend(StateQueue, &next_state_signal_single, 100);
+//			}
+//			else if (buttonCount(BUT_E) && menu_select == CHEATS_SELECT){
+//				xQueueSend(StateQueue, &next_state_signal_cheats, 100);
+//			}
 
 		}
 	}
