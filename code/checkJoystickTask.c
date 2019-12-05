@@ -30,8 +30,8 @@ void checkJoystickTask (void * params){
 	float temp = 0;
 
 	while (1) {
-		joystick_internal.axis.x = (float) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-		joystick_internal.axis.y = (float) (255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+		joystick_internal.axis.x = (uint8_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+		joystick_internal.axis.y = (uint8_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 
 		// SEND UP/LEFT/DOWN/RIGHT PULSE
 
@@ -95,7 +95,9 @@ void checkJoystickTask (void * params){
 		xQueueSend(JoystickAngle360Queue, &temp, 0);
 
 		// Use this because it makes interaction more responsive
-		if(joystick_internal_old.angle != joystick_internal.angle){
+		if(joystick_internal_old.angle != joystick_internal.angle ||
+				joystick_internal_old.pulse.x != joystick_internal.pulse.x ||
+				joystick_internal_old.pulse.y != joystick_internal.pulse.y){
 			xQueueSend(JoystickQueue, &joystick_internal, 0);
 			memcpy(&joystick_internal_old, &joystick_internal, sizeof(struct joystick_angle_pulse));
 		}

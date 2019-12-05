@@ -57,15 +57,16 @@ static const point type_6[] = { { 0, 3 }, { 3, 2 }, { 3, -1 }, { 2, -4 },
 //static const point type_9[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
 //		1 } };
 
-//uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle,
-//		uint16_t current_x, uint16_t current_y);
-//uint16_t determinePlayerPositionY(uint8_t thrust, uint16_t angle,
-//		uint16_t current_x, uint16_t current_y);
+uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle,
+		uint16_t current_x, uint16_t current_y);
+uint16_t determinePlayerPositionY(uint8_t thrust, uint16_t angle,
+		uint16_t current_x, uint16_t current_y);
 
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	char str[100]; // buffer for messages to draw to display
+	char str2[100]; // another buffer for messages to draw to display
 	unsigned int life_count = 3;
 	unsigned int life_readin = 3;
 	unsigned int restart_lives = 3;
@@ -113,6 +114,7 @@ void drawTaskSingle(void * params) {
 			life_count = life_readin;
 		}
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
+
 			// Handling button logic down here. Also thrust and angle.
 			restart_lives = life_readin;
 			if (life_count != 0) {
@@ -132,9 +134,9 @@ void drawTaskSingle(void * params) {
 				input.angle = joystick_internal.angle;
 			}
 
-			while (xQueueReceive(JoystickAngle360Queue, &angle_float, 0) == pdTRUE);
+			xQueueReceive(JoystickAngle360Queue, &angle_float, 0);
 //			struct coord_draw temp;
-////			memcpy(&temp, &player.position, sizeof(struct coord_draw));
+//			memcpy(&temp, &player.position, sizeof(struct coord_draw));
 //			temp.x = player.position.x;
 //			temp.y = player.position.y;
 //			player.position.x += determinePlayerPositionX(&input.thrust,
@@ -237,6 +239,8 @@ void drawTaskSingle(void * params) {
 			// Debug print line for angle and thrust
 			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
 			gdispDrawString(0, 230, str, font1, White);
+			sprintf(str2, "Axis X: %i | Axis Y: %i", joystick_internal.axis.x, joystick_internal.axis.y);
+			gdispDrawString(0, 220, str2, font1, White);
 
 			// Players ship
 			if (life_count != 0) {
