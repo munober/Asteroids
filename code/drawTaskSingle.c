@@ -74,15 +74,16 @@ void drawTaskSingle(void * params) {
 	boolean life_count_lock = false;
 
 	TickType_t hit_timestamp;
-	TickType_t thrust_reset_timer;
+//	TickType_t thrust_reset_timer;
 	TickType_t inertia_timer;
-	thrust_reset_timer = xTaskGetTickCount();
+//	thrust_reset_timer = xTaskGetTickCount();
 	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
-	const TickType_t thrust_reset_threshold = 300;
+//	const TickType_t thrust_reset_threshold = 300;
 	const TickType_t inertia_threshold = 1000;
 
 	unsigned int exeCount = 0;
+	unsigned int thrustCount = 0;
 
 	// Spawn player in display center
 	struct players_ship player;
@@ -116,6 +117,9 @@ void drawTaskSingle(void * params) {
 	struct coord joy_direct;
 	unsigned int moved = 0;
 
+	float angle_x = 0;
+	float angle_y = 0;
+
 	while (1) {
 		// Reading life count down here.
 		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
@@ -129,11 +133,16 @@ void drawTaskSingle(void * params) {
 				if (buttonCount(BUT_E)) {
 					xQueueSend(StateQueue, &next_state_signal_pause, 100);
 				}
-				if (buttonCount(BUT_A)) {
+				if (buttonCountWithLiftup(BUT_A)) {
+					thrustCount++;
+				}
+				if (thrustCount == 100) {
+					thrustCount = 0;
+				}
+				if ((thrustCount % 2) == 1) {
 					input.thrust = 1;
-					thrust_reset_timer = xTaskGetTickCount();
-				} else if (xTaskGetTickCount() - thrust_reset_timer
-						>= thrust_reset_threshold) {
+				}
+				else if((thrustCount % 2) == 0){
 					input.thrust = 0;
 				}
 			}
@@ -145,8 +154,13 @@ void drawTaskSingle(void * params) {
 //			Read joystick input directly in here
 			joy_direct.x = (uint8_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (uint8_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+			angle_x = (float)((joy_direct.x / 128) - 1);
+			angle_y = (float)((joy_direct.y / 128) - 1);
+			if((angle_x != 0) && (angle_y != 0)){
+				angle_float = atan2f(angle_y, angle_x) * CONVERT_TO_DEG;
+			}
 
-//			Make player show up at the other side of the screen when reaching border
+//			Make player show up at the other side of the screen when reaching screen border
 			if(player.position.x >= DISPLAY_SIZE_X){
 				player.position.x = 0;
 			}
@@ -162,50 +176,44 @@ void drawTaskSingle(void * params) {
 
 //			Player movement input
 			if(input.thrust){
+				moved = 1;
 				if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
-					player.position.x += (joy_direct.x - 128) / 16;
-					player.position.y += (joy_direct.y - 128) / 16;
+					player.position.x += (joy_direct.x - 128) / 32;
+					player.position.y += (joy_direct.y - 128) / 32;
 					if (joy_direct.x - 128 > 10 || joy_direct.y - 128 > 10){
 						inertia_timer = xTaskGetTickCount();
 					}
-					moved = 1;
 				}
-			}
-			if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
-				player.position.x += (joy_direct.x - 128) / 32;
-				player.position.y += (joy_direct.y - 128) / 32;
-				if (joy_direct.x - 128 > 10 || joy_direct.y - 128 > 10){
-					inertia_timer = xTaskGetTickCount();
-				}
-				moved = 1;
 			}
 
 //			Player inertia
-			if((xTaskGetTickCount() - inertia_timer < inertia_threshold) && moved != 0){
-				switch((player.position.x - player.position_old.x) > 0){
-				case 1:
-					player.position.x++;
-					break;
-				case 0:
-					player.position.x--;
-					break;
-				default:
-					break;
+			if(moved){
+				if(xTaskGetTickCount() - inertia_timer < inertia_threshold){
+					switch((player.position.x - player.position_old.x) > 0){
+					case 1:
+						player.position.x++;
+						break;
+					case 0:
+						player.position.x--;
+						break;
+					default:
+						break;
+					}
+					switch((player.position.y - player.position_old.y) > 0){
+					case 1:
+						player.position.y++;
+						break;
+					case 0:
+						player.position.y--;
+						break;
+					default:
+						break;
+					}
 				}
-				switch((player.position.y - player.position_old.y) > 0){
-				case 1:
-					player.position.y++;
-					break;
-				case 0:
-					player.position.y--;
-					break;
-				default:
-					break;
+				else{
+					player.position_old.x = player.position.x;
+					player.position_old.y = player.position.y;
 				}
-			}
-			else{
-				player.position_old.x = player.position.x;
-				player.position_old.y = player.position.y;
 			}
 
 			exeCount++;
@@ -301,7 +309,7 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(260, 10, str, font1, White);
 
 			// Debug print line for angle and thrust
-			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
+			sprintf(str, "Angle: %d | Thrust: %d | 360: %3f", input.angle, input.thrust, angle_float);
 			gdispDrawString(0, 230, str, font1, White);
 			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
 			gdispDrawString(0, 220, str2, font1, White);
