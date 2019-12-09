@@ -20,17 +20,18 @@ extern QueueHandle_t HighScoresQueue;
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 #define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
+#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
 
-#define HIT_LIMIT				3 		//how close the asteroids have to get to the player to register a hit
+#define HIT_LIMIT_SMALL		3 		//how close the asteroids have to get to the player to register a hit
+#define HIT_LIMIT_MEDIUM	4
+#define HIT_LIMIT_LARGE		5
 
 // Asteroid shapes SMALL
 
 static const point type_1[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
 		1 } };
-
 static const point type_2[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
 		1 } };
-
 static const point type_3[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
 		1 } };
 
@@ -38,21 +39,19 @@ static const point type_3[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
 
 static const point type_4[] = { { 0, 2 }, { 2, 2 }, { 4, 0 }, { 3, -4 },
 		{ 0, -5 }, { -3, -4 }, { -2, 1 } };
-
 static const point type_5[] = { { 2, 3 }, { 3, 0 }, { 3, -3 }, { 0, -2 },
 		{ -2, -4 }, { -3, -1 }, { -2, 3 } };
-
 static const point type_6[] = { { 0, 3 }, { 3, 2 }, { 3, -1 }, { 2, -4 },
 		{ -2, -2 }, { -3, 0 }, { -2, 3 } };
 
 // Asteroid shapes LARGE
 
-//static const point type_7[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
-//		1 } };
-//static const point type_8[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
-//		1 } };
-//static const point type_9[] = { { 0, 3 }, { 2, 1 }, { 1, -2 }, { -2, -2 }, { -2,
-//		1 } };
+static const point type_7[] = { { 1, 3 }, { 3, 4 }, { 4, 1 }, { 4, -3 },
+		{ 0, -5 }, { -3, -4 }, { -5, -2 }, { -5, 1 }, { -3, 2 }, { -2, 5 } };
+static const point type_8[] = { { 1, 3 }, { 3, 4 }, { 5, 0 }, { 3, -2 },
+		{ 1, -3 }, { 0, -5 }, { -2, -3 }, { -5, -3 }, { -5, 1 }, { -3, 3 } };
+static const point type_9[] = { { 0, 3 }, { 6, 1 }, { 2, 1 }, { 5, -3 },
+		{ 1, 0 }, { 0, -5 }, { -1, 0 }, { -5, -3 }, { -2, 1 }, { -6, 1 } };
 
 //uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle,
 //		uint16_t current_x, uint16_t current_y);
@@ -94,19 +93,34 @@ void drawTaskSingle(void * params) {
 	player.position_old.y = player.position.y;
 	player.state = fine;
 
+	// Initialize asteroids
 	struct asteroid asteroid_1 = { { 0 } };
+	asteroid_1.position.x = -10;
+	asteroid_1.position.y = 180;
 	asteroid_1.remain_hits = one;
 	struct asteroid asteroid_2 = { { 0 } };
+	asteroid_2.position.x = -10;
+	asteroid_2.position.y = 0;
 	asteroid_2.remain_hits = one;
 	struct asteroid asteroid_3 = { { 0 } };
+	asteroid_3.position.x = 240;
+	asteroid_3.position.y = -10;
 	asteroid_3.remain_hits = one;
 	struct asteroid asteroid_4 = { { 0 } };
+	asteroid_4.position.x = 320;
+	asteroid_4.position.y = 190;
 	asteroid_4.remain_hits = one;
 	struct asteroid asteroid_5 = { { 0 } };
+	asteroid_5.position.x = 320;
+	asteroid_5.position.y = 40;
 	asteroid_5.remain_hits = one;
 	struct asteroid asteroid_6 = { { 0 } };
+	asteroid_6.position.x = 80;
+	asteroid_6.position.y = 240;
 	asteroid_6.remain_hits = one;
 	struct asteroid asteroid_7 = { { 0 } };
+	asteroid_7.position.x = 280;
+	asteroid_7.position.y = 240;
 	asteroid_7.remain_hits = one;
 
 	struct joystick_angle_pulse joystick_internal;
@@ -220,82 +234,105 @@ void drawTaskSingle(void * params) {
 
 			exeCount++;
 			/*
-			 * The following sets the movement of the asteroids. With the modulo operator it can be assured
-			 * the asteroids return to the starting position and therefore move in a loop. The value after
-			 * the modulo operator ('%') is with an offset so that the asteroid first fully moves out of the
-			 * screen before returning to its start position.
+			 * The following sets the movement of the asteroids. Offset 10 pixel
 			 */
 			// North-East movement of asteroid 1
-			// Start position is (-5,180)
-			asteroid_1.position.x = -5 + exeCount % 190;
-			asteroid_1.position.y = 180 - exeCount % 190;
+			// rand() % 231 returns a random number between 0 and 230
+			asteroid_1.position.x = asteroid_1.position.x + 1;
+			asteroid_1.position.y = asteroid_1.position.y - 1;
+			if ((asteroid_1.position.x >= 330) || (asteroid_1.position.y <= -10)) {
+				asteroid_1.position.x = -10;
+				asteroid_1.position.y = rand() % 231;
+			}
 
 			// South-East movement of asteroid 2
-			asteroid_2.position.x = -5 + exeCount % 250;
-			asteroid_2.position.y = 0 + exeCount % 250;
+			asteroid_2.position.x = asteroid_2.position.x + 1;
+			asteroid_2.position.y = asteroid_2.position.y + 1;
+			if ((asteroid_2.position.x >= 330) || (asteroid_2.position.y >= 250)) {
+				asteroid_2.position.x = -10;
+				asteroid_2.position.y = rand() % 231;
+			}
 
 			// South movement of asteroid 3
-			asteroid_3.position.x = 240;
-			asteroid_3.position.y = -5 + exeCount % 250;
+			asteroid_3.position.y = asteroid_3.position.y + 1;
+			if (asteroid_3.position.y >= 250) {
+				asteroid_3.position.x = rand() % 315;
+				asteroid_3.position.y = -10;
+			}
 
 			// West movement of asteroid 4
-			asteroid_4.position.x = 320 - exeCount % 330;
-			asteroid_4.position.y = 190;
+			asteroid_4.position.x = asteroid_4.position.x - 1;
+			if (asteroid_4.position.x <= -10) {
+				asteroid_4.position.x = 320;
+				asteroid_4.position.y = rand() % 231;
+			}
 
 			// West-South-West movement of asteroid 5
-			asteroid_5.position.x = 320 - exeCount % 330;
-			asteroid_5.position.y = 40 + (exeCount % 330) / 2;
+			asteroid_5.position.x = asteroid_5.position.x - 2;
+			asteroid_5.position.y = asteroid_5.position.y + 1;
+			if ((asteroid_5.position.x <= -10) || (asteroid_5.position.y >= 250)) {
+				asteroid_5.position.x = 320;
+				asteroid_5.position.y = rand() % 231;
+			}
 
 			// North-East movement of asteroid 6
-			asteroid_6.position.x = 80 + exeCount % 245;
-			asteroid_6.position.y = 240 - exeCount % 245;
+			asteroid_6.position.x = asteroid_6.position.x + 1;
+			asteroid_6.position.y = asteroid_6.position.y - 1;
+			if ((asteroid_6.position.x >= 330) || (asteroid_6.position.y <= -10)) {
+				asteroid_6.position.x = rand() % 315;
+				asteroid_6.position.y = 240;
+			}
 
 			// North-West movement of asteroid 7
-			asteroid_7.position.x = 280 - exeCount % 250;
-			asteroid_7.position.y = 240 - exeCount % 250;
+			asteroid_7.position.x = asteroid_7.position.x - 1;
+			asteroid_7.position.y = asteroid_7.position.y - 1;
+			if ((asteroid_7.position.x <= -10) || (asteroid_7.position.y <= -10)) {
+				asteroid_7.position.x = rand() % 315;
+				asteroid_7.position.y = 240;
+			}
 
 			/* Check if players ship was hit by asteroid
 			 * Threshold zone is a square around the players ship center with 6px side length
 			 */
-			if ((abs(asteroid_1.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_1.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_1.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
-			if ((abs(asteroid_2.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_2.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_2.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
-			if ((abs(asteroid_3.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_3.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_3.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
-			if ((abs(asteroid_4.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_4.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_4.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
-			if ((abs(asteroid_5.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_5.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_5.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
-			if ((abs(asteroid_6.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_6.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_6.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
-			if ((abs(asteroid_7.position.x - player.position.x) <= HIT_LIMIT)
+			if ((abs(asteroid_7.position.x - player.position.x) <= HIT_LIMIT_SMALL)
 					&& (abs(asteroid_7.position.y - player.position.y)
-							<= HIT_LIMIT)) {
+							<= HIT_LIMIT_SMALL)) {
 				player.state = hit;
 				hit_timestamp = xTaskGetTickCount();
 			}
@@ -348,7 +385,7 @@ void drawTaskSingle(void * params) {
 
 				// Asteroid 1
 				gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
-						type_1, NUM_POINTS_SMALL, White);
+						type_9, NUM_POINTS_LARGE, White);
 
 				// Asteroid 2
 				gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,

@@ -17,8 +17,8 @@ typedef enum {
 } boolean;
 
 struct coord_draw {
-	uint16_t x;
-	uint16_t y;
+	int16_t x;
+	int16_t y;
 };
 
 typedef enum {
