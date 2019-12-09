@@ -34,6 +34,8 @@ void drawTaskHighScoreInterface(void * params) {
 	unsigned int letter_sel = 0;
 
 	struct score score_internal;
+	score_internal.score = 2800;
+	score_internal.name = "Mike";
 
 	char user_help[1][70] = {"HIGH SCORES. Navigate with joystick, select with E."};
 	char done[1][70] = {"Done"};
@@ -45,19 +47,31 @@ void drawTaskHighScoreInterface(void * params) {
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
-				if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
-					menu_select = DONE;
+				if(!edit_mode){
+					if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
+						menu_select = DONE;
+					}
+					else if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
+						menu_select = NAME_INPUT;
+					}
+					joystick_internal.pulse.y = JOYSTICK_PULSE_NULL;
 				}
-				else if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
-					menu_select = NAME_INPUT;
-				}
-				joystick_internal.pulse.y = JOYSTICK_PULSE_NULL;
 			}
-			if(menu_select == NAME_INPUT){
+			sprintf(score_print, "Your score: %i. You got position 8 on the list.", score_internal.score);
+			sprintf(name_print, "Edit your name here: %c", score_internal.name);
+
+			gdispClear(Black);
+
+			switch (menu_select) {
+			case NAME_INPUT:
 				if(buttonCount(BUT_E)){
 					edit_mode = !edit_mode;
 				}
+
 				if(edit_mode){
+					for(int i = 0; i < 1; i++){
+						gdispDrawString(TEXT_X(exit_help[i]), 120, exit_help[i], font1, White);
+					}
 					if(xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 						if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
 							if(letter_sel < 5){
@@ -82,16 +96,39 @@ void drawTaskHighScoreInterface(void * params) {
 							// scroll up thru letters
 						}
 					}
+					switch(letter_sel){
+					case 0:
+						for(int i = 0; i < 1; i++){
+							gdispDrawString(TEXT_SELECT_1_X, 111, select_dash[i],font1, White);
+						}
+						break;
+					case 1:
+						for(int i = 0; i < 1; i++){
+							gdispDrawString(TEXT_SELECT_2_X, 111, select_dash[i],font1, White);
+						}
+						break;
+					case 2:
+						for(int i = 0; i < 1; i++){
+							gdispDrawString(TEXT_SELECT_3_X, 111, select_dash[i],font1, White);
+						}
+						break;	
+					case 3:					
+						for(int i = 0; i < 1; i++){
+							gdispDrawString(TEXT_SELECT_4_X, 111, select_dash[i],font1, White);
+						}
+						break;
+					case 4:	
+						for(int i = 0; i < 1; i++){
+							gdispDrawString(TEXT_SELECT_5_X, 111, select_dash[i],font1, White);
+						}
+						break;
+					case 5:
+						for(int i = 0; i < 1; i++){
+							gdispDrawString(TEXT_SELECT_6_X, 111, select_dash[i],font1, White);
+						}
+						break;
+					}
 				}
-			}
-
-			sprintf(score_print, "Your score: %i. You got position 8 on the list.", &score_internal.score);
-			sprintf(name_print, "Edit your name here: %c", &score_internal.name);
-
-			gdispClear(Black);
-
-			switch (menu_select) {
-			case NAME_INPUT:
 				for(int i = 0; i < 1; i++){
 					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
 					gdispDrawString(TEXT_X(score_print[i]), 80, score_print[i], font1, White);
@@ -111,44 +148,6 @@ void drawTaskHighScoreInterface(void * params) {
 					xQueueSend(HighScoresQueue, &score_internal, 0);
 				}
 				break;
-			}
-
-			if(edit_mode){
-				for(int i = 0; i < 1; i++){
-					gdispDrawString(TEXT_X(exit_help[i]), 120, exit_help[i], font1, White);
-				}
-				switch(letter_sel){
-				case 0:
-					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_SELECT_1_X, 111, select_dash[i],font1, White);
-					}
-					break;
-				case 1:
-					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_SELECT_2_X, 111, select_dash[i],font1, White);
-					}
-					break;
-				case 2:
-					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_SELECT_3_X, 111, select_dash[i],font1, White);
-					}
-					break;	
-				case 3:					
-					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_SELECT_4_X, 111, select_dash[i],font1, White);
-					}
-					break;
-				case 4:	
-					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_SELECT_5_X, 111, select_dash[i],font1, White);
-					}
-					break;
-				case 5:
-					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_SELECT_6_X, 111, select_dash[i],font1, White);
-					}
-					break;
-				}
 			}
 
 		}
