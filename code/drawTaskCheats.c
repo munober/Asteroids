@@ -14,8 +14,6 @@ extern QueueHandle_t LifeCountQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 
-extern TaskHandle_t drawTaskSingleHandle;
-
 #define CLASSIC_3_LIVES				1
 #define INFINITE_LIVES				2
 #define GRANULAR_SELECT				3
@@ -23,7 +21,6 @@ extern TaskHandle_t drawTaskSingleHandle;
 
 void drawTaskCheats(void * params) {
 	// Possible next states
-	const unsigned char next_state_signal_single = SINGLE_PLAYER_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 
 	unsigned int menu_select = CLASSIC_3_LIVES;

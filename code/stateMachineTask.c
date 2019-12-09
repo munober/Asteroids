@@ -12,6 +12,8 @@ extern TaskHandle_t drawTaskStartMenuHandle;
 extern TaskHandle_t drawTaskSingleHandle;
 extern TaskHandle_t drawTaskPauseHandle;
 extern TaskHandle_t drawTaskCheatsHandle;
+extern TaskHandle_t drawTaskHighScoreHandle;
+extern TaskHandle_t drawTaskHighScoreInterfaceHandle;
 
 void stateMachineTask(void * params) {
 	unsigned char current_state = 1; // Default state
@@ -32,6 +34,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskSingleHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskResume(drawTaskStartMenuHandle);
 				state_changed = 0;
 				break;
@@ -39,6 +43,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskResume(drawTaskSingleHandle);
 				state_changed = 0;
 				break;
@@ -46,6 +52,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskResume(drawTaskPauseHandle);
 				state_changed = 0;
 				break;
@@ -53,7 +61,27 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskResume(drawTaskCheatsHandle);
+				state_changed = 0;
+				break;
+			case HIGHSCORE_DISPLAY_STATE:
+			    vTaskSuspend(drawTaskStartMenuHandle);
+			    vTaskSuspend(drawTaskSingleHandle);
+			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
+			    vTaskResume(drawTaskHighScoreHandle);
+				state_changed = 0;
+				break;
+			case HIGHSCORE_INTERFACE_STATE:
+			    vTaskSuspend(drawTaskStartMenuHandle);
+			    vTaskSuspend(drawTaskSingleHandle);
+			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskResume(drawTaskHighScoreInterfaceHandle);
 				state_changed = 0;
 				break;
 			default:

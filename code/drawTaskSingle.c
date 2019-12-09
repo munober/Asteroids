@@ -14,18 +14,14 @@ extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t JoystickQueue;
-extern QueueHandle_t JoystickAngle360Queue;
 extern QueueHandle_t LifeCountQueue;
-extern QueueHandle_t PlayerNavigationQueue;
+extern QueueHandle_t HighScoresQueue;
 
 #define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 #define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 
 #define HIT_LIMIT				3 		//how close the asteroids have to get to the player to register a hit
-
-// This defines the players ship shape
-static const point form[] = { { -3, 3 }, { 0, -6 }, { 3, 3 }, };
 
 // Asteroid shapes SMALL
 
@@ -66,6 +62,7 @@ static const point type_6[] = { { 0, 3 }, { 3, 2 }, { 3, -1 }, { 2, -4 },
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
+	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
 	unsigned int life_count = 3;
@@ -89,7 +86,7 @@ void drawTaskSingle(void * params) {
 	struct players_ship player;
 	struct player_input input;
 	input.thrust = 0;
-	input.angle = 1;
+	input.angle = 0;
 	// Position will be handled by function determinePlayerPosition
 	player.position.x = DISPLAY_CENTER_X;
 	player.position.y = DISPLAY_CENTER_Y;
@@ -119,6 +116,11 @@ void drawTaskSingle(void * params) {
 
 	float angle_x = 0;
 	float angle_y = 0;
+
+	// This defines the initial shape of the player ship
+	struct point form[] = { { -3, 3 }, { 0, -6 }, { 3, 3 } };
+	struct point form_old[] = { { -3, 3 }, { 0, -6 }, { 3, 3 } };
+	unsigned int incr = 0;
 
 	while (1) {
 		// Reading life count down here.
@@ -157,7 +159,7 @@ void drawTaskSingle(void * params) {
 			angle_x = (float)((joy_direct.x / 128) - 1);
 			angle_y = (float)((joy_direct.y / 128) - 1);
 			if((angle_x != 0) && (angle_y != 0)){
-				angle_float = atan2f(angle_y, angle_x) * CONVERT_TO_DEG;
+				angle_float = atan2f(angle_y, angle_x);
 			}
 
 //			Make player show up at the other side of the screen when reaching screen border
@@ -309,10 +311,21 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(260, 10, str, font1, White);
 
 			// Debug print line for angle and thrust
-			sprintf(str, "Angle: %d | Thrust: %d | 360: %3f", input.angle, input.thrust, angle_float);
+			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
 			gdispDrawString(0, 230, str, font1, White);
 			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
 			gdispDrawString(0, 220, str2, font1, White);
+
+			// Player ship rotation
+//			for(incr = 1; incr < 4; incr++){
+//				memcpy(&form_old[incr], &form[incr], sizeof(struct point));
+//			}
+//			for(incr = 1; incr < 4; incr++){
+//				form[incr].x = form_old[incr].x * cos(input.angle * CONVERT_TO_RAD) -
+//						form_old[incr].y * sin(input.angle * CONVERT_TO_RAD);
+//				form[incr].y = form_old[incr].x * sin(input.angle * CONVERT_TO_RAD) +
+//						form_old[incr].y * cos(input.angle * CONVERT_TO_RAD);
+//			}
 
 			// Players ship
 			if (life_count != 0) {
@@ -370,7 +383,7 @@ void drawTaskSingle(void * params) {
 						Black);
 				if (buttonCount(BUT_D)) {
 					life_count = restart_lives;
-					xQueueSend(StateQueue, &next_state_signal_menu, 100);
+					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 				}
 			}
 		}

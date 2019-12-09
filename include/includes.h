@@ -31,12 +31,14 @@
 #include "buttonDebounce.h"
 #include "buttons.h"
 
-#define STATE_COUNT					4
+#define STATE_COUNT					6
 
 #define MAIN_MENU_STATE  		 	1
 #define SINGLE_PLAYER_STATE			2
 #define PAUSE_MENU_STATE  			3
 #define CHEATS_MENU_STATE			4
+#define HIGHSCORE_DISPLAY_STATE		5
+#define HIGHSCORE_INTERFACE_STATE	6
 
 #define DISPLAY_SIZE_X  		320
 #define DISPLAY_SIZE_Y  		240

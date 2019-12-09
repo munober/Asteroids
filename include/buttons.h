@@ -22,7 +22,7 @@ struct coord_float {
 
 typedef struct joystick_angle_pulse {
 	struct coord_float axis;
-	uint8_t angle;
+	float angle;
 	struct coord pulse;
 }joystick_angle_pulse_t;
 
