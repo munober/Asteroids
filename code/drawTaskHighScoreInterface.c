@@ -17,12 +17,13 @@ extern SemaphoreHandle_t DrawReady;
 #define NAME_INPUT					1
 #define DONE						2
 
-#define TEXT_SELECT_1_X				90
-#define TEXT_SELECT_2_X				95
-#define TEXT_SELECT_3_X				100
-#define TEXT_SELECT_4_X				105
-#define TEXT_SELECT_5_X				110
-#define TEXT_SELECT_6_X				115
+#define WIDTH						8
+#define TEXT_SELECT_1_X				210
+#define TEXT_SELECT_2_X				TEXT_SELECT_1_X + WIDTH
+#define TEXT_SELECT_3_X				TEXT_SELECT_2_X + WIDTH
+#define TEXT_SELECT_4_X				TEXT_SELECT_3_X + WIDTH
+#define TEXT_SELECT_5_X				TEXT_SELECT_4_X + WIDTH
+#define TEXT_SELECT_6_X				TEXT_SELECT_5_X + WIDTH
 
 void drawTaskHighScoreInterface(void * params) {
 	// Possible next states
@@ -31,18 +32,13 @@ void drawTaskHighScoreInterface(void * params) {
 	struct joystick_angle_pulse joystick_internal;
 	unsigned int menu_select = NAME_INPUT;
 	unsigned int edit_mode = 0;
-	unsigned int sel_letter = 0;
-
-	struct score score_internal;
-	score_internal.score = 2800;
-//	score_internal.name = "Mike";
+	unsigned int selected_letter = 0;
+	char name[] = "AAAAAA";
 
 	char user_help[1][70] = {"HIGH SCORES. Navigate with joystick, select with E."};
 	char done[1][70] = {"Done"};
-	char exit_help[1][70] = {"Press E to save your edit."};
-	char select_dash[1][1] = {"-"};
-	char name_print[1][70] = { 0 };
-	char score_print[1][70] = { 0 };
+	char edit_help[1][70] = {"Press E to start editing."};
+	char exit_help[1][70] = {"Press E to save your edit:"};
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
@@ -56,31 +52,45 @@ void drawTaskHighScoreInterface(void * params) {
 					}
 					joystick_internal.pulse.y = JOYSTICK_PULSE_NULL;
 				}
-			}
-
-			if(menu_select == NAME_INPUT){
-				if(buttonCount(BUT_B)){
-					if(sel_letter < 6){
-						sel_letter++;
+				else{
+					if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
+						if(selected_letter < 5){
+							selected_letter++;
+						}
+						else if (selected_letter == 5){
+							selected_letter = 0;
+						}
 					}
-				}
-				if(buttonCount(BUT_D)){
-					if(sel_letter > 0){
-						sel_letter--;
+					else if(joystick_internal.pulse.x == JOYSTICK_PULSE_LEFT){
+						if (selected_letter > 0){
+							selected_letter--;
+						}
+						else if (selected_letter == 0){
+							selected_letter = 5;
+						}
 					}
-				}
-//				if(buttonCount(BUT_A)){
-//					if(score_internal.name[sel_letter] < "Z")
-//						sprintf(score_internal.name[sel_letter], "%c", score_internal.name[sel_letter]--);
-//				}
-//				if(buttonCount(BUT_C)){
-//					if(score_internal.name[sel_letter] > "A")
-//						sprintf(score_internal.name[sel_letter], "%c", score_internal.name[sel_letter]++);
-//				}
-			}
 
-			sprintf(score_print, "Your score: %i. You got position 8 on the list.", &score_internal.score);
-			sprintf(name_print, "Enter your name here: %c", &score_internal.name);
+					if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
+						if(name[selected_letter] < 'Z'){
+							name[selected_letter]++;
+						}
+						else if(name[selected_letter] == 'Z'){
+							name[selected_letter] == 'A';
+						}
+					}
+					else if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
+						if(name[selected_letter] > 'A'){
+							name[selected_letter]--;
+						}
+						else if(name[selected_letter] == 'A'){
+							name[selected_letter] == 'Z';
+						}
+					}
+
+					joystick_internal.pulse.x = JOYSTICK_PULSE_NULL;
+					joystick_internal.pulse.y = JOYSTICK_PULSE_NULL;
+				}
+			}
 
 			gdispClear(Black);
 
@@ -89,85 +99,51 @@ void drawTaskHighScoreInterface(void * params) {
 				if(buttonCount(BUT_E)){
 					edit_mode = !edit_mode;
 				}
-
-				if(edit_mode){
+				if(!edit_mode){
 					for(int i = 0; i < 1; i++){
-						gdispDrawString(TEXT_X(exit_help[i]), 120, exit_help[i], font1, White);
-					}
-					if(xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
-						if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
-							if(sel_letter < 5){
-								sel_letter++;
-							}
-							else if(sel_letter == 5){
-								sel_letter = 0;
-							}
-						}
-						if(joystick_internal.pulse.x == JOYSTICK_PULSE_LEFT){
-							if(sel_letter > 0){
-								sel_letter--;
-							}
-							else if(sel_letter == 0){
-								sel_letter = 5;
-							}
-						}
-						if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
-							// scroll down thru letters
-						}
-						if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
-							// scroll up thru letters
-						}
-					}
-					switch(sel_letter){
-					case 0:
-						for(int i = 0; i < 1; i++){
-							gdispDrawString(TEXT_SELECT_1_X, 111, select_dash[i],font1, White);
-						}
-						break;
-					case 1:
-						for(int i = 0; i < 1; i++){
-							gdispDrawString(TEXT_SELECT_2_X, 111, select_dash[i],font1, White);
-						}
-						break;
-					case 2:
-						for(int i = 0; i < 1; i++){
-							gdispDrawString(TEXT_SELECT_3_X, 111, select_dash[i],font1, White);
-						}
-						break;	
-					case 3:					
-						for(int i = 0; i < 1; i++){
-							gdispDrawString(TEXT_SELECT_4_X, 111, select_dash[i],font1, White);
-						}
-						break;
-					case 4:	
-						for(int i = 0; i < 1; i++){
-							gdispDrawString(TEXT_SELECT_5_X, 111, select_dash[i],font1, White);
-						}
-						break;
-					case 5:
-						for(int i = 0; i < 1; i++){
-							gdispDrawString(TEXT_SELECT_6_X, 111, select_dash[i],font1, White);
-						}
-						break;
+						gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
+						gdispDrawString(TEXT_X(edit_help[i]), 110, edit_help[i],font1, Yellow);
+						gdispDrawString(TEXT_X(done[i]), 130, done[i], font1, White);
 					}
 				}
-				for(int i = 0; i < 1; i++){
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-					gdispDrawString(TEXT_X(score_print[i]), 80, score_print[i], font1, White);
-					gdispDrawString(TEXT_X(name_print[i]), 100, name_print[i], font1, Yellow);
-					gdispDrawString(TEXT_X(done[i]), 130, done[i], font1, White);
+				else{
+					for(int i = 0; i < 1; i++){
+						gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
+						gdispDrawString(TEXT_X(exit_help[i]) - 30, 110, exit_help[i],font1, Yellow);
+						gdispDrawString(TEXT_X(done[i]), 130, done[i], font1, White);
+					}
+					gdispDrawString(TEXT_SELECT_1_X, 110, name, font1, White);
+					switch(selected_letter) {
+					case 0:
+						gdispDrawLine(TEXT_SELECT_1_X, 120, TEXT_SELECT_1_X + WIDTH, 120, White);
+						break;
+					case 1:
+						gdispDrawLine(TEXT_SELECT_2_X, 120, TEXT_SELECT_2_X + WIDTH, 120, White);
+						break;
+					case 2:
+						gdispDrawLine(TEXT_SELECT_3_X, 120, TEXT_SELECT_3_X + WIDTH, 120, White);
+						break;
+					case 3:
+						gdispDrawLine(TEXT_SELECT_4_X, 120, TEXT_SELECT_4_X + WIDTH, 120, White);
+						break;
+					case 4:
+						gdispDrawLine(TEXT_SELECT_5_X, 120, TEXT_SELECT_5_X + WIDTH, 120, White);
+						break;
+					case 5:
+						gdispDrawLine(TEXT_SELECT_6_X, 120, TEXT_SELECT_6_X + WIDTH, 120, White);
+						break;
+					}
 				}
 				break;
 			case DONE:
 				for(int i = 0; i < 1; i++){
 					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-					gdispDrawString(TEXT_X(score_print[i]), 80, score_print[i], font1, White);
-					gdispDrawString(TEXT_X(name_print[i]), 100, name_print[i], font1, White);
-					gdispDrawString(TEXT_X(done[i]), 130, done[i],	font1, Yellow);
+					gdispDrawString(TEXT_X(edit_help[i]), 110, edit_help[i],font1, White);
+					gdispDrawString(TEXT_X(done[i]), 130, done[i], font1, Yellow);
 				}
 				if(buttonCount(BUT_E)){
 					xQueueSend(StateQueue, &next_state_signal_menu, 0);
-					xQueueSend(HighScoresQueue, &score_internal, 0);
+//					xQueueSend(HighScoresQueue, &score_internal, 0);
 				}
 				break;
 			}
