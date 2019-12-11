@@ -446,7 +446,7 @@ void drawTaskSingle(void * params) {
 			// GAME OVER
 			else if (life_count == 0) {
 				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White);
-				sprintf(str, "GAME OVER. Press D to quit.");
+				sprintf(str, "GAME OVER. Press D to continue.");
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1,
 						Black);
 				if (buttonCount(BUT_D)) {
