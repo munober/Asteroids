@@ -47,6 +47,7 @@ struct player_input{
 struct asteroid {
     struct coord_draw position;
     hit_counter remain_hits;
+    int16_t shape;
 };
 
 #endif /* INCLUDE_DRAWTASKSINGLE_H_ */
