@@ -29,10 +29,11 @@ void drawTaskPause(void * params) {
 	unsigned char menu_select = RESUME_SELECT;
 	struct joystick_angle_pulse joystick_internal;
 
+	unsigned int life_readin = 3;
+
 	while (1) {
-
+		xQueueReceive(LifeCountQueue, &life_readin, 0);
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
-
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 				sprintf(status_debug, "x:%5d, y:%5d | DEG:%5d | P_x: %5d | P_y: %5d",
 						joystick_internal.axis.x, joystick_internal.axis.y, joystick_internal.angle,
@@ -67,6 +68,7 @@ void drawTaskPause(void * params) {
 					gdispDrawString(120, 150, quit,	font1, Yellow);
 				}
 				if (buttonCount(BUT_E)){
+					xQueueSend(LifeCountQueue, &life_readin, 100);
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);
 				}
 			}

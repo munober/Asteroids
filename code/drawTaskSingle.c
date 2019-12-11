@@ -17,7 +17,7 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
 
-#define NUM_POINTS (sizeof(form)/sizeof(form[0]))
+//#define NUM_POINTS (sizeof(form)/sizeof(form[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 #define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 #define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
@@ -53,11 +53,6 @@ static const point type_8[] = { { 1, 3 }, { 3, 4 }, { 5, 0 }, { 3, -2 },
 static const point type_9[] = { { 0, 3 }, { 6, 1 }, { 2, 1 }, { 5, -3 },
 		{ 1, 0 }, { 0, -5 }, { -1, 0 }, { -5, -3 }, { -2, 1 }, { -6, 1 } };
 
-//uint16_t determinePlayerPositionX(uint8_t thrust, uint16_t angle,
-//		uint16_t current_x, uint16_t current_y);
-//uint16_t determinePlayerPositionY(uint8_t thrust, uint16_t angle,
-//		uint16_t current_x, uint16_t current_y);
-
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
@@ -70,23 +65,21 @@ void drawTaskSingle(void * params) {
 	boolean life_count_lock = false;
 
 	TickType_t hit_timestamp;
-//	TickType_t thrust_reset_timer;
 	TickType_t inertia_timer;
-//	thrust_reset_timer = xTaskGetTickCount();
 	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
-//	const TickType_t thrust_reset_threshold = 300;
-	const TickType_t inertia_threshold = 1000;
+	const TickType_t inertia_threshold = 2000;
 
 	unsigned int exeCount = 0;
 	unsigned int thrustCount = 0;
 
 	// Spawn player in display center
+	struct direction direction;
+	struct direction direction_old;
 	struct players_ship player;
 	struct player_input input;
 	input.thrust = 0;
 	input.angle = 0;
-	// Position will be handled by function determinePlayerPosition
 	player.position.x = DISPLAY_CENTER_X;
 	player.position.y = DISPLAY_CENTER_Y;
 	player.position_old.x = player.position.x;
@@ -131,9 +124,19 @@ void drawTaskSingle(void * params) {
 	float angle_x = 0;
 	float angle_y = 0;
 
+	// Player ship
 	// This defines the initial shape of the player ship
-	struct point form[] = { { -3, 3 }, { 0, -6 }, { 3, 3 } };
-	struct point form_old[] = { { -3, 3 }, { 0, -6 }, { 3, 3 } };
+	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
+	direction.x1 = 0;
+	direction.y1 = -12;
+	direction.x2 = 0;
+	direction.y2 = 6;
+	direction_old.x1 = 0;
+	direction_old.y1 = -12;
+	direction_old.x2 = 0;
+	direction_old.y2 = 6;
+	// These variable is changed with every tick by the joystick angle
+	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	unsigned int incr = 0;
 
 	while (1) {
@@ -168,12 +171,15 @@ void drawTaskSingle(void * params) {
 			}
 
 //			Read joystick input directly in here
-			joy_direct.x = (uint8_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-			joy_direct.y = (uint8_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
-			angle_x = (float)((joy_direct.x / 128) - 1);
-			angle_y = (float)((joy_direct.y / 128) - 1);
-			if((angle_x != 0) && (angle_y != 0)){
-				angle_float = atan2f(angle_y, angle_x);
+			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+			angle_x = (float)((int16_t)joy_direct.x-128);
+			angle_y = (float)((int16_t)joy_direct.y-128);
+			angle_float = 0;
+			if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
+				if((angle_x != 0) && (angle_y != 0)){
+					angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+				}
 			}
 
 //			Make player show up at the other side of the screen when reaching screen border
@@ -191,6 +197,7 @@ void drawTaskSingle(void * params) {
 			}
 
 //			Player movement input
+
 			if(input.thrust){
 				moved = 1;
 				if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
@@ -202,35 +209,69 @@ void drawTaskSingle(void * params) {
 				}
 			}
 
-//			Player inertia
+//			Player inertia old implementation
+//			if(moved){
+//				if(xTaskGetTickCount() - inertia_timer < inertia_threshold){
+//					if((player.position.x - player.position_old.x) > 0){
+//						player.position.x++;
+//					}
+//					else if((player.position.x - player.position_old.x) < 0){
+//						player.position.x--;
+//					}
+//					if((player.position.y - player.position_old.y) > 0){
+//						player.position.y++;
+//					}
+//					else if((player.position.y - player.position_old.y) < 0){
+//						player.position.y--;
+//					}
+//				}
+//				else{
+//					player.position_old.x = player.position.x;
+//					player.position_old.y = player.position.y;
+//				}
+//			}
+
+//			Player inertia new implementation
+
+			// Player ship rotation
+
+			memcpy(&form, &form_orig, 3 * sizeof(struct point));
+			for(incr = 0; incr < 3; incr++){
+				form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
+									- form_orig[incr].y * sin(angle_float * CONVERT_TO_RAD);
+				form[incr].y = form_orig[incr].x * sin(angle_float * CONVERT_TO_RAD)
+									+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
+			}
+
+			// Get player ship direction
+			direction.x1 = form[2].x;
+			direction.y1 = form[2].y;
+			direction.x2 = (form[1].x + form[3].x) / 2;
+			direction.y2 = (form[1].y + form[3].y) / 2;
+
 			if(moved){
-				if(xTaskGetTickCount() - inertia_timer < inertia_threshold){
-					switch((player.position.x - player.position_old.x) > 0){
-					case 1:
-						player.position.x++;
-						break;
-					case 0:
-						player.position.x--;
-						break;
-					default:
-						break;
-					}
-					switch((player.position.y - player.position_old.y) > 0){
-					case 1:
-						player.position.y++;
-						break;
-					case 0:
-						player.position.y--;
-						break;
-					default:
-						break;
-					}
+				if((player.position.x - player.position_old.x) > 0){
+				player.position.x++;
 				}
-				else{
-					player.position_old.x = player.position.x;
-					player.position_old.y = player.position.y;
+				else if((player.position.x - player.position_old.x) < 0){
+					player.position.x--;
+				}
+				if((player.position.y - player.position_old.y) > 0){
+					player.position.y++;
+				}
+				else if((player.position.y - player.position_old.y) < 0){
+					player.position.y--;
 				}
 			}
+			else if((direction_old.x1 != direction.x1) || (direction_old.y1 != direction.y1)
+					|| (direction_old.x2 != direction.x2) || (direction_old.y2 != direction.y2)){
+				player.position_old.x = player.position.x;
+				player.position_old.y = player.position.y;
+			}
+			direction_old.x1 = direction.x1;
+			direction_old.x2 = direction.x2;
+			direction_old.y1 = direction.y1;
+			direction_old.y2 = direction.y2;
 
 			exeCount++;
 			/*
@@ -348,27 +389,17 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(260, 10, str, font1, White);
 
 			// Debug print line for angle and thrust
-			sprintf(str, "Angle: %d | Thrust: %d | 360: %f", input.angle, input.thrust, angle_float);
-			gdispDrawString(0, 230, str, font1, White);
-			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
-			gdispDrawString(0, 220, str2, font1, White);
+//			sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
+//			gdispDrawString(0, 230, str, font1, White);
+//			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
+//			gdispDrawString(0, 220, str2, font1, White);
 
-			// Player ship rotation
-//			for(incr = 1; incr < 4; incr++){
-//				memcpy(&form_old[incr], &form[incr], sizeof(struct point));
-//			}
-//			for(incr = 1; incr < 4; incr++){
-//				form[incr].x = form_old[incr].x * cos(input.angle * CONVERT_TO_RAD) -
-//						form_old[incr].y * sin(input.angle * CONVERT_TO_RAD);
-//				form[incr].y = form_old[incr].x * sin(input.angle * CONVERT_TO_RAD) +
-//						form_old[incr].y * cos(input.angle * CONVERT_TO_RAD);
-//			}
 
 			// Players ship
 			if (life_count != 0) {
 				if (player.state == fine)
 					gdispFillConvexPoly(player.position.x, player.position.y,
-							form, NUM_POINTS, White);
+							form, (sizeof(form)/sizeof(form[0])), White);
 				if (player.state == hit) {
 					if (life_count_lock == false) {
 						life_count--;

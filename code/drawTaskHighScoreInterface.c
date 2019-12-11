@@ -25,6 +25,8 @@ void drawTaskHighScoreInterface(void * params) {
 	unsigned int menu_select = NAME_INPUT;
 
 	struct score score_internal;
+	sprintf(score_internal.name, "AAAAAA");
+	unsigned int sel_letter = 0;
 
 	char user_help[1][70] = {"HIGH SCORES. Enter your name below."};
 	char done[1][70] = {"Done"};
@@ -42,18 +44,27 @@ void drawTaskHighScoreInterface(void * params) {
 				}
 				joystick_internal.pulse.y = JOYSTICK_PULSE_NULL;
 			}
-//			if(menu_select == NAME_INPUT){
-//				if(xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE)){
-//					if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
-//						if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN)
-//						else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN)
-//					}
-//					if(joystick_internal.pulse.x == JOYSTICK_PULSE_LEFT){
-//						if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN)
-//						else if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN)
-//					}
+
+			if(menu_select == NAME_INPUT){
+				if(buttonCount(BUT_B)){
+					if(sel_letter < 6){
+						sel_letter++;
+					}
+				}
+				if(buttonCount(BUT_D)){
+					if(sel_letter > 0){
+						sel_letter--;
+					}
+				}
+//				if(buttonCount(BUT_A)){
+//					if(score_internal.name[sel_letter] < "Z")
+//						sprintf(score_internal.name[sel_letter], "%c", score_internal.name[sel_letter]--);
 //				}
-//			}
+//				if(buttonCount(BUT_C)){
+//					if(score_internal.name[sel_letter] > "A")
+//						sprintf(score_internal.name[sel_letter], "%c", score_internal.name[sel_letter]++);
+//				}
+			}
 
 			sprintf(score_print, "Your score: %i. You got position 8 on the list.", &score_internal.score);
 			sprintf(name_print, "Enter your name here: %c", &score_internal.name);

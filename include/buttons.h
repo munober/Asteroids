@@ -11,8 +11,15 @@
 
 
 struct coord {
-	uint8_t x;
-	uint8_t y;
+	uint16_t x;
+	uint16_t y;
+};
+
+struct direction {
+	int16_t x1;
+	int16_t y1;
+	int16_t x2;
+	int16_t y2;
 };
 
 struct coord_float {

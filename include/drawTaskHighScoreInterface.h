@@ -11,7 +11,7 @@
 
 typedef struct score{
 	uint16_t score;
-	char name;
+	char name[1][6];
 }score_t;
 
 

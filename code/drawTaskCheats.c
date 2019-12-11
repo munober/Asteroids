@@ -146,9 +146,7 @@ void drawTaskCheats(void * params) {
 				break;
 			}
 			if(starting_lives != starting_lives_old){
-//				vTaskResume(drawTaskSingleHandle);
 				xQueueSend(LifeCountQueue, &starting_lives, 100);
-//				vTaskSuspend(drawTaskSingleHandle);
 				starting_lives_old = starting_lives;
 			}
 
