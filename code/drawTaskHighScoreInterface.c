@@ -31,11 +31,11 @@ void drawTaskHighScoreInterface(void * params) {
 	struct joystick_angle_pulse joystick_internal;
 	unsigned int menu_select = NAME_INPUT;
 	unsigned int edit_mode = 0;
-	unsigned int letter_sel = 0;
+	unsigned int sel_letter = 0;
 
 	struct score score_internal;
 	score_internal.score = 2800;
-	score_internal.name = "Mike";
+//	score_internal.name = "Mike";
 
 	char user_help[1][70] = {"HIGH SCORES. Navigate with joystick, select with E."};
 	char done[1][70] = {"Done"};
@@ -96,19 +96,19 @@ void drawTaskHighScoreInterface(void * params) {
 					}
 					if(xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 						if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
-							if(letter_sel < 5){
-								letter_sel++;
+							if(sel_letter < 5){
+								sel_letter++;
 							}
-							else if(letter_sel == 5){
-								letter_sel = 0;
+							else if(sel_letter == 5){
+								sel_letter = 0;
 							}
 						}
 						if(joystick_internal.pulse.x == JOYSTICK_PULSE_LEFT){
-							if(letter_sel > 0){
-								letter_sel--;
+							if(sel_letter > 0){
+								sel_letter--;
 							}
-							else if(letter_sel == 0){
-								letter_sel = 5;
+							else if(sel_letter == 0){
+								sel_letter = 5;
 							}
 						}
 						if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
@@ -118,7 +118,7 @@ void drawTaskHighScoreInterface(void * params) {
 							// scroll up thru letters
 						}
 					}
-					switch(letter_sel){
+					switch(sel_letter){
 					case 0:
 						for(int i = 0; i < 1; i++){
 							gdispDrawString(TEXT_SELECT_1_X, 111, select_dash[i],font1, White);
