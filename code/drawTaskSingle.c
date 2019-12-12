@@ -85,7 +85,7 @@ void drawTaskSingle(void * params) {
 	unsigned int exeCount = 0;
 	unsigned int thrustCount = 0;
 
-	// Spawn player in display center
+// 	Spawn player in display center
 	struct direction direction;
 	struct direction direction_old;
 	struct players_ship player;
@@ -98,7 +98,7 @@ void drawTaskSingle(void * params) {
 	player.position_old.y = player.position.y;
 	player.state = fine;
 
-	// Initialize asteroids
+// 	Initialize asteroids
 	struct asteroid asteroid_1 = { { 0 } };
 	asteroid_1.position.x = -10;
 	asteroid_1.position.y = 180;
@@ -148,8 +148,7 @@ void drawTaskSingle(void * params) {
 	float angle_x = 0;
 	float angle_y = 0;
 
-	// Player ship
-	// This defines the initial shape of the player ship
+// 	Initial shape and heading of the player ship
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	direction.x1 = 0;
 	direction.y1 = -12;
@@ -159,18 +158,22 @@ void drawTaskSingle(void * params) {
 	direction_old.y1 = -12;
 	direction_old.x2 = 0;
 	direction_old.y2 = 6;
-	// These variable is changed with every tick by the joystick angle
+
+// 	This variable is changed with every tick by the joystick angle for player ship rotation
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	unsigned int incr = 0;
 
 	while (1) {
-		// Reading life count down here.
+// 		Reading desired life count from cheats menu
+
 		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
 			life_count = life_readin;
 		}
-		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
 
-			// Handling button logic down here. Also thrust and angle.
+//		Starting drawing when screen is ready
+		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
+
+//			Button logic, thrust and angle
 			restart_lives = life_readin;
 			if (life_count != 0) {
 				if (buttonCount(BUT_E)) {
@@ -194,7 +197,8 @@ void drawTaskSingle(void * params) {
 				input.angle = joystick_internal.angle;
 			}
 
-//			Read joystick input directly in here
+//			Read joystick input directly, less delay-prone than using queues from other tasks
+
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 			angle_x = (float)((int16_t)joy_direct.x-128);
@@ -207,6 +211,7 @@ void drawTaskSingle(void * params) {
 			}
 
 //			Make player show up at the other side of the screen when reaching screen border
+
 			if(player.position.x >= DISPLAY_SIZE_X){
 				player.position.x = 0;
 			}
@@ -257,7 +262,7 @@ void drawTaskSingle(void * params) {
 
 //			Player inertia new implementation
 
-			// Player ship rotation
+// 			Player ship rotation
 
 			memcpy(&form, &form_orig, 3 * sizeof(struct point));
 			for(incr = 0; incr < 3; incr++){
@@ -267,7 +272,8 @@ void drawTaskSingle(void * params) {
 									+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
 			}
 
-			// Get player ship direction
+// 			Get player ship direction
+
 			direction.x1 = form[2].x;
 			direction.y1 = form[2].y;
 			direction.x2 = (form[1].x + form[3].x) / 2;
@@ -463,7 +469,7 @@ void drawTaskSingle(void * params) {
 				hit_timestamp = xTaskGetTickCount();
 			}
 
-
+			// Drawing functions
 			gdispClear(Black);
 
 			// Score board
@@ -481,8 +487,9 @@ void drawTaskSingle(void * params) {
 //			gdispDrawString(0, 220, str2, font1, White);
 
 
-			// Players ship
+			// Drawing the player's ship and asteroids
 			if (life_count != 0) {
+				// Player ship
 				if (player.state == fine)
 					gdispFillConvexPoly(player.position.x, player.position.y,
 							form, (sizeof(form)/sizeof(form[0])), White);
@@ -544,12 +551,15 @@ void drawTaskSingle(void * params) {
 
 			// GAME OVER
 			else if (life_count == 0) {
-				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White);
-				sprintf(str, "GAME OVER. Press D to continue.");
-				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1,
-						Black);
-				if (buttonCount(BUT_D)) {
+				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White); // White border
+				sprintf(str, "GAME OVER. Press D to continue."); // Generate game over message
+				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
+				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D
 					life_count = restart_lives;
+					// TODO:
+					// Put asteroids in their original places
+					// Reset score and level
+					// Clean up bullets, alien ship etc.
 					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 				}
 			}

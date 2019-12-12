@@ -21,16 +21,15 @@
 
 font_t font1;
 
+// Function declarations for tasks
 void frameSwapTask(void * params);
 void stateMachineTask(void * params);
-
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
 void drawTaskPause (void * params);
 void drawTaskCheats(void * params);
 void drawTaskHighScore (void * params);
 void drawTaskHighScoreInterface (void * params);
-
 void checkJoystickTask (void * params);
 
 //QueueHandle_t ButtonQueue;
@@ -42,7 +41,7 @@ QueueHandle_t LifeCountQueue;
 QueueHandle_t HighScoresQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
-SemaphoreHandle_t DrawReady; // After swapping buffer calll drawing
+SemaphoreHandle_t DrawReady;
 
 TaskHandle_t frameSwapHandle;
 TaskHandle_t stateMachineTaskHandle;
@@ -59,7 +58,8 @@ int main(void){
 	// Initialize Board functions and graphics
 	ESPL_SystemInit();
 	font1 = gdispOpenFont("DejaVuSans24*");
-	// General
+
+//	Creating ALL Queues
 	StateQueue = xQueueCreate(STATE_QUEUE_LENGTH, sizeof(unsigned char));
 	JoystickQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct joystick_angle_pulse));
 	JoystickAngle360Queue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(float));
@@ -70,8 +70,8 @@ int main(void){
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
 
-	// Initializes Tasks with their respective priority
-	// Core tasks
+//	Creating ALL Tasks
+
 	xTaskCreate(frameSwapTask, "frameSwapper", 1000, NULL, 5, &frameSwapHandle);
 	xTaskCreate(stateMachineTask, "stateMachineTask", 1000, NULL, 3, &stateMachineTaskHandle);
 
@@ -84,6 +84,8 @@ int main(void){
 
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
 
+//	Suspending ALL tasks that draw to the screen, will be handled by state machine.
+
     vTaskSuspend(drawTaskStartMenuHandle);
     vTaskSuspend(drawTaskSingleHandle);
     vTaskSuspend(drawTaskPauseHandle);
@@ -93,6 +95,8 @@ int main(void){
 
 	vTaskStartScheduler();
 }
+
+// Keeping the frame swapping task here
 
 void frameSwapTask(void * params) {
 	TickType_t xLastWakeTime;
@@ -119,4 +123,3 @@ void vApplicationMallocFailedHook() {
 	while (TRUE) {
 	};
 }
-
