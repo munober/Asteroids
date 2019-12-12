@@ -100,59 +100,85 @@ void drawTaskSingle(void * params) {
 	player.position_old.x = player.position.x;
 	player.position_old.y = player.position.y;
 	player.state = fine;
+	player.asteroids_to_destroy = 20; // In the first level there are 20 small asteroids to destroy
 
-	// Initialize asteroids
+	// Initialize asteroids: max. 10 asteroids are on screen at once
 	// asteroid shape is either 0, 1 or 2
 	struct asteroid asteroid_1 = { { 0 } };
+	asteroid_1.spawn_position.x = -10;
+	asteroid_1.spawn_position.y = 180;
 	asteroid_1.position.x = -10;
 	asteroid_1.position.y = 180;
 	asteroid_1.remain_hits = one;
 	asteroid_1.shape = super_random % 3;
 	struct asteroid asteroid_2 = { { 0 } };
+	asteroid_2.spawn_position.x = -10;
+	asteroid_2.spawn_position.y = 0;
 	asteroid_2.position.x = -10;
 	asteroid_2.position.y = 0;
 	asteroid_2.remain_hits = one;
 	asteroid_2.shape = (super_random + 1) % 3;
 	struct asteroid asteroid_3 = { { 0 } };
+	asteroid_3.spawn_position.x = 240;
+	asteroid_3.spawn_position.y = -10;
 	asteroid_3.position.x = 240;
 	asteroid_3.position.y = -10;
 	asteroid_3.remain_hits = one;
 	asteroid_3.shape = (super_random + 2) % 3;
 	struct asteroid asteroid_4 = { { 0 } };
+	asteroid_4.spawn_position.x = 320;
+	asteroid_4.spawn_position.y = 190;
 	asteroid_4.position.x = 320;
 	asteroid_4.position.y = 190;
 	asteroid_4.remain_hits = one;
 	asteroid_4.shape = super_random % 3;
 	struct asteroid asteroid_5 = { { 0 } };
+	asteroid_5.spawn_position.x = 320;
+	asteroid_5.spawn_position.y = 40;
 	asteroid_5.position.x = 320;
 	asteroid_5.position.y = 40;
 	asteroid_5.remain_hits = one;
 	asteroid_5.shape = (super_random + 1) % 3;
 	struct asteroid asteroid_6 = { { 0 } };
+	asteroid_6.spawn_position.x = 80;
+	asteroid_6.spawn_position.y = 240;
 	asteroid_6.position.x = 80;
 	asteroid_6.position.y = 240;
 	asteroid_6.remain_hits = one;
 	asteroid_6.shape = (super_random + 2) % 3;
 	struct asteroid asteroid_7 = { { 0 } };
+	asteroid_7.spawn_position.x = 280;
+	asteroid_7.spawn_position.y = 240;
 	asteroid_7.position.x = 280;
 	asteroid_7.position.y = 240;
 	asteroid_7.remain_hits = one;
 	asteroid_7.shape = super_random % 3;
 	struct asteroid asteroid_8 = { { 0 } };
+	asteroid_8.spawn_position.x = 180;
+	asteroid_8.spawn_position.y = -10;
 	asteroid_8.position.x = 180;
 	asteroid_8.position.y = -10;
 	asteroid_8.remain_hits = one;
 	asteroid_8.shape = (super_random + 1) % 3;
 	struct asteroid asteroid_9 = { { 0 } };
+	asteroid_9.spawn_position.x = 70;
+	asteroid_9.spawn_position.y = -10;
 	asteroid_9.position.x = 70;
 	asteroid_9.position.y = -10;
 	asteroid_9.remain_hits = one;
 	asteroid_9.shape = (super_random + 2) % 3;
 	struct asteroid asteroid_10 = { { 0 } };
+	asteroid_10.spawn_position.x = 320;
+	asteroid_10.spawn_position.y = 180;
 	asteroid_10.position.x = 320;
 	asteroid_10.position.y = 180;
 	asteroid_10.remain_hits = one;
 	asteroid_10.shape = super_random % 3;
+
+	// Put them asteroids inside an array
+	struct asteroid all_asteroids[10] = { asteroid_1, asteroid_2, asteroid_3,
+			asteroid_4, asteroid_5, asteroid_6, asteroid_7, asteroid_8,
+			asteroid_9, asteroid_10 };
 
 	struct joystick_angle_pulse joystick_internal;
 	float angle_float = 0;
@@ -312,6 +338,24 @@ void drawTaskSingle(void * params) {
 			direction_old.y2 = direction.y2;
 
 			exeCount++;
+
+			/*
+			 * Here we re-spawn asteroids if the player still has to destroy more than 10 asteroids.
+			 * If there are only 10 or less asteroids left to destroy, no more new asteroids will be spawned.
+			 */
+			if (/*player destroyed an asteroid == true*/ && (player.asteroids_to_destroy > 10)) {
+				// Detect which asteroid was destroyed
+				for (int i = 0; i <= 9; i++) {
+					if (all_asteroids[i].remain_hits == none)
+						break;
+				}
+
+				// Re-spawn the asteroid_i
+				*all_asteroids[i].remain_hits = one;
+				*all_asteroids[i].shape = rand() % 3;
+				*all_asteroids[i].position.x = *all_asteroids[i].spawn_position.x;
+				*all_asteroids[i].position.y = *all_asteroids[i].spawn_position.y;
+			}
 
 			/*
 			 * The following sets the movement of the asteroids. Offset 10 pixel
@@ -517,42 +561,52 @@ void drawTaskSingle(void * params) {
 				}
 
 				// Asteroid 1
+				if (asteroid_1.remain_hits > 0)
 				gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
 						shapes_small[asteroid_1.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 2
+				if (asteroid_2.remain_hits > 0)
 				gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,
 						shapes_small[asteroid_2.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 3
+				if (asteroid_3.remain_hits > 0)
 				gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
 						shapes_small[asteroid_3.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 4
+				if (asteroid_4.remain_hits > 0)
 				gdispDrawPoly(asteroid_4.position.x, asteroid_4.position.y,
 						shapes_small[asteroid_4.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 5
+				if (asteroid_5.remain_hits > 0)
 				gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
 						shapes_small[asteroid_5.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 6
+				if (asteroid_6.remain_hits > 0)
 				gdispDrawPoly(asteroid_6.position.x, asteroid_6.position.y,
 						shapes_small[asteroid_6.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 7
+				if (asteroid_7.remain_hits > 0)
 				gdispDrawPoly(asteroid_7.position.x, asteroid_7.position.y,
 						shapes_small[asteroid_7.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 8
+				if (asteroid_8.remain_hits > 0)
 				gdispDrawPoly(asteroid_8.position.x, asteroid_8.position.y,
 						shapes_small[asteroid_8.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 9
+				if (asteroid_9.remain_hits > 0)
 				gdispDrawPoly(asteroid_9.position.x, asteroid_9.position.y,
 						shapes_small[asteroid_9.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 10
+				if (asteroid_10.remain_hits > 0)
 				gdispDrawPoly(asteroid_10.position.x, asteroid_10.position.y,
 						shapes_small[asteroid_10.shape], NUM_POINTS_SMALL, White);
 
@@ -569,7 +623,7 @@ void drawTaskSingle(void * params) {
 					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 				}
 			}
-		}
-	}
-}
+		} // Block until screen is ready
+	} // While-loop
+} // Task
 

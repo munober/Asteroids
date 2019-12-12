@@ -37,6 +37,7 @@ struct players_ship {
 	struct coord_draw position;
 	struct coord_draw position_old;
 	player_status state;
+	char asteroids_to_destroy; // This is a counter for how many asteroids have to be destroyed until level completion
 };
 
 struct player_input{
@@ -46,6 +47,7 @@ struct player_input{
 
 struct asteroid {
     struct coord_draw position;
+    struct coord_draw spawn_position;
     hit_counter remain_hits;
     int16_t shape;
 };
