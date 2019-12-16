@@ -15,13 +15,6 @@ struct coord {
 	uint16_t y;
 };
 
-struct direction {
-	int16_t x1;
-	int16_t y1;
-	int16_t x2;
-	int16_t y2;
-};
-
 struct coord_float {
 	float x;
 	float y;
