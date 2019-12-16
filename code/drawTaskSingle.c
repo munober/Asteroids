@@ -15,11 +15,12 @@
 extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
+extern SemaphoreHandle_t timerSignal;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
 
-//#define NUM_POINTS (sizeof(form)/sizeof(form[0]))
+#define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 //#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 //#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
@@ -56,6 +57,18 @@ const point type_3[] = { { 5, 6 }, { 4, -2 }, { 7, -4 }, { -3, -5 }, { -5,
 //const point type_9[] = { { 0, 12 }, { 24, 4 }, { 8, 4 }, { 20, -12 },
 //		{ 4, 0 }, { 0, -20 }, { -4, 0 }, { -20, -12 }, { -8, 4 }, { -24, 4 } };
 
+// Saucer shape
+
+const point saucer_shape[] = { { -10, 3 }, { -6, 6 }, { 6, 6 }, { 10, 3 }, { -10, 3 },
+		{ -6, 0 }, { 6, 0 }, { 10, 3 }, { 6, 0 }, { 4, -5 }, { -4, -5 },
+		{ -6, 0 } };
+
+/* Saucer routes:
+ * There are 6 different routes, each route has 2 points where the route makes a turn -> 3 y-positions
+ */
+const int16_t saucer_routes[6][3] = { { 30, 120, 30 }, { 30, 120, 210 }, { 120,
+		30, 120 }, { 120, 210, 120 }, { 210, 120, 210 }, { 210, 120, 30 } };
+
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
@@ -66,6 +79,7 @@ void drawTaskSingle(void * params) {
 	unsigned int life_readin = 3;
 	unsigned int restart_lives = 3;
 	boolean life_count_lock = false;
+	int time_passed = -1; // Simple clock at top of screen
 
 	/* This the only random value generated.
 	 * This is used to only need to send 1 variable via UART.
@@ -179,6 +193,18 @@ void drawTaskSingle(void * params) {
 	struct asteroid all_asteroids[10] = { asteroid_1, asteroid_2, asteroid_3,
 			asteroid_4, asteroid_5, asteroid_6, asteroid_7, asteroid_8,
 			asteroid_9, asteroid_10 };
+
+	// Initialize Saucer
+	struct saucer saucer_1 = { { 0 } };
+	saucer_1.route_number = super_random % 6;
+	saucer_1.position.x = -10;
+	saucer_1.position.y = saucer_routes[saucer_1.route_number][0];
+	saucer_1.turning = false;
+	struct saucer saucer_2 = { { 0 } };
+	saucer_2.route_number = (super_random + 3) % 6;
+	saucer_2.position.x = -10;
+	saucer_2.position.y = saucer_routes[saucer_2.route_number][0];
+	saucer_2.turning = false;
 
 	struct joystick_angle_pulse joystick_internal;
 	float angle_float = 0;
@@ -343,25 +369,27 @@ void drawTaskSingle(void * params) {
 			 * Here we re-spawn asteroids if the player still has to destroy more than 10 asteroids.
 			 * If there are only 10 or less asteroids left to destroy, no more new asteroids will be spawned.
 			 */
-			if (/*player destroyed an asteroid == true*/ && (player.asteroids_to_destroy > 10)) {
-				// Detect which asteroid was destroyed
-				for (int i = 0; i <= 9; i++) {
-					if (all_asteroids[i].remain_hits == none)
-						break;
-				}
+//			if (/*  destroyed an asteroid == true*/ && (player.asteroids_to_destroy > 10)) {
+//				// Detect which asteroid was destroyed
+//				for (int i = 0; i <= 9; i++) {
+//					if (all_asteroids[i].remain_hits == none)
+//						break;
+//				}
+//
+//				// Re-spawn the asteroid_i
+//				*all_asteroids[i].remain_hits = one;
+//				*all_asteroids[i].shape = rand() % 3;
+//				*all_asteroids[i].position.x = *all_asteroids[i].spawn_position.x;
+//				*all_asteroids[i].position.y = *all_asteroids[i].spawn_position.y;
+//			}
 
-				// Re-spawn the asteroid_i
-				*all_asteroids[i].remain_hits = one;
-				*all_asteroids[i].shape = rand() % 3;
-				*all_asteroids[i].position.x = *all_asteroids[i].spawn_position.x;
-				*all_asteroids[i].position.y = *all_asteroids[i].spawn_position.y;
-			}
-
-			/*
-			 * The following sets the movement of the asteroids. Offset 10 pixel
-			 */
 			// This creates the seed for all the following rand-Functions
 			srand(super_random);
+
+			/*
+			 * ASTEROIDS
+			 * The following sets the movement of the asteroids. Offset 10 pixel (10 pixel off screen)
+			 */
 			// North-East movement of asteroid 1
 			// rand() % 231 returns a random number between 0 and 230
 			asteroid_1.position.x = asteroid_1.position.x + 1;
@@ -449,6 +477,84 @@ void drawTaskSingle(void * params) {
 				asteroid_10.position.y = rand() % 241;
 			}
 
+			/*
+			 * SAUCERS
+			 * The following sets the movement of the saucers. Offset 10 pixel (10 pixel off screen)
+			 */
+			// SAUCER #1, spawns after 20 sec
+			if (time_passed > 20) {
+				if (saucer_1.position.x == 100) {
+					saucer_1.turn_number = 1;
+					saucer_1.turning = true;
+				}
+
+				if (saucer_1.position.x == 200) {
+					saucer_1.turn_number = 2;
+					saucer_1.turning = true;
+				}
+
+				if (saucer_1.position.x >= 330) {
+					saucer_1.route_number = rand() % 6; // Assign new random route
+					saucer_1.position.x = -10;
+					saucer_1.position.y =
+							saucer_routes[saucer_1.route_number][0];
+				}
+
+				if (saucer_1.turning == true) {
+					if (saucer_routes[saucer_1.route_number][saucer_1.turn_number]
+							> saucer_routes[saucer_1.route_number][saucer_1.turn_number
+									- 1]) {
+						saucer_1.position.x++;
+						saucer_1.position.y = saucer_1.position.y + 2;
+					} else {
+						saucer_1.position.x++;
+						saucer_1.position.y = saucer_1.position.y - 2;
+					}
+					if (saucer_1.position.y
+							== saucer_routes[saucer_1.route_number][saucer_1.turn_number])
+						saucer_1.turning = false; // The saucer has reached its new y-position
+				} else {
+					saucer_1.position.x++;
+				}
+			}
+
+			// SAUCER #2, spawns after 35 sec
+			if (time_passed > 35) {
+				if (saucer_2.position.x == 100) {
+					saucer_2.turn_number = 1;
+					saucer_2.turning = true;
+				}
+
+				if (saucer_2.position.x == 200) {
+					saucer_2.turn_number = 2;
+					saucer_2.turning = true;
+				}
+
+				if (saucer_2.position.x >= 330) {
+					saucer_2.route_number = (rand() + 3) % 6; // Assign new random route
+					saucer_2.position.x = -10;
+					saucer_2.position.y =
+							saucer_routes[saucer_2.route_number][0];
+				}
+
+				if (saucer_2.turning == true) {
+					if (saucer_routes[saucer_2.route_number][saucer_2.turn_number]
+							> saucer_routes[saucer_2.route_number][saucer_2.turn_number
+									- 1]) {
+						saucer_2.position.x++;
+						saucer_2.position.y = saucer_2.position.y + 2;
+					} else {
+						saucer_2.position.x++;
+						saucer_2.position.y = saucer_2.position.y - 2;
+					}
+					if (saucer_2.position.y
+							== saucer_routes[saucer_2.route_number][saucer_2.turn_number])
+						saucer_2.turning = false; // The saucer has reached its new y-position
+				} else {
+					saucer_2.position.x++;
+				}
+			}
+
 			/* Check if players ship was hit by asteroid
 			 * Threshold zone is a square around the players ship center with 6px side length
 			 */
@@ -525,6 +631,12 @@ void drawTaskSingle(void * params) {
 
 
 			gdispClear(Black);
+
+			// Simple clock at top of screen
+		    if (xSemaphoreTake(timerSignal, 0) == pdTRUE)
+		    	time_passed++;
+			sprintf(str2, "%d sec", time_passed);
+			gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
 
 			// Score board
 			sprintf(str, "Score: 9000");
@@ -610,6 +722,13 @@ void drawTaskSingle(void * params) {
 				gdispDrawPoly(asteroid_10.position.x, asteroid_10.position.y,
 						shapes_small[asteroid_10.shape], NUM_POINTS_SMALL, White);
 
+				// Saucer 1
+				gdispDrawPoly(saucer_1.position.x, saucer_1.position.y,
+						saucer_shape, NUM_POINTS_SAUCER, White);
+
+				// Saucer 2
+				gdispDrawPoly(saucer_2.position.x, saucer_2.position.y,
+						saucer_shape, NUM_POINTS_SAUCER, White);
 			}
 
 			// GAME OVER
@@ -627,3 +746,12 @@ void drawTaskSingle(void * params) {
 	} // While-loop
 } // Task
 
+//This "Timer" Task sends a signal every second
+void timer(void * params) {
+	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
+
+	while (1) {
+	xSemaphoreGive(timerSignal);
+	vTaskDelay(xDelay);
+	}
+}

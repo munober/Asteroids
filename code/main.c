@@ -26,6 +26,7 @@ void stateMachineTask(void * params);
 
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
+void timer(void * params);
 void drawTaskPause (void * params);
 void drawTaskCheats(void * params);
 void drawTaskHighScore (void * params);
@@ -43,6 +44,7 @@ QueueHandle_t HighScoresQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 SemaphoreHandle_t DrawReady; // After swapping buffer calll drawing
+SemaphoreHandle_t timerSignal;
 
 TaskHandle_t frameSwapHandle;
 TaskHandle_t stateMachineTaskHandle;
@@ -53,6 +55,7 @@ TaskHandle_t drawTaskCheatsHandle;
 TaskHandle_t checkJoystickTaskHandle;
 TaskHandle_t drawTaskHighScoreHandle;
 TaskHandle_t drawTaskHighScoreInterfaceHandle;
+TaskHandle_t timerHandle;
 
 int main(void){
 
@@ -70,6 +73,8 @@ int main(void){
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
 
+	timerSignal = xSemaphoreCreateBinary();
+
 	// Initializes Tasks with their respective priority
 	// Core tasks
 	xTaskCreate(frameSwapTask, "frameSwapper", 1000, NULL, 5, &frameSwapHandle);
@@ -77,6 +82,7 @@ int main(void){
 
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
+	xTaskCreate(timer, "Timer", 1000, NULL, 2, &timerHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
 	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
 	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 2, &drawTaskHighScoreHandle);

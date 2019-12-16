@@ -52,5 +52,12 @@ struct asteroid {
     int16_t shape;
 };
 
+struct saucer {
+	struct coord_draw position;
+	int16_t route_number;
+	int16_t turn_number;
+	boolean turning;
+};
+
 #endif /* INCLUDE_DRAWTASKSINGLE_H_ */
 
