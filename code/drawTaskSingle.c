@@ -20,6 +20,8 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
 
+#define LASER_BLASTER_SPEED			3
+
 #define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 //#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
@@ -29,7 +31,7 @@ extern QueueHandle_t HighScoresQueue;
 
 #define HIT_LIMIT_SMALL		5 		//how close the asteroids have to get to the player to register a hit
 //#define HIT_LIMIT_MEDIUM	4
-//#define HIT_LIMIT_LARGE		5
+//#define HIT_LIMIT_LARGE	5
 
 // Asteroid shapes SMALL
 
@@ -83,6 +85,9 @@ void drawTaskSingle(void * params) {
 	boolean life_count_lock = false;
 	int time_passed = -1; // Simple clock at top of screen
 
+	boolean one_asteroid_hit = false;
+	int16_t score = 0;
+
 	/* This the only random value generated.
 	 * This is used to only need to send 1 variable via UART.
 	 */
@@ -96,9 +101,11 @@ void drawTaskSingle(void * params) {
 	//	const point** shapes_all[3] = {shapes_small, shapes_medium, shapes_large};
 
 	TickType_t hit_timestamp;
+	TickType_t hit_timestamp_laser[10] = { {0} };
 	TickType_t inertia_timer;
 	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
+	const TickType_t delay_hit_laser = 400;
 	const TickType_t inertia_threshold = 2000;
 
 	unsigned int exeCount = 0;
@@ -234,6 +241,7 @@ void drawTaskSingle(void * params) {
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	int16_t incr = 0;
 	int16_t incr2 = 0;
+	int i;
 
 
 //	Fired blaster cannon shots
@@ -242,10 +250,7 @@ void drawTaskSingle(void * params) {
 	void initialize_single_shot(int i){
 		shots[i].position.x = 0;
 		shots[i].position.y = 0;
-		shots[i].shot_direction.x1 = 0;
-		shots[i].shot_direction.x2 = 0;
-		shots[i].shot_direction.y1 = 0;
-		shots[i].shot_direction.y2 = 0;
+		shots[i].angle = 0;
 		shots[i].status = hide;
 	}
 
@@ -376,14 +381,11 @@ void drawTaskSingle(void * params) {
 //			Handling cannon shot firing
 //			Spawning new cannon shots on player input
 
-			if(buttonCount(BUT_B)){
+			if(buttonCountWithLiftup(BUT_B)){
 				shots[input.shots_fired].status = spawn;
 				shots[input.shots_fired].position.x = player.position.x;
 				shots[input.shots_fired].position.y = player.position.y;
-				shots[input.shots_fired].shot_direction.x1 = direction.x1;
-				shots[input.shots_fired].shot_direction.x2 = direction.x2;
-				shots[input.shots_fired].shot_direction.y1 = direction.y1;
-				shots[input.shots_fired].shot_direction.y2 = direction.y2;
+				shots[input.shots_fired].angle = joystick_internal.angle;
 				input.shots_fired++;
 			}
 
@@ -421,8 +423,41 @@ void drawTaskSingle(void * params) {
 			}
 //			Handling movement of fired shots
 			for(incr = 0; incr < input.shots_fired; incr++){
-				shots[incr].position.x += (shots[incr].shot_direction.x2 - shots[incr].shot_direction.x1);
-				shots[incr].position.y += (shots[incr].shot_direction.y2 - shots[incr].shot_direction.y1);
+//				shots[incr].position.x += 0.25 * (shots[incr].shot_direction.x2 - shots[incr].shot_direction.x1);
+//				shots[incr].position.y += 0.25 * (shots[incr].shot_direction.y2 - shots[incr].shot_direction.y1);
+				switch(shots[incr].angle){
+				case JOYSTICK_ANGLE_N:
+					shots[incr].position.y -= LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_S:
+					shots[incr].position.y += LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_E:
+					shots[incr].position.x += LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_W:
+					shots[incr].position.x -= LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_NW:
+					shots[incr].position.x -= LASER_BLASTER_SPEED;
+					shots[incr].position.y -= LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_NE:
+					shots[incr].position.x += LASER_BLASTER_SPEED;
+					shots[incr].position.y -= LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_SW:
+					shots[incr].position.x -= LASER_BLASTER_SPEED;
+					shots[incr].position.y += LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_SE:
+					shots[incr].position.x += LASER_BLASTER_SPEED;
+					shots[incr].position.y += LASER_BLASTER_SPEED;
+					break;
+				case JOYSTICK_ANGLE_NULL:
+					shots[incr].position.y -= LASER_BLASTER_SPEED;
+					break;
+				}
 			}
 
 			exeCount++;
@@ -431,19 +466,20 @@ void drawTaskSingle(void * params) {
 			 * Here we re-spawn asteroids if the player still has to destroy more than 10 asteroids.
 			 * If there are only 10 or less asteroids left to destroy, no more new asteroids will be spawned.
 			 */
-//			if (/*  destroyed an asteroid == true*/ && (player.asteroids_to_destroy > 10)) {
-//				// Detect which asteroid was destroyed
-//				for (int i = 0; i <= 9; i++) {
-//					if (all_asteroids[i].remain_hits == none)
-//						break;
-//				}
-//
-//				// Re-spawn the asteroid_i
-//				*all_asteroids[i].remain_hits = one;
-//				*all_asteroids[i].shape = rand() % 3;
-//				*all_asteroids[i].position.x = *all_asteroids[i].spawn_position.x;
-//				*all_asteroids[i].position.y = *all_asteroids[i].spawn_position.y;
-//			}
+			if ((one_asteroid_hit == true) && (player.asteroids_to_destroy > 10)) {
+				// Detect which asteroid was destroyed
+				for (i = 0; i <= 9; i++) {
+					if (all_asteroids[i].remain_hits == none)
+						break;
+				}
+
+				// Re-spawn the asteroid_i
+				all_asteroids[i].remain_hits = one;
+				all_asteroids[i].shape = rand() % 3;
+				all_asteroids[i].position.x = all_asteroids[i].spawn_position.x;
+				all_asteroids[i].position.y = all_asteroids[i].spawn_position.y;
+				one_asteroid_hit = false;
+			}
 
 			// This creates the seed for all the following rand-Functions
 			srand(super_random);
@@ -694,14 +730,141 @@ void drawTaskSingle(void * params) {
 			/* Check if asteroids were hit by shot cannon blaster laser thigs
 			 * Threshold zone is a square around the asteroid center with 5px side length
 			 */
-//			for(incr = 0; incr < input.shots_fired; incr++){
-//				for(incr2 = 0; incr < 10; incr++){
-//					if(abs(asteroid[incr2].position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT &&
-//							abs(asteroid[i].position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT){
-//						asteroid[incr2].remain_hits--;
-//					}
-//				}
-//			}
+			for(incr = 0; incr < input.shots_fired; incr++){
+				if((abs(asteroid_1.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_1.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_1.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_2.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_2.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_2.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_3.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_3.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_3.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_4.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_4.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_4.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_5.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_5.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_5.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_6.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_6.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_6.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_7.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_7.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_7.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_8.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_8.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_8.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_9.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_9.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_9.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+				if((abs(asteroid_10.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_10.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
+					asteroid_10.remain_hits = none;
+					hit_timestamp_laser[incr] = xTaskGetTickCount();
+//					score+=100;
+//					one_asteroid_hit = true;
+				}
+			}
+
+			if(asteroid_1.remain_hits == none){
+				if(hit_timestamp_laser[0] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[0] = 0;
+				}
+			}
+			if(asteroid_2.remain_hits == none){
+				if(hit_timestamp_laser[1] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[1] = 0;
+				}
+			}
+			if(asteroid_3.remain_hits == none){
+				if(hit_timestamp_laser[2] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[2] = 0;
+				}
+			}
+			if(asteroid_4.remain_hits == none){
+				if(hit_timestamp_laser[3] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[3] = 0;
+				}
+			}
+			if(asteroid_5.remain_hits == none){
+				if(hit_timestamp_laser[4] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[4] = 0;
+				}
+			}
+			if(asteroid_6.remain_hits == none){
+				if(hit_timestamp_laser[5] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[5] = 0;
+				}
+			}
+			if(asteroid_7.remain_hits == none){
+				if(hit_timestamp_laser[6] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[6] = 0;
+				}
+			}
+			if(asteroid_8.remain_hits == none){
+				if(hit_timestamp_laser[7] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[7] = 0;
+				}
+			}
+			if(asteroid_9.remain_hits == none){
+				if(hit_timestamp_laser[8] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[8] = 0;
+				}
+			}
+			if(asteroid_10.remain_hits == none){
+				if(hit_timestamp_laser[9] - xTaskGetTickCount() > delay_hit_laser){
+					score+=100;
+					one_asteroid_hit = true;
+					hit_timestamp_laser[9] = 0;
+				}
+			}
+
+
 
 			// Drawing functions
 			gdispClear(Black);
@@ -713,7 +876,7 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
 
 			// Score board
-			sprintf(str, "Score: 9000");
+			sprintf(str, "Score: %i", score);
 			gdispDrawString(5, 10, str, font1, White);
 
 			// Life count
@@ -721,10 +884,10 @@ void drawTaskSingle(void * params) {
 			gdispDrawString(260, 10, str, font1, White);
 
 //			Debug print line for angle and thrust
-//			sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
-//			gdispDrawString(0, 230, str, font1, White);
-//			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
-//			gdispDrawString(0, 220, str2, font1, White);
+			sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
+			gdispDrawString(0, 230, str, font1, White);
+			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
+			gdispDrawString(0, 220, str2, font1, White);
 
 
 			// Drawing the player's ship and asteroids
@@ -748,53 +911,53 @@ void drawTaskSingle(void * params) {
 				}
 
 				// Asteroid 1
-				if (asteroid_1.remain_hits > 0)
-				gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
+				if (asteroid_1.remain_hits != none)
+					gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
 						shapes_small[asteroid_1.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 2
-				if (asteroid_2.remain_hits > 0)
-				gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,
+				if (asteroid_2.remain_hits != none)
+					gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,
 						shapes_small[asteroid_2.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 3
-				if (asteroid_3.remain_hits > 0)
-				gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
+				if (asteroid_3.remain_hits != none)
+					gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
 						shapes_small[asteroid_3.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 4
-				if (asteroid_4.remain_hits > 0)
-				gdispDrawPoly(asteroid_4.position.x, asteroid_4.position.y,
+				if (asteroid_4.remain_hits != none)
+					gdispDrawPoly(asteroid_4.position.x, asteroid_4.position.y,
 						shapes_small[asteroid_4.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 5
-				if (asteroid_5.remain_hits > 0)
-				gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
+				if (asteroid_5.remain_hits != none)
+					gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
 						shapes_small[asteroid_5.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 6
-				if (asteroid_6.remain_hits > 0)
+				if (asteroid_6.remain_hits != none)
 				gdispDrawPoly(asteroid_6.position.x, asteroid_6.position.y,
 						shapes_small[asteroid_6.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 7
-				if (asteroid_7.remain_hits > 0)
-				gdispDrawPoly(asteroid_7.position.x, asteroid_7.position.y,
+				if (asteroid_7.remain_hits != none)
+					gdispDrawPoly(asteroid_7.position.x, asteroid_7.position.y,
 						shapes_small[asteroid_7.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 8
-				if (asteroid_8.remain_hits > 0)
-				gdispDrawPoly(asteroid_8.position.x, asteroid_8.position.y,
+				if (asteroid_8.remain_hits != none)
+					gdispDrawPoly(asteroid_8.position.x, asteroid_8.position.y,
 						shapes_small[asteroid_8.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 9
-				if (asteroid_9.remain_hits > 0)
-				gdispDrawPoly(asteroid_9.position.x, asteroid_9.position.y,
+				if (asteroid_9.remain_hits != none)
+					gdispDrawPoly(asteroid_9.position.x, asteroid_9.position.y,
 						shapes_small[asteroid_9.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 10
-				if (asteroid_10.remain_hits > 0)
-				gdispDrawPoly(asteroid_10.position.x, asteroid_10.position.y,
+				if (asteroid_10.remain_hits != none)
+					gdispDrawPoly(asteroid_10.position.x, asteroid_10.position.y,
 						shapes_small[asteroid_10.shape], NUM_POINTS_SMALL, White);
 
 				// Saucer 1
@@ -818,6 +981,10 @@ void drawTaskSingle(void * params) {
 					// Put asteroids in their original places
 					// Reset score and level
 					// Clean up bullets, alien ship etc.
+					// Reset game timer
+					time_passed = 0;
+					xQueueSend(HighScoresQueue, &score, 0);
+					score = 0;
 					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 				}
 			}

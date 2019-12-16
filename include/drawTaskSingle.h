@@ -76,7 +76,7 @@ struct saucer {
 
 struct shot {
 	struct coord_draw position;
-	struct direction shot_direction;
+	int16_t angle;
 	shot_status status;
 };
 

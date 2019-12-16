@@ -41,8 +41,10 @@ void drawTaskHighScoreInterface(void * params) {
 	char edit_help[1][70] = {"Press E to type in your name"};
 	char exit_help[1][70] = {"Press E to save your name:"};
 	char str[30];
+	int16_t score_internal = 0;
 
 	while (1) {
+		xQueueReceive(HighScoresQueue, &score_internal, 0);
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 				if(!edit_mode){
@@ -94,7 +96,7 @@ void drawTaskHighScoreInterface(void * params) {
 				}
 			}
 
-			sprintf(str, "High score: %i | Name: %s", 5000, name);
+			sprintf(str, "High score: %i | Name: %s", score_internal, name);
 			gdispClear(Black);
 
 			switch (menu_select) {
