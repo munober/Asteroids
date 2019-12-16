@@ -17,7 +17,7 @@ extern TaskHandle_t drawTaskHighScoreHandle;
 extern TaskHandle_t drawTaskHighScoreInterfaceHandle;
 
 void stateMachineTask(void * params) {
-	unsigned char current_state = 1; // Default state
+	unsigned char current_state = MAIN_MENU_STATE; // Default state
 	unsigned char state_changed = 1; // Only re-evaluate state if it has changed
 	while (1) {
 		if (state_changed)

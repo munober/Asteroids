@@ -25,6 +25,8 @@ extern QueueHandle_t HighScoresQueue;
 //#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 //#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
 
+#define HIT_LIMIT_SHOT		5 		// how close the fired blaster shots have to get to the asteroids to register a hit
+
 #define HIT_LIMIT_SMALL		5 		//how close the asteroids have to get to the player to register a hit
 //#define HIT_LIMIT_MEDIUM	4
 //#define HIT_LIMIT_LARGE		5
@@ -102,13 +104,14 @@ void drawTaskSingle(void * params) {
 	unsigned int exeCount = 0;
 	unsigned int thrustCount = 0;
 
-	// Spawn player in display center
+// 	Spawn player in display center
 	struct direction direction;
 	struct direction direction_old;
 	struct players_ship player;
 	struct player_input input;
 	input.thrust = 0;
 	input.angle = 0;
+	input.shots_fired = 0;
 	player.position.x = DISPLAY_CENTER_X;
 	player.position.y = DISPLAY_CENTER_Y;
 	player.position_old.x = player.position.x;
@@ -118,6 +121,7 @@ void drawTaskSingle(void * params) {
 
 	// Initialize asteroids: max. 10 asteroids are on screen at once
 	// asteroid shape is either 0, 1 or 2
+
 	struct asteroid asteroid_1 = { { 0 } };
 	asteroid_1.spawn_position.x = -10;
 	asteroid_1.spawn_position.y = 180;
@@ -209,13 +213,13 @@ void drawTaskSingle(void * params) {
 	struct joystick_angle_pulse joystick_internal;
 	float angle_float = 0;
 	struct coord joy_direct;
+	struct coord joy_direct_old;
 	unsigned int moved = 0;
 
 	float angle_x = 0;
 	float angle_y = 0;
 
-	// Player ship
-	// This defines the initial shape of the player ship
+// 	Initial shape and heading of the player ship
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	direction.x1 = 0;
 	direction.y1 = -12;
@@ -225,18 +229,37 @@ void drawTaskSingle(void * params) {
 	direction_old.y1 = -12;
 	direction_old.x2 = 0;
 	direction_old.y2 = 6;
-	// These variable is changed with every tick by the joystick angle
+
+// 	This variable is changed with every tick by the joystick angle for player ship rotation
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
-	unsigned int incr = 0;
+	int16_t incr = 0;
+	int16_t incr2 = 0;
+
+
+//	Fired blaster cannon shots
+	// Initializations
+	struct shot shots[50] = { { 0 } };
+	void initialize_single_shot(int i){
+		shots[i].position.x = 0;
+		shots[i].position.y = 0;
+		shots[i].shot_direction.x1 = 0;
+		shots[i].shot_direction.x2 = 0;
+		shots[i].shot_direction.y1 = 0;
+		shots[i].shot_direction.y2 = 0;
+		shots[i].status = hide;
+	}
 
 	while (1) {
-		// Reading life count down here.
+// 		Reading desired life count from cheats menu
+
 		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
 			life_count = life_readin;
 		}
-		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
 
-			// Handling button logic down here. Also thrust and angle.
+//		Starting drawing when screen is ready
+		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
+
+//			Button logic, thrust and angle
 			restart_lives = life_readin;
 			if (life_count != 0) {
 				if (buttonCount(BUT_E)) {
@@ -260,19 +283,30 @@ void drawTaskSingle(void * params) {
 				input.angle = joystick_internal.angle;
 			}
 
-//			Read joystick input directly in here
+//			Read joystick input directly, less delay-prone than using queues from other tasks
+
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+
+//			Start player movement:
+			if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
+				moved = 1;
+			}
 			angle_x = (float)((int16_t)joy_direct.x-128);
 			angle_y = (float)((int16_t)joy_direct.y-128);
 			angle_float = 0;
 			if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
 				if((angle_x != 0) && (angle_y != 0)){
-					angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+					if(angle_y != 128){
+						angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+					}
+					else
+						angle_float = 0;
 				}
 			}
 
 //			Make player show up at the other side of the screen when reaching screen border
+
 			if(player.position.x >= DISPLAY_SIZE_X){
 				player.position.x = 0;
 			}
@@ -287,9 +321,7 @@ void drawTaskSingle(void * params) {
 			}
 
 //			Player movement input
-
-			if(input.thrust){
-				moved = 1;
+			if(moved){
 				if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
 					player.position.x += (joy_direct.x - 128) / 32;
 					player.position.y += (joy_direct.y - 128) / 32;
@@ -299,31 +331,7 @@ void drawTaskSingle(void * params) {
 				}
 			}
 
-//			Player inertia old implementation
-//			if(moved){
-//				if(xTaskGetTickCount() - inertia_timer < inertia_threshold){
-//					if((player.position.x - player.position_old.x) > 0){
-//						player.position.x++;
-//					}
-//					else if((player.position.x - player.position_old.x) < 0){
-//						player.position.x--;
-//					}
-//					if((player.position.y - player.position_old.y) > 0){
-//						player.position.y++;
-//					}
-//					else if((player.position.y - player.position_old.y) < 0){
-//						player.position.y--;
-//					}
-//				}
-//				else{
-//					player.position_old.x = player.position.x;
-//					player.position_old.y = player.position.y;
-//				}
-//			}
-
-//			Player inertia new implementation
-
-			// Player ship rotation
+// 			Player ship rotation
 
 			memcpy(&form, &form_orig, 3 * sizeof(struct point));
 			for(incr = 0; incr < 3; incr++){
@@ -333,15 +341,17 @@ void drawTaskSingle(void * params) {
 									+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
 			}
 
-			// Get player ship direction
+// 			Get player ship direction
+
 			direction.x1 = form[2].x;
 			direction.y1 = form[2].y;
-			direction.x2 = (form[1].x + form[3].x) / 2;
-			direction.y2 = (form[1].y + form[3].y) / 2;
+			direction.x2 = form[2].x;
+			direction.y2 = form[1].y;
 
+//			Player inertia new implementation
 			if(moved){
 				if((player.position.x - player.position_old.x) > 0){
-				player.position.x++;
+					player.position.x++;
 				}
 				else if((player.position.x - player.position_old.x) < 0){
 					player.position.x--;
@@ -362,6 +372,58 @@ void drawTaskSingle(void * params) {
 			direction_old.x2 = direction.x2;
 			direction_old.y1 = direction.y1;
 			direction_old.y2 = direction.y2;
+
+//			Handling cannon shot firing
+//			Spawning new cannon shots on player input
+
+			if(buttonCount(BUT_B)){
+				shots[input.shots_fired].status = spawn;
+				shots[input.shots_fired].position.x = player.position.x;
+				shots[input.shots_fired].position.y = player.position.y;
+				shots[input.shots_fired].shot_direction.x1 = direction.x1;
+				shots[input.shots_fired].shot_direction.x2 = direction.x2;
+				shots[input.shots_fired].shot_direction.y1 = direction.y1;
+				shots[input.shots_fired].shot_direction.y2 = direction.y2;
+				input.shots_fired++;
+			}
+
+//			Making fired shots disappear when reaching the screen edge
+			for(incr = 0; incr < input.shots_fired; incr++){
+				if(shots[incr].position.x >= DISPLAY_SIZE_X){
+					input.shots_fired--;
+					for(incr2 = incr; incr2 < input.shots_fired; incr2++){
+						memcpy(&shots[incr2], &shots[incr2 + 1], sizeof(struct shot));
+					}
+					initialize_single_shot(input.shots_fired + 1);
+				}
+				else if(shots[incr].position.x <= 0){
+					input.shots_fired--;
+					for(incr2 = incr; incr2 < input.shots_fired; incr2++){
+						memcpy(&shots[incr2], &shots[incr2 + 1], sizeof(struct shot));
+					}
+					initialize_single_shot(input.shots_fired + 1);
+				}
+
+				if(shots[incr].position.y >= DISPLAY_SIZE_Y){
+					input.shots_fired--;
+					for(incr2 = incr; incr2 < input.shots_fired; incr2++){
+						memcpy(&shots[incr2], &shots[incr2 + 1], sizeof(struct shot));
+					}
+					initialize_single_shot(input.shots_fired + 1);
+				}
+				else if(shots[incr].position.y <= 0){
+					input.shots_fired--;
+					for(incr2 = incr; incr2 < input.shots_fired; incr2++){
+						memcpy(&shots[incr2], &shots[incr2 + 1], sizeof(struct shot));
+					}
+					initialize_single_shot(input.shots_fired + 1);
+				}
+			}
+//			Handling movement of fired shots
+			for(incr = 0; incr < input.shots_fired; incr++){
+				shots[incr].position.x += (shots[incr].shot_direction.x2 - shots[incr].shot_direction.x1);
+				shots[incr].position.y += (shots[incr].shot_direction.y2 - shots[incr].shot_direction.y1);
+			}
 
 			exeCount++;
 
@@ -629,7 +691,19 @@ void drawTaskSingle(void * params) {
 				hit_timestamp = xTaskGetTickCount();
 			}
 
+			/* Check if asteroids were hit by shot cannon blaster laser thigs
+			 * Threshold zone is a square around the asteroid center with 5px side length
+			 */
+//			for(incr = 0; incr < input.shots_fired; incr++){
+//				for(incr2 = 0; incr < 10; incr++){
+//					if(abs(asteroid[incr2].position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT &&
+//							abs(asteroid[i].position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT){
+//						asteroid[incr2].remain_hits--;
+//					}
+//				}
+//			}
 
+			// Drawing functions
 			gdispClear(Black);
 
 			// Simple clock at top of screen
@@ -646,15 +720,16 @@ void drawTaskSingle(void * params) {
 			sprintf(str, "Lives: %d", life_count);
 			gdispDrawString(260, 10, str, font1, White);
 
-			// Debug print line for angle and thrust
+//			Debug print line for angle and thrust
 //			sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
 //			gdispDrawString(0, 230, str, font1, White);
 //			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
 //			gdispDrawString(0, 220, str2, font1, White);
 
 
-			// Players ship
+			// Drawing the player's ship and asteroids
 			if (life_count != 0) {
+				// Player ship
 				if (player.state == fine)
 					gdispFillConvexPoly(player.position.x, player.position.y,
 							form, (sizeof(form)/sizeof(form[0])), White);
@@ -733,19 +808,31 @@ void drawTaskSingle(void * params) {
 
 			// GAME OVER
 			else if (life_count == 0) {
-				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White);
-				sprintf(str, "GAME OVER. Press D to continue.");
-				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1,
-						Black);
-				if (buttonCount(BUT_D)) {
+				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White); // White border
+				sprintf(str, "GAME OVER. Press D to continue."); // Generate game over message
+				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
+				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D
 					life_count = restart_lives;
+					moved = 0;
+					// TODO:
+					// Put asteroids in their original places
+					// Reset score and level
+					// Clean up bullets, alien ship etc.
 					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 				}
 			}
+
+//			Drawing the fired canon shots
+			for(incr = 0; incr < input.shots_fired; incr++){
+				if(shots[incr].status == spawn){
+					gdispFillCircle(shots[incr].position.x, shots[incr].position.y, 3, Yellow);
+				}
+			}
+			joy_direct_old.x = joy_direct.x;
+			joy_direct_old.y = joy_direct.y;
 		} // Block until screen is ready
 	} // While-loop
 } // Task
-
 //This "Timer" Task sends a signal every second
 void timer(void * params) {
 	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;

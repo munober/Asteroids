@@ -11,6 +11,8 @@
 #define DISPLAY_CENTER_X DISPLAY_SIZE_X/2
 #define DISPLAY_CENTER_Y DISPLAY_SIZE_Y/2
 
+#include "buttons.h"
+
 typedef enum {
 	false = 0,
 	true = 1
@@ -21,10 +23,22 @@ struct coord_draw {
 	int16_t y;
 };
 
+struct direction {
+	int16_t x1;
+	int16_t y1;
+	int16_t x2;
+	int16_t y2;
+};
+
 typedef enum {
 	fine = 0,
 	hit = 1
 } player_status;
+
+typedef enum {
+	hide = 0,
+	spawn = 1
+} shot_status;
 
 typedef enum {
 	none = 0,
@@ -41,8 +55,9 @@ struct players_ship {
 };
 
 struct player_input{
-	uint8_t thrust;
-	uint16_t angle;
+	int8_t thrust;
+	int16_t angle;
+	int16_t shots_fired;
 };
 
 struct asteroid {
@@ -57,6 +72,12 @@ struct saucer {
 	int16_t route_number;
 	int16_t turn_number;
 	boolean turning;
+};
+
+struct shot {
+	struct coord_draw position;
+	struct direction shot_direction;
+	shot_status status;
 };
 
 #endif /* INCLUDE_DRAWTASKSINGLE_H_ */
