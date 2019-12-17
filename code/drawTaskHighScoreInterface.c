@@ -152,7 +152,7 @@ void drawTaskHighScoreInterface(void * params) {
 				}
 				if(buttonCount(BUT_E)){
 					score_to_send.score = score_internal;
-					sprintf(score_to_send.tag, "%c", name);
+					sprintf(score_to_send.tag, "%s", name);
 					xQueueSend(HighScoresQueue, &score_to_send, 0);
 					xQueueSend(StateQueue, &next_state_signal_menu, 0);
 				}
