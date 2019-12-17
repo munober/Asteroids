@@ -7,9 +7,11 @@
 
 #include "includes.h"
 #include "drawTaskHighScoreInterface.h"
+#include "drawTaskHighScore.h"
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t HighScoresQueue;
+extern QueueHandle_t LeaderboardQueue;
 extern QueueHandle_t JoystickQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
@@ -42,6 +44,7 @@ void drawTaskHighScoreInterface(void * params) {
 	char exit_help[1][70] = {"Press E to save your name:"};
 	char str[30];
 	int16_t score_internal = 0;
+	struct highscore score_to_send;
 
 	while (1) {
 		xQueueReceive(HighScoresQueue, &score_internal, 0);
@@ -148,8 +151,10 @@ void drawTaskHighScoreInterface(void * params) {
 					gdispDrawString(TEXT_X(done[i]), 130, done[i], font1, Yellow);
 				}
 				if(buttonCount(BUT_E)){
+					score_to_send.score = score_internal;
+					sprintf(score_to_send.tag, "%c", name);
+					xQueueSend(HighScoresQueue, &score_to_send, 0);
 					xQueueSend(StateQueue, &next_state_signal_menu, 0);
-//					xQueueSend(HighScoresQueue, &score_internal, 0);
 				}
 				break;
 			}
