@@ -40,7 +40,6 @@ QueueHandle_t JoystickAngle360Queue;
 QueueHandle_t PlayerNavigationQueue;
 QueueHandle_t LifeCountQueue;
 QueueHandle_t HighScoresQueue;
-QueueHandle_t LeaderboardQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 
@@ -71,7 +70,6 @@ int main(void){
 	PlayerNavigationQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct coord));
 	LifeCountQueue = xQueueCreate(10, sizeof(unsigned int));
 	HighScoresQueue = xQueueCreate(10, sizeof(struct highscore));
-	LeaderboardQueue = xQueueCreate(10, sizeof(struct highscore));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
@@ -90,7 +88,7 @@ int main(void){
 	xTaskCreate(timer, "Timer", 1000, NULL, 2, &timerHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
 	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
-	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 2, &drawTaskHighScoreHandle);
+	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 4, &drawTaskHighScoreHandle);
 	xTaskCreate(drawTaskHighScoreInterface, "drawTaskHighScoreInterface", 1000, NULL, 2, &drawTaskHighScoreInterfaceHandle);
 
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
