@@ -50,12 +50,12 @@ void drawTaskHighScore(void * params) {
 
 			gdispClear(Black);
 			line_x = COORD_X_PRINTLINE;
+			gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
 			for(i = 0; i < 10; i++){
-				gdispDrawString(TEXT_X(user_help), 10, user_help,font1, White);
 				if(highscores[i].score != 0){
 					gdispDrawString(TEXT_X(print[i]), line_x, print[i],font1, White);
+					line_x += LINE_DISTANCE;
 				}
-				line_x += LINE_DISTANCE;
 			}
 		}
 	}
