@@ -33,7 +33,7 @@ void drawTaskStartMenu(void * params) {
 	char settings [1][20] = {"Settings"};
 	char cheats [1][20] = {"Cheats"};
 	char highscores [1][20] = {"High Scores"};
-	char user_help[1][70] = {"START MENU. Navigate with joystick, select with E."};
+	char user_help[1][70] = {"HAS MORE. Navigate with joystick, select with E."};
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {

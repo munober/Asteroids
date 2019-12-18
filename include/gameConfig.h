@@ -10,10 +10,16 @@
 
 
 #define LASER_BLASTER_SPEED			3
-#define HIT_LIMIT_SHOT				5 		// how close the fired blaster shots have to get to the asteroids to register a hit
-#define HIT_LIMIT_SMALL				5 		//how close the asteroids have to get to the player to register a hit
-#define HIT_LIMIT_MEDIUM			4
-#define HIT_LIMIT_LARGE				5
+
+// How close the fired blaster shots have to get to the asteroids to register a hit
+#define HIT_LIMIT_SHOT_SMALL				6
+#define HIT_LIMIT_SHOT_MEDIUM				8
+#define HIT_LIMIT_SHOT_LARGE				12
+
+// How close the asteroids have to get to the player to register a hit
+#define HIT_LIMIT_SMALL				6
+#define HIT_LIMIT_MEDIUM			8
+#define HIT_LIMIT_LARGE				12
 
 
 
