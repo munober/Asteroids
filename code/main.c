@@ -49,7 +49,8 @@ SemaphoreHandle_t ESPL_DisplayReady;
 
 SemaphoreHandle_t DrawReady;
 SemaphoreHandle_t timerSignal;
-SemaphoreHandle_t saucerFire;
+SemaphoreHandle_t saucerFire1;
+SemaphoreHandle_t saucerFire2;
 
 TaskHandle_t frameSwapHandle;
 TaskHandle_t stateMachineTaskHandle;
@@ -82,7 +83,8 @@ int main(void){
 	DrawReady = xSemaphoreCreateBinary();
 
 	timerSignal = xSemaphoreCreateBinary();
-	saucerFire = xSemaphoreCreateBinary();
+	saucerFire1 = xSemaphoreCreateBinary();
+	saucerFire2= xSemaphoreCreateBinary();
 
 	// Initializes Tasks with their respective priority
 	// Core tasks
