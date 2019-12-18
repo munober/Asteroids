@@ -23,6 +23,11 @@ struct coord_draw {
 	int16_t y;
 };
 
+struct coord_saucer_shots {
+	float x;
+	float y;
+};
+
 struct direction {
 	int16_t x1;
 	int16_t y1;
@@ -46,6 +51,13 @@ typedef enum {
 	two = 2,
 	three = 3
 } hit_counter;
+
+typedef enum {
+	up_and_left = 0,
+	up_and_right = 1,
+	down_and_right = 2,
+	down_and_left = 3
+} saucer_shot_direction;
 
 struct players_ship {
 	struct coord_draw position;
@@ -72,6 +84,11 @@ struct saucer {
 	int16_t route_number;
 	int16_t turn_number;
 	boolean turning;
+	struct coord_saucer_shots shots[10];
+	saucer_shot_direction shot_direction[10];
+	boolean shot_fired[10];
+	uint8_t shot_number;
+	float ratios[10]; // This variable describes the ratio of x to y component of the distance between saucer and player at time of saucer fire
 };
 
 struct shot {
