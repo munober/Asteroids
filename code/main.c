@@ -13,6 +13,8 @@
 #include "checkJoystickTask.h"
 #include "drawTaskHighScore.h"
 #include "drawTaskHighScoreInterface.h"
+#include "drawTaskMultiplayer.h"
+#include "uartTask.h"
 
 #define STATE_QUEUE_LENGTH 		 1
 #define BUTTON_QUEUE_LENGTH		20
@@ -26,12 +28,14 @@ void frameSwapTask(void * params);
 void stateMachineTask(void * params);
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
+void drawTaskMultiplayer (void * params);
 void timer(void * params);
 void drawTaskPause (void * params);
 void drawTaskCheats(void * params);
 void drawTaskHighScore (void * params);
 void drawTaskHighScoreInterface (void * params);
 void checkJoystickTask (void * params);
+void uartTask (void * params);
 
 //QueueHandle_t ButtonQueue;
 QueueHandle_t StateQueue;
@@ -50,12 +54,14 @@ TaskHandle_t frameSwapHandle;
 TaskHandle_t stateMachineTaskHandle;
 TaskHandle_t drawTaskStartMenuHandle;
 TaskHandle_t drawTaskSingleHandle;
+TaskHandle_t drawTaskMultiplayerHandle;
 TaskHandle_t drawTaskPauseHandle;
 TaskHandle_t drawTaskCheatsHandle;
 TaskHandle_t checkJoystickTaskHandle;
 TaskHandle_t drawTaskHighScoreHandle;
 TaskHandle_t drawTaskHighScoreInterfaceHandle;
 TaskHandle_t timerHandle;
+TaskHandle_t uartTaskHandle;
 
 int main(void){
 
@@ -85,22 +91,24 @@ int main(void){
 
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
+	xTaskCreate(drawTaskMultiplayer, "drawTaskMultiplayer", 1000, NULL, 2, &drawTaskMultiplayerHandle);
 	xTaskCreate(timer, "Timer", 1000, NULL, 2, &timerHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
 	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
 	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 4, &drawTaskHighScoreHandle);
 	xTaskCreate(drawTaskHighScoreInterface, "drawTaskHighScoreInterface", 1000, NULL, 2, &drawTaskHighScoreInterfaceHandle);
-
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
-
+	xTaskCreate(uartTask, "uartTask", 1000, NULL, 3, &uartTaskHandle);
 //	Suspending ALL tasks that draw to the screen, will be handled by state machine.
 
     vTaskSuspend(drawTaskStartMenuHandle);
     vTaskSuspend(drawTaskSingleHandle);
+    vTaskSuspend(drawTaskMultiplayerHandle);
     vTaskSuspend(drawTaskPauseHandle);
     vTaskSuspend(drawTaskCheatsHandle);
     vTaskSuspend(drawTaskHighScoreHandle);
     vTaskSuspend(drawTaskHighScoreInterfaceHandle);
+    vTaskSuspend(uartTaskHandle);
 
 	vTaskStartScheduler();
 }

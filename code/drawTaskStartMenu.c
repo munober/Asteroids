@@ -19,9 +19,11 @@ extern SemaphoreHandle_t DrawReady;
 #define HIGHSCORES_SELECT			5
 
 void drawTaskStartMenu(void * params) {
+//  Possible next states
 	const unsigned char next_state_signal_single = SINGLE_PLAYER_STATE;
 	const unsigned char next_state_signal_cheats = CHEATS_MENU_STATE;
 	const unsigned char next_state_signal_highscores = HIGHSCORE_DISPLAY_STATE;
+	const unsigned char next_state_signal_multiplayer = MULTIPLAYER_STATE;
 	unsigned int menu_select = SINGLEPLAYER_SELECT;
 
 	struct joystick_angle_pulse joystick_internal;
