@@ -20,18 +20,10 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
 
-#define LASER_BLASTER_SPEED			3
-
 #define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 //#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 //#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
-
-#define HIT_LIMIT_SHOT		5 		// how close the fired blaster shots have to get to the asteroids to register a hit
-
-#define HIT_LIMIT_SMALL		5 		//how close the asteroids have to get to the player to register a hit
-//#define HIT_LIMIT_MEDIUM	4
-//#define HIT_LIMIT_LARGE	5
 
 // Asteroid shapes SMALL
 
@@ -75,7 +67,6 @@ const int16_t saucer_routes[6][3] = { { 30, 120, 30 }, { 30, 120, 210 }, { 120,
 
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
-	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
@@ -698,77 +689,6 @@ void drawTaskSingle(void * params) {
 				}
 			}
 
-//			if ((abs(asteroid_1.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_1.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_2.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_2.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_3.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_3.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_4.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_4.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_5.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_5.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_6.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_6.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_7.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_7.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_8.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_8.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_9.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_9.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-//			if ((abs(asteroid_10.position.x - player.position.x)
-//					<= HIT_LIMIT_SMALL)
-//					&& (abs(asteroid_10.position.y - player.position.y)
-//							<= HIT_LIMIT_SMALL)) {
-//				player.state = hit;
-//				hit_timestamp = xTaskGetTickCount();
-//			}
-
 			/* Check if asteroids were hit by shot cannon blaster laser thigs
 			 * Threshold zone is a square around the asteroid center with 5px side length
 			 */
@@ -789,108 +709,6 @@ void drawTaskSingle(void * params) {
 					}
 				}
 			}
-
-//				if((abs(asteroid_1.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_1.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_1.remain_hits != none){
-//						asteroid_1.position.x = 0;
-//						asteroid_1.position.y = 0;
-//						asteroid_1.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_2.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_2.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_2.remain_hits != none){
-//						asteroid_2.position.x = 0;
-//						asteroid_2.position.y = 0;
-//						asteroid_2.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_3.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_3.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_3.remain_hits != none){
-//						asteroid_3.position.x = 0;
-//						asteroid_3.position.y = 0;
-//						asteroid_3.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_4.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_4.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_4.remain_hits != none){
-//						asteroid_4.position.x = 0;
-//						asteroid_4.position.y = 0;
-//						asteroid_4.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_5.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_5.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_5.remain_hits != none){
-//						asteroid_5.position.x = 0;
-//						asteroid_5.position.y = 0;
-//						asteroid_5.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_6.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_6.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_6.remain_hits != none){
-//						asteroid_6.position.x = 0;
-//						asteroid_6.position.y = 0;
-//						asteroid_6.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_7.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_7.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_7.remain_hits != none){
-//						asteroid_7.position.x = 0;
-//						asteroid_7.position.y = 0;
-//						asteroid_7.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_8.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_8.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_8.remain_hits != none){
-//						asteroid_8.position.x = 0;
-//						asteroid_8.position.y = 0;
-//						asteroid_8.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_9.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_9.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_9.remain_hits != none){
-//						asteroid_9.position.x = 0;
-//						asteroid_9.position.y = 0;
-//						asteroid_9.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-//				if((abs(asteroid_10.position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT) && (abs(asteroid_10.position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)){
-//					if(asteroid_10.remain_hits != none){
-//						asteroid_10.position.x = 0;
-//						asteroid_10.position.y = 0;
-//						asteroid_10.remain_hits = none;
-//						hit_timestamp_laser[incr] = xTaskGetTickCount();
-//						score+=100;
-//						one_asteroid_hit = true;
-//					}
-//				}
-
 
 			// Drawing functions
 			gdispClear(Black);
@@ -993,10 +811,6 @@ void drawTaskSingle(void * params) {
 				// Saucer 2
 				gdispDrawPoly(saucer_2.position.x, saucer_2.position.y,
 						saucer_shape, NUM_POINTS_SAUCER, White);
-
-//				// Debug
-//				sprintf(str2, "%f", 5/3);
-//				gdispDrawString(DISPLAY_CENTER_X, 50, str2, font1, White);
 			}
 
 			// GAME OVER

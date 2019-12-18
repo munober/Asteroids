@@ -27,9 +27,10 @@
 #include "ESPL_functions.h"
 #include "main.h"
 
-/* ESPL Excercise Code */
+/* Game settings and stuff */
 #include "buttonDebounce.h"
 #include "buttons.h"
+#include "gameConfig.h"
 
 #define STATE_COUNT					7
 
