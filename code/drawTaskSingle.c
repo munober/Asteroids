@@ -679,6 +679,8 @@ void drawTaskSingle(void * params) {
 			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
 			for (i = 0; i <= 9; i++) {
 				if (saucer_1.shot_fired[i] == true) {
+					if (saucer_1.ratios[saucer_1.shot_number] > 5)
+						saucer_1.ratios[saucer_1.shot_number] = 1;
 					switch (saucer_1.shot_direction[i]) {
 					case up_and_left:
 						saucer_1.shots[i].x = saucer_1.shots[i].x
@@ -785,6 +787,8 @@ void drawTaskSingle(void * params) {
 			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
 			for (i = 0; i <= 9; i++) {
 				if (saucer_2.shot_fired[i] == true) {
+					if (saucer_2.ratios[saucer_2.shot_number] > 5)
+						saucer_2.ratios[saucer_2.shot_number] = 1;
 					switch (saucer_2.shot_direction[i]) {
 					case up_and_left:
 						saucer_2.shots[i].x = saucer_2.shots[i].x
