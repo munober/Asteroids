@@ -81,9 +81,11 @@ struct asteroid {
 
 struct saucer {
 	struct coord_draw position;
+	boolean position_locked;
 	int16_t route_number;
 	int16_t turn_number;
 	boolean turning;
+    hit_counter remain_hits;
 	struct coord_saucer_shots shots[10];
 	saucer_shot_direction shot_direction[10];
 	boolean shot_fired[10];
