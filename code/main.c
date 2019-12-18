@@ -29,7 +29,7 @@ void stateMachineTask(void * params);
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
 void drawTaskMultiplayer (void * params);
-void timer(void * params);
+//void timer(void * params);
 void drawTaskPause (void * params);
 void drawTaskCheats(void * params);
 void drawTaskHighScore (void * params);
@@ -48,7 +48,7 @@ QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 
 SemaphoreHandle_t DrawReady;
-SemaphoreHandle_t timerSignal;
+//SemaphoreHandle_t timerSignal;
 SemaphoreHandle_t saucerFire1;
 SemaphoreHandle_t saucerFire2;
 
@@ -62,7 +62,7 @@ TaskHandle_t drawTaskCheatsHandle;
 TaskHandle_t checkJoystickTaskHandle;
 TaskHandle_t drawTaskHighScoreHandle;
 TaskHandle_t drawTaskHighScoreInterfaceHandle;
-TaskHandle_t timerHandle;
+//TaskHandle_t timerHandle;
 TaskHandle_t uartTaskHandle;
 
 int main(void){
@@ -82,7 +82,7 @@ int main(void){
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
 
-	timerSignal = xSemaphoreCreateBinary();
+//	timerSignal = xSemaphoreCreateBinary();
 	saucerFire1 = xSemaphoreCreateBinary();
 	saucerFire2= xSemaphoreCreateBinary();
 
@@ -96,7 +96,7 @@ int main(void){
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
 	xTaskCreate(drawTaskMultiplayer, "drawTaskMultiplayer", 1000, NULL, 2, &drawTaskMultiplayerHandle);
-	xTaskCreate(timer, "Timer", 1000, NULL, 2, &timerHandle);
+//	xTaskCreate(timer, "Timer", 1000, NULL, 2, &timerHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
 	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
 	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 4, &drawTaskHighScoreHandle);
