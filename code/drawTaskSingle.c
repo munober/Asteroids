@@ -15,9 +15,9 @@
 extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
-extern SemaphoreHandle_t timerSignal;
-extern SemaphoreHandle_t saucerFire1;
-extern SemaphoreHandle_t saucerFire2;
+//extern SemaphoreHandle_t timerSignal;
+//extern SemaphoreHandle_t saucerFire1;
+//extern SemaphoreHandle_t saucerFire2;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
@@ -100,6 +100,14 @@ void drawTaskSingle(void * params) {
 	const TickType_t delay_hit = 1000;
 	const TickType_t delay_hit_laser = 400;
 	const TickType_t inertia_threshold = 2000;
+
+	// Timer stuff
+	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
+	const TickType_t one_and_a_half_seconds = 1500 / portTICK_PERIOD_MS;
+	const TickType_t two_seconds = 1500 / portTICK_PERIOD_MS;
+	TickType_t lastTime_1 = xTaskGetTickCount();
+	TickType_t lastTime_2 = xTaskGetTickCount();
+	TickType_t lastTime_3 = xTaskGetTickCount();
 
 	unsigned int exeCount = 0;
 	unsigned int thrustCount = 0;
@@ -265,6 +273,9 @@ void drawTaskSingle(void * params) {
 		shots[i].angle = 0;
 		shots[i].status = hide;
 	}
+	unsigned char timer_1sec = 0;
+	unsigned char timer_1halfsec = 0;
+	unsigned char timer_2sec = 0;
 
 	while (1) {
 // 		Reading desired life count from cheats menu
@@ -272,6 +283,27 @@ void drawTaskSingle(void * params) {
 		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
 			life_count = life_readin;
 		}
+
+// 		Timer logic
+		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
+			timer_1sec = 1;
+			lastTime_1 = xTaskGetTickCount();
+		}
+		else
+			timer_1sec = 0;
+		if ((xTaskGetTickCount() - lastTime_2) >= one_and_a_half_seconds) {
+			timer_1halfsec = 1;
+			lastTime_2 = xTaskGetTickCount();
+		}
+		else
+			timer_1halfsec = 0;
+
+		if ((xTaskGetTickCount() - lastTime_3) >= two_seconds) {
+			timer_2sec = 1;
+			lastTime_3 = xTaskGetTickCount();
+		}
+		else
+			timer_2sec = 0;
 
 //		Starting drawing when screen is ready
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
@@ -650,7 +682,7 @@ void drawTaskSingle(void * params) {
 			}
 
 			// SACUER #1 fire
-			if ((xSemaphoreTake(saucerFire1, 0) == pdTRUE) && (time_passed > 20)) {
+			if ((timer_1halfsec == 1) && (time_passed > 20)) {
 				if ((player.position.y - saucer_1.position.y != 0) && (player.position.x - saucer_1.position.x != 0)) {
 					saucer_1.ratios[saucer_1.shot_number] = (player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y);
 				}
@@ -758,7 +790,7 @@ void drawTaskSingle(void * params) {
 			}
 
 			// SACUER #2 fire
-			if ((xSemaphoreTake(saucerFire2, 0) == pdTRUE) && (time_passed > 35)) {
+			if ((timer_2sec == 1) && (time_passed > 35)) {
 				if ((player.position.y - saucer_2.position.y != 0) && (player.position.x - saucer_2.position.x != 0)) {
 					saucer_2.ratios[saucer_2.shot_number] = (player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y);
 				}
@@ -867,7 +899,7 @@ void drawTaskSingle(void * params) {
 			gdispClear(Black);
 
 			// Simple clock at top of screen
-		    if (xSemaphoreTake(timerSignal, 0) == pdTRUE)
+		    if (timer_1sec == 1)
 		    	time_passed++;
 			sprintf(str2, "%d sec", time_passed);
 			gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
@@ -1017,26 +1049,26 @@ void drawTaskSingle(void * params) {
 } // Task
 
 //This "Timer" Task sends a signal every second
-void timer(void * params) {
-	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
-	const TickType_t one_and_a_half_seconds = 1500 / portTICK_PERIOD_MS;
-	const TickType_t two_seconds = 1500 / portTICK_PERIOD_MS;
-	TickType_t lastTime_1 = xTaskGetTickCount();
-	TickType_t lastTime_2 = xTaskGetTickCount();
-	TickType_t lastTime_3 = xTaskGetTickCount();
-
-	while (1) {
-		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
-			xSemaphoreGive(timerSignal);
-			lastTime_1 = xTaskGetTickCount();
-		}
-		if ((xTaskGetTickCount() - lastTime_2) >= one_and_a_half_seconds) {
-			xSemaphoreGive(saucerFire1);
-			lastTime_2 = xTaskGetTickCount();
-		}
-		if ((xTaskGetTickCount() - lastTime_3) >= two_seconds) {
-			xSemaphoreGive(saucerFire2);
-			lastTime_3 = xTaskGetTickCount();
-		}
-	}
-}
+//void timer(void * params) {
+//	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
+//	const TickType_t one_and_a_half_seconds = 1500 / portTICK_PERIOD_MS;
+//	const TickType_t two_seconds = 1500 / portTICK_PERIOD_MS;
+//	TickType_t lastTime_1 = xTaskGetTickCount();
+//	TickType_t lastTime_2 = xTaskGetTickCount();
+//	TickType_t lastTime_3 = xTaskGetTickCount();
+//
+//	while (1) {
+//		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
+//			xSemaphoreGive(timerSignal);
+//			lastTime_1 = xTaskGetTickCount();
+//		}
+//		if ((xTaskGetTickCount() - lastTime_2) >= one_and_a_half_seconds) {
+//			xSemaphoreGive(saucerFire1);
+//			lastTime_2 = xTaskGetTickCount();
+//		}
+//		if ((xTaskGetTickCount() - lastTime_3) >= two_seconds) {
+//			xSemaphoreGive(saucerFire2);
+//			lastTime_3 = xTaskGetTickCount();
+//		}
+//	}
+//}

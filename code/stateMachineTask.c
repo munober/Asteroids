@@ -10,7 +10,7 @@
 extern QueueHandle_t StateQueue;
 extern TaskHandle_t drawTaskStartMenuHandle;
 extern TaskHandle_t drawTaskSingleHandle;
-extern TaskHandle_t timerHandle;
+//extern TaskHandle_t timerHandle;
 extern TaskHandle_t drawTaskPauseHandle;
 extern TaskHandle_t drawTaskCheatsHandle;
 extern TaskHandle_t drawTaskHighScoreHandle;
@@ -35,7 +35,7 @@ void stateMachineTask(void * params) {
 			switch (current_state) {
 			case MAIN_MENU_STATE:
 			    vTaskSuspend(drawTaskSingleHandle);
-			    vTaskSuspend(timerHandle);
+//			    vTaskSuspend(timerHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskSuspend(drawTaskHighScoreHandle);
@@ -54,13 +54,13 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
 			    vTaskResume(drawTaskSingleHandle);
-			    vTaskResume(timerHandle);
+//			    vTaskResume(timerHandle);
 				state_changed = 0;
 				break;
 			case PAUSE_MENU_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
-			    vTaskSuspend(timerHandle);
+//			    vTaskSuspend(timerHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskSuspend(drawTaskHighScoreHandle);
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
@@ -72,7 +72,7 @@ void stateMachineTask(void * params) {
 			case CHEATS_MENU_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
-			    vTaskSuspend(timerHandle);
+//			    vTaskSuspend(timerHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskHighScoreHandle);
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
@@ -84,7 +84,7 @@ void stateMachineTask(void * params) {
 			case HIGHSCORE_DISPLAY_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
-			    vTaskSuspend(timerHandle);
+//			    vTaskSuspend(timerHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
@@ -96,7 +96,7 @@ void stateMachineTask(void * params) {
 			case HIGHSCORE_INTERFACE_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
-			    vTaskSuspend(timerHandle);
+//			    vTaskSuspend(timerHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskSuspend(drawTaskHighScoreHandle);
@@ -108,7 +108,7 @@ void stateMachineTask(void * params) {
 			case MULTIPLAYER_STATE:
 			    vTaskSuspend(drawTaskStartMenuHandle);
 			    vTaskSuspend(drawTaskSingleHandle);
-			    vTaskSuspend(timerHandle);
+//			    vTaskSuspend(timerHandle);
 			    vTaskSuspend(drawTaskPauseHandle);
 			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskSuspend(drawTaskHighScoreHandle);
