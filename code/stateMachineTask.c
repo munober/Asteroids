@@ -113,7 +113,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskCheatsHandle);
 			    vTaskSuspend(drawTaskHighScoreHandle);
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
-			    vTaskResume(uartTaskHandle);
+			    vTaskSuspend(uartTaskHandle); // start resuming this when it works
+//			    vTaskResume(uartTaskHandle);
 			    vTaskResume(drawTaskMultiplayerHandle);
 				state_changed = 0;
 				break;

@@ -97,6 +97,8 @@ void drawTaskStartMenu(void * params) {
 					gdispDrawString(120, 200, highscores[i],	font1, White);
 					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
 				}
+				if(buttonCount(BUT_E))
+					xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
 				break;
 			case SETTINGS_SELECT:
 				for (unsigned char i = 0; i < 1; i++){

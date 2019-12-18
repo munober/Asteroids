@@ -21,18 +21,10 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
 
-#define LASER_BLASTER_SPEED			3
-
 #define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
 //#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 //#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
-
-#define HIT_LIMIT_SHOT		5 		// how close the fired blaster shots have to get to the asteroids to register a hit
-
-#define HIT_LIMIT_SMALL		5 		//how close the asteroids have to get to the player to register a hit
-//#define HIT_LIMIT_MEDIUM	4
-//#define HIT_LIMIT_LARGE	5
 
 // Asteroid shapes SMALL
 
@@ -76,7 +68,6 @@ const int16_t saucer_routes[6][3] = { { 30, 120, 30 }, { 30, 120, 210 }, { 120,
 
 void drawTaskSingle(void * params) {
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
-	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
@@ -904,10 +895,6 @@ void drawTaskSingle(void * params) {
 				// Saucer 2
 				gdispDrawPoly(saucer_2.position.x, saucer_2.position.y,
 						saucer_shape, NUM_POINTS_SAUCER, White);
-
-//				// Debug
-//				sprintf(str2, "%f", 5/3);
-//				gdispDrawString(DISPLAY_CENTER_X, 50, str2, font1, White);
 			}
 
 			// GAME OVER
