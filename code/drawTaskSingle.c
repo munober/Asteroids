@@ -686,8 +686,9 @@ void drawTaskSingle(void * params) {
 				if ((player.position.y - saucer_1.position.y != 0) && (player.position.x - saucer_1.position.x != 0)) {
 					saucer_1.ratios[saucer_1.shot_number] = (player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y);
 				}
-				else
-					break;
+				else {
+					saucer_1.ratios[saucer_1.shot_number] = 1;
+				}
 
 				// Get shot ready
 				saucer_1.shots[saucer_1.shot_number].x = saucer_1.position.x;
@@ -711,7 +712,7 @@ void drawTaskSingle(void * params) {
 			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
 			for (i = 0; i <= 9; i++) {
 				if (saucer_1.shot_fired[i] == true) {
-					if (saucer_1.ratios[saucer_1.shot_number] > 5)
+					if (saucer_1.ratios[saucer_1.shot_number] > 3.0)
 						saucer_1.ratios[saucer_1.shot_number] = 1;
 					switch (saucer_1.shot_direction[i]) {
 					case up_and_left:
@@ -794,8 +795,9 @@ void drawTaskSingle(void * params) {
 				if ((player.position.y - saucer_2.position.y != 0) && (player.position.x - saucer_2.position.x != 0)) {
 					saucer_2.ratios[saucer_2.shot_number] = (player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y);
 				}
-				else
-					break;
+				else {
+					saucer_2.ratios[saucer_2.shot_number] = 1;
+				}
 
 				// Get shot ready
 				saucer_2.shots[saucer_2.shot_number].x = saucer_2.position.x;
@@ -819,7 +821,7 @@ void drawTaskSingle(void * params) {
 			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
 			for (i = 0; i <= 9; i++) {
 				if (saucer_2.shot_fired[i] == true) {
-					if (saucer_2.ratios[saucer_2.shot_number] > 5)
+					if (saucer_2.ratios[saucer_2.shot_number] > 3.0)
 						saucer_2.ratios[saucer_2.shot_number] = 1;
 					switch (saucer_2.shot_direction[i]) {
 					case up_and_left:
