@@ -1054,7 +1054,7 @@ void drawTaskSingle(void * params) {
 			}
 
 			// TRANSITION TO LEVEL 2
-			if (score == 2000) {
+			if (score == 4000) {
 				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
 				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
