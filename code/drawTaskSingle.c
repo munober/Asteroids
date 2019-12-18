@@ -16,7 +16,8 @@ extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern SemaphoreHandle_t timerSignal;
-extern SemaphoreHandle_t saucerFire;
+extern SemaphoreHandle_t saucerFire1;
+extern SemaphoreHandle_t saucerFire2;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
@@ -649,7 +650,7 @@ void drawTaskSingle(void * params) {
 			}
 
 			// SACUER #1 fire
-			if ((xSemaphoreTake(saucerFire, 0) == pdTRUE) && (time_passed > 20)) {
+			if ((xSemaphoreTake(saucerFire1, 0) == pdTRUE) && (time_passed > 20)) {
 				if ((player.position.y - saucer_1.position.y != 0) && (player.position.x - saucer_1.position.x != 0)) {
 					saucer_1.ratios[saucer_1.shot_number] = (player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y);
 				}
@@ -751,6 +752,75 @@ void drawTaskSingle(void * params) {
 						saucer_2.turning = false; // The saucer has reached its new y-position
 				} else {
 					saucer_2.position.x++;
+				}
+			}
+
+			// SACUER #2 fire
+			if ((xSemaphoreTake(saucerFire2, 0) == pdTRUE) && (time_passed > 35)) {
+				if ((player.position.y - saucer_2.position.y != 0) && (player.position.x - saucer_2.position.x != 0)) {
+					saucer_2.ratios[saucer_2.shot_number] = (player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y);
+				}
+				else
+					break;
+
+				// Get shot ready
+				saucer_2.shots[saucer_2.shot_number].x = saucer_2.position.x;
+				saucer_2.shots[saucer_2.shot_number].y = saucer_2.position.y;
+				saucer_2.shot_fired[saucer_2.shot_number] = true;
+
+				// Determine in which quarter-direction the shot moves (Up and left, Up and right, Down and left or Down and right)
+				if (((player.position.x - saucer_2.position.x) < 0) && ((player.position.y - saucer_2.position.y) < 0))
+					saucer_2.shot_direction[saucer_2.shot_number] = up_and_left;
+				if (((player.position.x - saucer_2.position.x) > 0) && ((player.position.y - saucer_2.position.y) < 0))
+					saucer_2.shot_direction[saucer_2.shot_number] = up_and_right;
+				if (((player.position.x - saucer_2.position.x) > 0) && ((player.position.y - saucer_2.position.y) > 0))
+					saucer_2.shot_direction[saucer_2.shot_number] = down_and_right;
+				if (((player.position.x - saucer_2.position.x) < 0) && ((player.position.y - saucer_2.position.y) > 0))
+					saucer_2.shot_direction[saucer_2.shot_number] = down_and_left;
+
+				saucer_2.shot_number = (saucer_2.shot_number + 1) % 10; // Get the next shot ready
+			}
+
+			// SAUCER #2 shots movement
+			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
+			for (i = 0; i <= 9; i++) {
+				if (saucer_2.shot_fired[i] == true) {
+					switch (saucer_2.shot_direction[i]) {
+					case up_and_left:
+						saucer_2.shots[i].x = saucer_2.shots[i].x
+								- saucer_2.ratios[i] * 2;
+						saucer_2.shots[i].y = saucer_2.shots[i].y - 2;
+						break;
+					case up_and_right:
+						saucer_2.shots[i].x = saucer_2.shots[i].x
+								+ saucer_2.ratios[i] * 2;
+						saucer_2.shots[i].y = saucer_2.shots[i].y - 2;
+						break;
+					case down_and_right:
+						saucer_2.shots[i].x = saucer_2.shots[i].x
+								+ saucer_2.ratios[i] * 2;
+						saucer_2.shots[i].y = saucer_2.shots[i].y + 2;
+						break;
+					case down_and_left:
+						saucer_2.shots[i].x = saucer_2.shots[i].x
+								- saucer_2.ratios[i] * 2;
+						saucer_2.shots[i].y = saucer_2.shots[i].y + 2;
+						break;
+					}
+				}
+			}
+
+			// SACUER #2 catch shots which have moved off the screen; offset: 5 pxl
+			for (i = 0; i <= 9; i++) {
+				if ((saucer_2.shots[i].x > 325) || (saucer_2.shots[i].x < -5)) {
+					saucer_2.shots[i].x = 0;
+					saucer_2.shots[i].y = 0;
+					saucer_2.shot_fired[i] = false;
+				}
+				if ((saucer_2.shots[i].y > 245) || (saucer_2.shots[i].y < -5)) {
+					saucer_2.shots[i].x = 0;
+					saucer_2.shots[i].y = 0;
+					saucer_2.shot_fired[i] = false;
 				}
 			}
 
@@ -888,13 +958,26 @@ void drawTaskSingle(void * params) {
 						saucer_shape, NUM_POINTS_SAUCER, White);
 
 				for (i = 0; i <= 9; i++) {
-					if (saucer_1.shot_fired[i] == true)
-						gdispFillCircle((int)saucer_1.shots[i].x, (int)saucer_1.shots[i].y, 3, Red);
+					if (saucer_1.shot_fired[i] == true) {
+						if ((player.position.y - saucer_1.position.y != 0)
+								&& (player.position.x - saucer_1.position.x != 0))
+							gdispFillCircle((int )saucer_1.shots[i].x, (int )saucer_1.shots[i].y, 3, Red);
+					}
 				}
 
 				// Saucer 2
 				gdispDrawPoly(saucer_2.position.x, saucer_2.position.y,
 						saucer_shape, NUM_POINTS_SAUCER, White);
+
+				for (i = 0; i <= 9; i++) {
+					if (saucer_2.shot_fired[i] == true) {
+						if ((player.position.y - saucer_2.position.y != 0)
+								&& (player.position.x - saucer_2.position.x != 0))
+							gdispFillCircle((int )saucer_2.shots[i].x, (int )saucer_2.shots[i].y, 3, Red);
+					}
+				}
+
+
 			}
 
 			// GAME OVER
@@ -932,18 +1015,24 @@ void drawTaskSingle(void * params) {
 //This "Timer" Task sends a signal every second
 void timer(void * params) {
 	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
-	const TickType_t two_seconds = 2000 / portTICK_PERIOD_MS;
+	const TickType_t one_and_a_half_seconds = 1500 / portTICK_PERIOD_MS;
+	const TickType_t two_seconds = 1500 / portTICK_PERIOD_MS;
 	TickType_t lastTime_1 = xTaskGetTickCount();
 	TickType_t lastTime_2 = xTaskGetTickCount();
+	TickType_t lastTime_3 = xTaskGetTickCount();
 
 	while (1) {
 		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
 			xSemaphoreGive(timerSignal);
 			lastTime_1 = xTaskGetTickCount();
 		}
-		if ((xTaskGetTickCount() - lastTime_2) >= two_seconds) {
-			xSemaphoreGive(saucerFire);
+		if ((xTaskGetTickCount() - lastTime_2) >= one_and_a_half_seconds) {
+			xSemaphoreGive(saucerFire1);
 			lastTime_2 = xTaskGetTickCount();
+		}
+		if ((xTaskGetTickCount() - lastTime_3) >= two_seconds) {
+			xSemaphoreGive(saucerFire2);
+			lastTime_3 = xTaskGetTickCount();
 		}
 	}
 }
