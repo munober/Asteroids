@@ -872,8 +872,8 @@ void drawTaskSingle(void * params) {
 			 */
 			for (i = 0; i <= 1; i++) {
 				for (j = 0; j <= 9; j++) {
-					if ((abs(the_saucers[i]->shots[j].x - player.position.x) <= HIT_LIMIT_SHOT)
-							&& (abs(the_saucers[i]->shots[j].y - player.position.y) <= HIT_LIMIT_SHOT)) {
+					if ((abs(the_saucers[i]->shots[j].x - player.position.x) <= HIT_LIMIT_SHOT_SMALL)
+							&& (abs(the_saucers[i]->shots[j].y - player.position.y) <= HIT_LIMIT_SHOT_SMALL)) {
 						player.state = hit;
 						hit_timestamp = xTaskGetTickCount();
 					}
@@ -885,8 +885,8 @@ void drawTaskSingle(void * params) {
 			 */
 			for (incr = 0; incr < input.shots_fired; incr++) {
 				for (i = 0; i <= 1; i++) {
-					if ((abs( the_saucers[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT)
-							&& (abs(the_saucers[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT)) {
+					if ((abs( the_saucers[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+							&& (abs(the_saucers[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
 						if (xTaskGetTickCount() - hit_saucer_timestamp > delay_hit) {
 							the_saucers[i]->remain_hits = the_saucers[i]->remain_hits - 1;
 							hit_saucer_timestamp = xTaskGetTickCount();
