@@ -1,12 +1,12 @@
 /*
- * drawTaskSingle.c
+ * drawTaskSingleLevel3.c
  *
- *  Created on: Dec 2, 2019
+ *  Created on: Dec 18, 2019
  *      Author: lab_espl_stud04
  */
 
 #include "includes.h"
-#include "drawTaskSingle.h"
+#include "drawTaskSingleLevel3.h"
 #include "math.h"
 #include "determinePlayerPosition.h"
 #include "stdlib.h" // Library for rand-function
@@ -15,9 +15,6 @@
 extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
-//extern SemaphoreHandle_t timerSignal;
-//extern SemaphoreHandle_t saucerFire1;
-//extern SemaphoreHandle_t saucerFire2;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
@@ -27,9 +24,8 @@ extern QueueHandle_t HighScoresQueue;
 //#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 //#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
 
-void drawTaskSingle(void * params) {
+void drawTaskSingleLevel3 (void * params){
 	// Asteroid shapes SMALL
-
 	const point type_1[] = { { 0, 8 }, { 5, 4 }, { 4, -5 }, { -5, -5 }, { -5,
 			4 } };
 	const point type_2[] = { { 0, 8 }, { 8, 4 }, { 4, -5 }, { -5, -5 }, { -5,
@@ -37,27 +33,23 @@ void drawTaskSingle(void * params) {
 	const point type_3[] = { { 5, 6 }, { 4, -2 }, { 7, -4 }, { -3, -5 }, { -5,
 			2 } };
 
-
 	// Asteroid shapes MEDIUM
+	const point type_4[] = { { 0, 8 }, { 8, 8 }, { 10, 0 }, { 10, -12 },
+			{ 0, -12 }, { -8, -12 }, { -8, 5 } };
+	const point type_5[] = { { 6, 10 }, { 10, 0 }, { 10, -10 }, { 0, -6 },
+			{ -6, -14 }, { -10, -4 }, { -6, 10 } };
+	const point type_6[] = { { 0, 10 }, { 10, 6 }, { 6, -3 }, { 4, -10 },
+			{ -5, -5 }, { -7, 0 }, { -5, 7 } };
 
-	//const point type_4[] = { { 0, 8 }, { 8, 8 }, { 10, 0 }, { 10, -12 },
-	//		{ 0, -12 }, { -8, -12 }, { -8, 5 } };
-	//const point type_5[] = { { 6, 10 }, { 10, 0 }, { 10, -10 }, { 0, -6 },
-	//		{ -6, -14 }, { -10, -4 }, { -6, 10 } };
-	//const point type_6[] = { { 0, 10 }, { 10, 6 }, { 6, -3 }, { 4, -10 },
-	//		{ -5, -5 }, { -7, 0 }, { -5, 7 } };
-	//
-	//// Asteroid shapes LARGE
-	//
-	//const point type_7[] = { { 4, 8 }, { 12, 14 }, { 14, 4 }, { 14, -12 },
-	//		{ 0, -18 }, { -12, -14 }, { -18, -8 }, { -18, 4 }, { -12, 8 }, { -8, 18 } };
-	//const point type_8[] = { { 4, 12 }, { 12, 14 }, { 18, 0 }, { 12, -8 },
-	//		{ 4, -12 }, { 0, -18 }, { -8, -12 }, { -18, -12 }, { -18, 4 }, { -12, 12 } };
-	//const point type_9[] = { { 0, 12 }, { 24, 4 }, { 8, 4 }, { 20, -12 },
-	//		{ 4, 0 }, { 0, -20 }, { -4, 0 }, { -20, -12 }, { -8, 4 }, { -24, 4 } };
+	// Asteroid shapes LARGE
+	const point type_7[] = { { 4, 8 }, { 12, 14 }, { 14, 4 }, { 14, -12 },
+			{ 0, -18 }, { -12, -14 }, { -18, -8 }, { -18, 4 }, { -12, 8 }, { -8, 18 } };
+	const point type_8[] = { { 4, 12 }, { 12, 14 }, { 18, 0 }, { 12, -8 },
+			{ 4, -12 }, { 0, -18 }, { -8, -12 }, { -18, -12 }, { -18, 4 }, { -12, 12 } };
+	const point type_9[] = { { 0, 12 }, { 24, 4 }, { 8, 4 }, { 20, -12 },
+			{ 4, 0 }, { 0, -20 }, { -4, 0 }, { -20, -12 }, { -8, 4 }, { -24, 4 } };
 
 	// Saucer shape
-
 	const point saucer_shape[] = { { -10, 3 }, { -6, 6 }, { 6, 6 }, { 10, 3 }, { -10, 3 },
 			{ -6, 0 }, { 6, 0 }, { 10, 3 }, { 6, 0 }, { 4, -5 }, { -4, -5 },
 			{ -6, 0 } };
@@ -67,9 +59,9 @@ void drawTaskSingle(void * params) {
 	 */
 	const int16_t saucer_routes[6][3] = { { 30, 120, 30 }, { 30, 120, 210 }, { 120,
 			30, 120 }, { 120, 210, 120 }, { 210, 120, 210 }, { 210, 120, 30 } };
+
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
-	const unsigned char next_state_signal_level2 = SINGLE_PLAYER_LEVEL_2;
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
 	unsigned int life_count = 3;
@@ -99,7 +91,7 @@ void drawTaskSingle(void * params) {
 	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
 	const TickType_t delay_hit_laser = 400;
-	const TickType_t inertia_threshold = 4000;
+	const TickType_t inertia_threshold = 2000;
 
 	// Timer stuff
 	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
@@ -913,7 +905,7 @@ void drawTaskSingle(void * params) {
 //			Debug print line for angle and thrust
 			sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
 			gdispDrawString(0, 230, str, font1, White);
-			sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
+			sprintf(str2, "Level 3");
 			gdispDrawString(0, 220, str2, font1, White);
 
 
@@ -1034,26 +1026,6 @@ void drawTaskSingle(void * params) {
 				}
 			}
 
-			// TRANSITION TO LEVEL 2
-			if (score == 2000) {
-				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
-				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
-				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D
-//					life_count = restart_lives;
-//					moved = 0;
-//					// TODO:
-//					// Put asteroids in their original places
-//					// Reset score and level
-//					// Clean up bullets, alien ship etc.
-//					// Reset game timer
-//					time_passed = 0;
-//					xQueueSend(HighScoresQueue, &score, 0);
-//					score = 0;
-					xQueueSend(StateQueue, &next_state_signal_level2, 100);
-				}
-			}
-
 //			Drawing the fired canon shots
 			for(incr = 0; incr < input.shots_fired; incr++){
 				if(shots[incr].status == spawn){
@@ -1065,4 +1037,3 @@ void drawTaskSingle(void * params) {
 		} // Block until screen is ready
 	} // While-loop
 } // Task
-

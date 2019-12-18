@@ -29,13 +29,14 @@ void stateMachineTask(void * params);
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
 void drawTaskMultiplayer (void * params);
-//void timer(void * params);
 void drawTaskPause (void * params);
 void drawTaskCheats(void * params);
 void drawTaskHighScore (void * params);
 void drawTaskHighScoreInterface (void * params);
 void checkJoystickTask (void * params);
 void uartTask (void * params);
+void drawTaskSingleLevel2 (void * params);
+void drawTaskSingleLevel3 (void * params);
 
 //QueueHandle_t ButtonQueue;
 QueueHandle_t StateQueue;
@@ -48,10 +49,6 @@ QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 
 SemaphoreHandle_t DrawReady;
-//SemaphoreHandle_t timerSignal;
-SemaphoreHandle_t saucerFire1;
-SemaphoreHandle_t saucerFire2;
-
 TaskHandle_t frameSwapHandle;
 TaskHandle_t stateMachineTaskHandle;
 TaskHandle_t drawTaskStartMenuHandle;
@@ -62,8 +59,9 @@ TaskHandle_t drawTaskCheatsHandle;
 TaskHandle_t checkJoystickTaskHandle;
 TaskHandle_t drawTaskHighScoreHandle;
 TaskHandle_t drawTaskHighScoreInterfaceHandle;
-//TaskHandle_t timerHandle;
 TaskHandle_t uartTaskHandle;
+TaskHandle_t drawTaskSingleLevel2Handle;
+TaskHandle_t drawTaskSingleLevel3Handle;
 
 int main(void){
 
@@ -82,10 +80,6 @@ int main(void){
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
 
-//	timerSignal = xSemaphoreCreateBinary();
-	saucerFire1 = xSemaphoreCreateBinary();
-	saucerFire2= xSemaphoreCreateBinary();
-
 	// Initializes Tasks with their respective priority
 	// Core tasks
 
@@ -95,18 +89,22 @@ int main(void){
 
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
+	xTaskCreate(drawTaskSingleLevel2, "drawTaskSingleLevel2", 1000, NULL, 3, &drawTaskSingleLevel2Handle);
+	xTaskCreate(drawTaskSingleLevel3, "drawTaskSingleLevel3", 1000, NULL, 3, &drawTaskSingleLevel3Handle);
 	xTaskCreate(drawTaskMultiplayer, "drawTaskMultiplayer", 1000, NULL, 2, &drawTaskMultiplayerHandle);
-//	xTaskCreate(timer, "Timer", 1000, NULL, 2, &timerHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
 	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
 	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 4, &drawTaskHighScoreHandle);
 	xTaskCreate(drawTaskHighScoreInterface, "drawTaskHighScoreInterface", 1000, NULL, 2, &drawTaskHighScoreInterfaceHandle);
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
 	xTaskCreate(uartTask, "uartTask", 1000, NULL, 3, &uartTaskHandle);
+
 //	Suspending ALL tasks that draw to the screen, will be handled by state machine.
 
     vTaskSuspend(drawTaskStartMenuHandle);
     vTaskSuspend(drawTaskSingleHandle);
+    vTaskSuspend(drawTaskSingleLevel2Handle);
+    vTaskSuspend(drawTaskSingleLevel3Handle);
     vTaskSuspend(drawTaskMultiplayerHandle);
     vTaskSuspend(drawTaskPauseHandle);
     vTaskSuspend(drawTaskCheatsHandle);
