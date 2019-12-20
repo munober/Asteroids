@@ -204,7 +204,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_10.shape = super_random % 3;
 	asteroid_10.position_locked = true;
 
-	// Put them asteroids inside an array
+	// Putting all asteroid variables inside a single array
 	struct asteroid* all_asteroids[10] = { &asteroid_1, &asteroid_2, &asteroid_3,
 			&asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7, &asteroid_8,
 			&asteroid_9, &asteroid_10 };
@@ -1033,7 +1033,7 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 			// TRANSITION TO LEVEL 3
-			if (score == 5000) {
+			if (score == LEVEL_THREE_SCORE_THRESHOLD) {
 				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
 				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);

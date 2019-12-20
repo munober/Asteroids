@@ -28,12 +28,15 @@ void drawTaskStartMenu(void * params) {
 
 	struct joystick_angle_pulse joystick_internal;
 
+	char version [1][20] = {"george"}; // Use this variable to print a custom message on the start menu.
 	char single [1][20] = {"Singleplayer"};
 	char multi [1][20] = {"Multiplayer"};
 	char settings [1][20] = {"Settings"};
 	char cheats [1][20] = {"Cheats"};
 	char highscores [1][20] = {"High Scores"};
-	char user_help[1][70] = {"HAS MORE. Navigate with joystick, select with E."};
+	char user_help[1][70];
+	char user_help_content[1][70] = {"Navigate with joystick, select with E."};
+	sprintf(user_help[0], " %s | %s", version, user_help_content);
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {

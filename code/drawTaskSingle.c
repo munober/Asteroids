@@ -15,9 +15,6 @@
 extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
-//extern SemaphoreHandle_t timerSignal;
-//extern SemaphoreHandle_t saucerFire1;
-//extern SemaphoreHandle_t saucerFire2;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
@@ -37,25 +34,6 @@ void drawTaskSingle(void * params) {
 	const point type_3[] = { { 5, 6 }, { 4, -2 }, { 7, -4 }, { -3, -5 }, { -5,
 			2 } };
 
-
-	// Asteroid shapes MEDIUM
-
-	//const point type_4[] = { { 0, 8 }, { 8, 8 }, { 10, 0 }, { 10, -12 },
-	//		{ 0, -12 }, { -8, -12 }, { -8, 5 } };
-	//const point type_5[] = { { 6, 10 }, { 10, 0 }, { 10, -10 }, { 0, -6 },
-	//		{ -6, -14 }, { -10, -4 }, { -6, 10 } };
-	//const point type_6[] = { { 0, 10 }, { 10, 6 }, { 6, -3 }, { 4, -10 },
-	//		{ -5, -5 }, { -7, 0 }, { -5, 7 } };
-	//
-	//// Asteroid shapes LARGE
-	//
-	//const point type_7[] = { { 4, 8 }, { 12, 14 }, { 14, 4 }, { 14, -12 },
-	//		{ 0, -18 }, { -12, -14 }, { -18, -8 }, { -18, 4 }, { -12, 8 }, { -8, 18 } };
-	//const point type_8[] = { { 4, 12 }, { 12, 14 }, { 18, 0 }, { 12, -8 },
-	//		{ 4, -12 }, { 0, -18 }, { -8, -12 }, { -18, -12 }, { -18, 4 }, { -12, 12 } };
-	//const point type_9[] = { { 0, 12 }, { 24, 4 }, { 8, 4 }, { 20, -12 },
-	//		{ 4, 0 }, { 0, -20 }, { -4, 0 }, { -20, -12 }, { -8, 4 }, { -24, 4 } };
-
 	// Saucer shape
 
 	const point saucer_shape[] = { { -10, 3 }, { -6, 6 }, { 6, 6 }, { 10, 3 }, { -10, 3 },
@@ -67,18 +45,24 @@ void drawTaskSingle(void * params) {
 	 */
 	const int16_t saucer_routes[6][3] = { { 30, 120, 30 }, { 30, 120, 210 }, { 120,
 			30, 120 }, { 120, 210, 120 }, { 210, 120, 210 }, { 210, 120, 30 } };
+
+//	Next possible states
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	const unsigned char next_state_signal_level2 = SINGLE_PLAYER_LEVEL_2;
+
+//	A few buffer, empty strings to print to
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
 	char str3[100]; // another buffer for messages to draw to display
 	char str4[100]; // another buffer for messages to draw to display
-	unsigned int life_count = 3;
-	unsigned int life_readin = 3;
-	unsigned int restart_lives = 3;
-	boolean life_count_lock = false;
-	int time_passed = 18; // Simple clock at top of screen
+
+//	Variables to store the number of lives
+	unsigned int life_count = 3;	// For standard game mode
+	unsigned int life_readin = 3;	// Will be filled with queue readin
+	unsigned int restart_lives = 3;	// Lives to be had when game is restarted
+	boolean life_count_lock = false;	// Used for delays when player is hit
+	int time_passed = 0; // Simple clock at top of screen
 
 	boolean one_asteroid_hit = false;
 	int16_t score = 0;
@@ -90,10 +74,7 @@ void drawTaskSingle(void * params) {
 	int16_t super_random = rand() % 241;
 
 	// All asteroid shapes in one array: From this array we later choose which shape to draw
-		const point* shapes_small[3] = {type_1, type_2, type_3};
-	//	const point* shapes_medium[3] = {type_4, type_5, type_6};
-	//	const point* shapes_large[3] = {type_7, type_8, type_9};
-	//	const point** shapes_all[3] = {shapes_small, shapes_medium, shapes_large};
+	const point* shapes_small[3] = {type_1, type_2, type_3};
 
 	TickType_t hit_timestamp;
 	TickType_t hit_timestamp_laser[10] = { {0} };
@@ -215,12 +196,12 @@ void drawTaskSingle(void * params) {
 	asteroid_10.shape = super_random % 3;
 	asteroid_10.position_locked = false;
 
-	// Put them asteroids inside an array
+	// Putting all asteroid variables inside a single array
 	struct asteroid* all_asteroids[10] = { &asteroid_1, &asteroid_2, &asteroid_3,
 			&asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7, &asteroid_8,
 			&asteroid_9, &asteroid_10 };
 
-	// Initialize Saucer
+	// Initializing saucers
 	struct saucer saucer_1 = { { 0 } };
 	saucer_1.route_number = super_random % 6;
 	saucer_1.position.x = -10;
@@ -389,7 +370,6 @@ void drawTaskSingle(void * params) {
 			}
 
 // 			Player ship rotation
-
 			memcpy(&form, &form_orig, 3 * sizeof(struct point));
 			for(incr = 0; incr < 3; incr++){
 				form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
@@ -399,7 +379,6 @@ void drawTaskSingle(void * params) {
 			}
 
 // 			Get player ship direction
-
 			direction.x1 = form[2].x;
 			direction.y1 = form[2].y;
 			direction.x2 = form[2].x;
@@ -419,6 +398,7 @@ void drawTaskSingle(void * params) {
 				else if((player.position.y - player.position_old.y) < 0){
 					player.position.y--;
 				}
+//				Still not sure about these 2 lines, dont delete yet	
 //				player.position.x += (player.position.x - player.position_old.x);
 //				player.position.y += (player.position.y - player.position_old.y);
 			}
@@ -477,6 +457,7 @@ void drawTaskSingle(void * params) {
 			}
 //			Handling movement of fired shots
 			for(incr = 0; incr < input.shots_fired; incr++){
+//				These two lines make the fired shots move slower, experiment with this
 //				shots[incr].position.x += 0.25 * (shots[incr].shot_direction.x2 - shots[incr].shot_direction.x1);
 //				shots[incr].position.y += 0.25 * (shots[incr].shot_direction.y2 - shots[incr].shot_direction.y1);
 				switch(shots[incr].angle){
@@ -1054,21 +1035,11 @@ void drawTaskSingle(void * params) {
 			}
 
 			// TRANSITION TO LEVEL 2
-			if (score == 4000) {
+			if (score == LEVEL_TWO_SCORE_THRESHOLD) {
 				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
 				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D
-//					life_count = restart_lives;
-//					moved = 0;
-//					// TODO:
-//					// Put asteroids in their original places
-//					// Reset score and level
-//					// Clean up bullets, alien ship etc.
-//					// Reset game timer
-//					time_passed = 0;
-//					xQueueSend(HighScoresQueue, &score, 0);
-//					score = 0;
+				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D					
 					xQueueSend(StateQueue, &next_state_signal_level2, 100);
 				}
 			}

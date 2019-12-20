@@ -21,6 +21,12 @@
 #define HIT_LIMIT_MEDIUM			8
 #define HIT_LIMIT_LARGE				12
 
+// Score thresholds for going on to the next levels
+// After beating game, will be spawning asteroids to let player go on to reach a new high score
+#define LEVEL_TWO_SCORE_THRESHOLD          4000
+#define LEVEL_THREE_SCORE_THRESHOLD        12000
+#define BEAT_GAME_SCORE_THRESHOLD          24000
+
 
 
 #endif /* INCLUDE_GAMECONFIG_H_ */
