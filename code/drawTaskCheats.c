@@ -141,6 +141,7 @@ void drawTaskCheats(void * params) {
 					gdispDrawString(190, 150, lives_display[i],	font1, White);
 				}
 				if(buttonCount(BUT_E)){
+					menu_select = CLASSIC_3_LIVES;
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);
 				}
 				break;

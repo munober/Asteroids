@@ -60,14 +60,27 @@ void drawTaskSingleLevel3 (void * params){
 	const int16_t saucer_routes[6][3] = { { 30, 120, 30 }, { 30, 120, 210 }, { 120,
 			30, 120 }, { 120, 210, 120 }, { 210, 120, 210 }, { 210, 120, 30 } };
 
+//	Next possible states
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
+
+	//	A few buffer, empty strings to print to
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
-	unsigned int life_count = 3;
-	unsigned int life_readin = 3;
-	unsigned int restart_lives = 3;
-	boolean life_count_lock = false;
+	char str3[100]; // another buffer for messages to draw to display
+	char str4[100]; // another buffer for messages to draw to display
+
+	unsigned int exeCount = 0;
+	gamestart3:
+	if(exeCount != 0){
+		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
+	}
+
+//	Variables to store the number of lives
+	unsigned int life_count = 3;	// For standard game mode
+	unsigned int life_readin = 3;	// Will be filled with queue readin
+	unsigned int restart_lives = 3;	// Lives to be had when game is restarted
+	boolean life_count_lock = false;	// Used for delays when player is hit
 	int time_passed = 0; // Simple clock at top of screen
 
 	boolean one_asteroid_hit = false;
@@ -101,7 +114,6 @@ void drawTaskSingleLevel3 (void * params){
 	TickType_t lastTime_2 = xTaskGetTickCount();
 	TickType_t lastTime_3 = xTaskGetTickCount();
 
-	unsigned int exeCount = 0;
 	unsigned int thrustCount = 0;
 	int i = 0;
 
@@ -1011,18 +1023,9 @@ void drawTaskSingleLevel3 (void * params){
 				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White); // White border
 				sprintf(str, "GAME OVER. Press D to continue."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D
-					life_count = restart_lives;
-					moved = 0;
-					// TODO:
-					// Put asteroids in their original places
-					// Reset score and level
-					// Clean up bullets, alien ship etc.
-					// Reset game timer
-					time_passed = 0;
+				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D			
 					xQueueSend(HighScoresQueue, &score, 0);
-					score = 0;
-					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
+					goto gamestart3;
 				}
 			}
 

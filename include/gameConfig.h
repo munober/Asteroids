@@ -8,7 +8,7 @@
 #ifndef INCLUDE_GAMECONFIG_H_
 #define INCLUDE_GAMECONFIG_H_
 
-
+// Speed of laser blaster shots
 #define LASER_BLASTER_SPEED			        3
 
 // How close the fired blaster shots have to get to the asteroids to register a hit

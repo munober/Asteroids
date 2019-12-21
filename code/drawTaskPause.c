@@ -68,6 +68,7 @@ void drawTaskPause(void * params) {
 					gdispDrawString(120, 150, quit,	font1, Yellow);
 				}
 				if (buttonCount(BUT_E)){
+					menu_select = RESUME_SELECT;
 					xQueueSend(LifeCountQueue, &life_readin, 100);
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);
 				}

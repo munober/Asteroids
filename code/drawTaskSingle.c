@@ -19,10 +19,8 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t HighScoresQueue;
 
-#define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
-#define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
-//#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
-//#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
+#define NUM_POINTS_SAUCER 			(sizeof(saucer_shape)/sizeof(saucer_shape[0]))
+#define NUM_POINTS_SMALL 			(sizeof(type_1)/sizeof(type_1[0]))
 
 void drawTaskSingle(void * params) {
 	// Asteroid shapes SMALL
@@ -57,6 +55,11 @@ void drawTaskSingle(void * params) {
 	char str3[100]; // another buffer for messages to draw to display
 	char str4[100]; // another buffer for messages to draw to display
 
+	unsigned int exeCount = 0;
+	gamestart:
+	if(exeCount != 0){
+		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
+	}
 //	Variables to store the number of lives
 	unsigned int life_count = 3;	// For standard game mode
 	unsigned int life_readin = 3;	// Will be filled with queue readin
@@ -93,7 +96,6 @@ void drawTaskSingle(void * params) {
 	TickType_t lastTime_2 = xTaskGetTickCount();
 	TickType_t lastTime_3 = xTaskGetTickCount();
 
-	unsigned int exeCount = 0;
 	unsigned int thrustCount = 0;
 	int i, j;
 
@@ -1019,18 +1021,9 @@ void drawTaskSingle(void * params) {
 				gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White); // White border
 				sprintf(str, "GAME OVER. Press D to continue."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D
-					life_count = restart_lives;
-					moved = 0;
-					// TODO:
-					// Put asteroids in their original places
-					// Reset score and level
-					// Clean up bullets, alien ship etc.
-					// Reset game timer
-					time_passed = 0;
+				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D			
 					xQueueSend(HighScoresQueue, &score, 0);
-					score = 0;
-					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
+					goto gamestart;
 				}
 			}
 
