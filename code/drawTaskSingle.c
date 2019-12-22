@@ -24,16 +24,11 @@ extern QueueHandle_t HighScoresQueue;
 
 void drawTaskSingle(void * params) {
 	// Asteroid shapes SMALL
-
-	const point type_1[] = { { 0, 8 }, { 5, 4 }, { 4, -5 }, { -5, -5 }, { -5,
-			4 } };
-	const point type_2[] = { { 0, 8 }, { 8, 4 }, { 4, -5 }, { -5, -5 }, { -5,
-			4 } };
-	const point type_3[] = { { 5, 6 }, { 4, -2 }, { 7, -4 }, { -3, -5 }, { -5,
-			2 } };
+	const point type_1[] = { { 0, 8 }, { 5, 4 }, { 4, -5 }, { -5, -5 }, { -5, 4 } };
+	const point type_2[] = { { 0, 8 }, { 8, 4 }, { 4, -5 }, { -5, -5 }, { -5, 4 } };
+	const point type_3[] = { { 5, 6 }, { 4, -2 }, { 7, -4 }, { -3, -5 }, { -5, 2 } };
 
 	// Saucer shape
-
 	const point saucer_shape[] = { { -10, 3 }, { -6, 6 }, { 6, 6 }, { 10, 3 }, { -10, 3 },
 			{ -6, 0 }, { 6, 0 }, { 10, 3 }, { 6, 0 }, { 4, -5 }, { -4, -5 },
 			{ -6, 0 } };
@@ -400,9 +395,6 @@ void drawTaskSingle(void * params) {
 				else if((player.position.y - player.position_old.y) < 0){
 					player.position.y--;
 				}
-//				Still not sure about these 2 lines, dont delete yet	
-//				player.position.x += (player.position.x - player.position_old.x);
-//				player.position.y += (player.position.y - player.position_old.y);
 			}
 			else if((direction_old.x1 != direction.x1) || (direction_old.y1 != direction.y1)
 					|| (direction_old.x2 != direction.x2) || (direction_old.y2 != direction.y2)){
@@ -459,9 +451,6 @@ void drawTaskSingle(void * params) {
 			}
 //			Handling movement of fired shots
 			for(incr = 0; incr < input.shots_fired; incr++){
-//				These two lines make the fired shots move slower, experiment with this
-//				shots[incr].position.x += 0.25 * (shots[incr].shot_direction.x2 - shots[incr].shot_direction.x1);
-//				shots[incr].position.y += 0.25 * (shots[incr].shot_direction.y2 - shots[incr].shot_direction.y1);
 				switch(shots[incr].angle){
 				case JOYSTICK_ANGLE_N:
 					shots[incr].position.y -= LASER_BLASTER_SPEED;
