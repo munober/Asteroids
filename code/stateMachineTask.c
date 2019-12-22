@@ -21,7 +21,7 @@ extern TaskHandle_t drawTaskSingleLevel2Handle;
 extern TaskHandle_t drawTaskSingleLevel3Handle;
 
 void stateMachineTask(void * params) {
-	unsigned char current_state = MAIN_MENU_STATE; // Default state
+	unsigned char current_state = STARTING_STATE; // Default state
 	unsigned char state_changed = 1; // Only re-evaluate state if it has changed
 	while (1) {
 		if (state_changed)

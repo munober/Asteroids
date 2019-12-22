@@ -26,6 +26,8 @@ void drawTaskPause(void * params) {
 	char user_help[1][70] = {"PAUSE MENU. Navigate with joystick, select with E."};
 	char resume[1][70] = {"Resume"};
 	char quit[1][70] = {"Quit"};
+	char dash [1][5] = {">"};
+	char dash_reverse [1][5] = {"<"};
 	unsigned char menu_select = RESUME_SELECT;
 	struct joystick_angle_pulse joystick_internal;
 
@@ -54,19 +56,19 @@ void drawTaskPause(void * params) {
 			}
 
 			if(menu_select == RESUME_SELECT){
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 90, resume, font1, Yellow);
-					gdispDrawString(120, 150, quit,	font1, White);
-				}
+				gdispDrawString(120, 90, resume, font1, Yellow);
+				gdispDrawString(120, 150, quit,	font1, White);
+				gdispDrawString(110, 90, dash[0], font1, Yellow);
+				gdispDrawString(195, 90, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E)){
 					xQueueSend(StateQueue, &next_state_signal_single, 100);
 				}
 			}
 			else if(menu_select == QUIT_SELECT){
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 90, resume, font1, White);
-					gdispDrawString(120, 150, quit,	font1, Yellow);
-				}
+				gdispDrawString(120, 90, resume, font1, White);
+				gdispDrawString(120, 150, quit,	font1, Yellow);
+				gdispDrawString(110, 150, dash[0], font1, Yellow);
+				gdispDrawString(195, 150, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E)){
 					menu_select = RESUME_SELECT;
 					xQueueSend(LifeCountQueue, &life_readin, 100);

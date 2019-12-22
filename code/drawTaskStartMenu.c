@@ -28,15 +28,18 @@ void drawTaskStartMenu(void * params) {
 
 	struct joystick_angle_pulse joystick_internal;
 
-	char version [1][20] = {"george"}; // Use this variable to print a custom message on the start menu.
+	char version [1][30] = { 0 }; // Use this variable to print a custom message on the start menu.
+	sprintf(version, "Build number -- %i", BUILD_NUMBER);
 	char single [1][20] = {"Singleplayer"};
 	char multi [1][20] = {"Multiplayer"};
 	char settings [1][20] = {"Settings"};
 	char cheats [1][20] = {"Cheats"};
 	char highscores [1][20] = {"High Scores"};
+	char dash [1][5] = {">"};
+	char dash_reverse [1][5] = {"<"};
 	char user_help[1][70];
 	char user_help_content[1][70] = {"Navigate with joystick, select with E."};
-	sprintf(user_help[0], " %s | %s", version, user_help_content);
+	sprintf(user_help[0], " %s", user_help_content);
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
@@ -55,10 +58,16 @@ void drawTaskStartMenu(void * params) {
 					case CHEATS_SELECT:
 						menu_select = HIGHSCORES_SELECT;
 						break;
+					case HIGHSCORES_SELECT:
+						menu_select = SINGLEPLAYER_SELECT;
+						break;
 					}
 				}
 				else if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
 					switch(menu_select){
+					case SINGLEPLAYER_SELECT:
+						menu_select = HIGHSCORES_SELECT;
+						break;
 					case MULTIPLAYER_SELECT:
 						menu_select = SINGLEPLAYER_SELECT;
 						break;
@@ -77,63 +86,60 @@ void drawTaskStartMenu(void * params) {
 			}
 
 			gdispClear(Black);
+			gdispDrawString(TEXT_X(version[0]), 220, version[0],font1, White);
+			gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
 
 			switch (menu_select) {
 			case SINGLEPLAYER_SELECT:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 40, single[i],	font1, Yellow);
-					gdispDrawString(120, 80, multi[i],	font1, White);
-					gdispDrawString(120, 120, settings[i],	font1, White);
-					gdispDrawString(120, 160, cheats[i],	font1, White);
-					gdispDrawString(120, 200, highscores[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-				}
+				gdispDrawString(120, 40, single[0],	font1, Yellow);
+				gdispDrawString(120, 80, multi[0],	font1, White);
+				gdispDrawString(120, 120, settings[0],	font1, White);
+				gdispDrawString(120, 160, cheats[0],	font1, White);
+				gdispDrawString(120, 200, highscores[0],	font1, White);
+				gdispDrawString(110, 40, dash[0], font1, Yellow);
+				gdispDrawString(195, 40, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E))
 					xQueueSend(StateQueue, &next_state_signal_single, 100);
 				break;
 			case MULTIPLAYER_SELECT:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 40, single[i],	font1, White);
-					gdispDrawString(120, 80, multi[i],	font1, Yellow);
-					gdispDrawString(120, 120, settings[i],	font1, White);
-					gdispDrawString(120, 160, cheats[i],	font1, White);
-					gdispDrawString(120, 200, highscores[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-				}
+					gdispDrawString(120, 40, single[0],	font1, White);
+					gdispDrawString(120, 80, multi[0],	font1, Yellow);
+					gdispDrawString(120, 120, settings[0],	font1, White);
+					gdispDrawString(120, 160, cheats[0],	font1, White);
+					gdispDrawString(120, 200, highscores[0],	font1, White);
+					gdispDrawString(110, 80, dash[0], font1, Yellow);
+					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
 				if(buttonCount(BUT_E))
 					xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
 				break;
 			case SETTINGS_SELECT:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 40, single[i],	font1, White);
-					gdispDrawString(120, 80, multi[i],	font1, White);
-					gdispDrawString(120, 120, settings[i],	font1, Yellow);
-					gdispDrawString(120, 160, cheats[i],	font1, White);
-					gdispDrawString(120, 200, highscores[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-				}
+				gdispDrawString(120, 40, single[0],	font1, White);
+				gdispDrawString(120, 80, multi[0],	font1, White);
+				gdispDrawString(120, 120, settings[0],	font1, Yellow);
+				gdispDrawString(120, 160, cheats[0],	font1, White);
+				gdispDrawString(120, 200, highscores[0],	font1, White);
+				gdispDrawString(110, 120, dash[0], font1, Yellow);
+				gdispDrawString(195, 120, dash_reverse[0], font1, Yellow);
 				break;
 			case CHEATS_SELECT:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 40, single[i],	font1, White);
-					gdispDrawString(120, 80, multi[i],	font1, White);
-					gdispDrawString(120, 120, settings[i],	font1, White);
-					gdispDrawString(120, 160, cheats[i],	font1, Yellow);
-					gdispDrawString(120, 200, highscores[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-				}
+				gdispDrawString(120, 40, single[0],	font1, White);
+				gdispDrawString(120, 80, multi[0],	font1, White);
+				gdispDrawString(120, 120, settings[0],	font1, White);
+				gdispDrawString(120, 160, cheats[0],	font1, Yellow);
+				gdispDrawString(120, 200, highscores[0],	font1, White);
+				gdispDrawString(110, 160, dash[0], font1, Yellow);
+				gdispDrawString(195, 160, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E))
 					xQueueSend(StateQueue, &next_state_signal_cheats, 100);
 				break;
 			case HIGHSCORES_SELECT:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 40, single[i],	font1, White);
-					gdispDrawString(120, 80, multi[i],	font1, White);
-					gdispDrawString(120, 120, settings[i],	font1, White);
-					gdispDrawString(120, 160, cheats[i],	font1, White);
-					gdispDrawString(120, 200, highscores[i],	font1, Yellow);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-				}
+				gdispDrawString(120, 40, single[0],	font1, White);
+				gdispDrawString(120, 80, multi[0],	font1, White);
+				gdispDrawString(120, 120, settings[0],	font1, White);
+				gdispDrawString(120, 160, cheats[0],	font1, White);
+				gdispDrawString(120, 200, highscores[0],	font1, Yellow);
+				gdispDrawString(110, 200, dash[0], font1, Yellow);
+				gdispDrawString(195, 200, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E))
 					xQueueSend(StateQueue, &next_state_signal_highscores, 100);
 				break;

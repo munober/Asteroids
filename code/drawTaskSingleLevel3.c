@@ -2,7 +2,7 @@
  * drawTaskSingleLevel3.c
  *
  *  Created on: Dec 18, 2019
- *      Author: lab_espl_stud04
+ *      Author: Teodor Fratiloiu
  */
 
 #include "includes.h"
@@ -67,11 +67,9 @@ void drawTaskSingleLevel3 (void * params){
 	//	A few buffer, empty strings to print to
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
-	char str3[100]; // another buffer for messages to draw to display
-	char str4[100]; // another buffer for messages to draw to display
 
 	unsigned int exeCount = 0;
-	gamestart3:
+	gamestart3: // Will return here if game over
 	if(exeCount != 0){
 		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 	}
@@ -130,7 +128,9 @@ void drawTaskSingleLevel3 (void * params){
 	player.position_old.x = player.position.x;
 	player.position_old.y = player.position.y;
 	player.state = fine;
-	int asteroids_to_destroy = 20; // In the first level there are 20 small asteroids to destroy
+	//	Number of asteroids to be destroyed in this level
+	int asteroids_to_destroy_medium = TO_DESTROY_LEVEL_3_MEDIUM;
+	int asteroids_to_destroy_large = TO_DESTROY_LEVEL_3_LARGE;
 
 	// Initialize asteroids: max. 10 asteroids are on screen at once
 	// asteroid shape is either 0, 1 or 2
@@ -270,7 +270,7 @@ void drawTaskSingleLevel3 (void * params){
 
 //	Fired blaster cannon shots
 	// Initializations
-	struct shot shots[50] = { { 0 } };
+	struct shot shots[100] = { { 0 } };
 	void initialize_single_shot(int i){
 		shots[i].position.x = 0;
 		shots[i].position.y = 0;
@@ -512,11 +512,7 @@ void drawTaskSingleLevel3 (void * params){
 
 			exeCount++;
 
-			/*
-			 * Here we re-spawn asteroids if the player still has to destroy more than 10 asteroids.
-			 * If there are only 10 or less asteroids left to destroy, no more new asteroids will be spawned.
-			 */
-			if ((one_asteroid_hit == true) && (asteroids_to_destroy >= 10)) {
+			if ((one_asteroid_hit == true) && (asteroids_to_destroy_medium >= 10)) {
 				// Detect which asteroid was destroyed
 				for (i = 0; i <= 9; i++) {
 					if (all_asteroids[i]->remain_hits == none)
@@ -891,7 +887,7 @@ void drawTaskSingleLevel3 (void * params){
 							hit_timestamp_laser[incr] = xTaskGetTickCount();
 							score+=100;
 							one_asteroid_hit = true;
-							asteroids_to_destroy--;
+							asteroids_to_destroy_medium--;
 						}
 					}
 				}

@@ -112,7 +112,7 @@ void drawTaskSingle(void * params) {
 	player.position_old.x = player.position.x;
 	player.position_old.y = player.position.y;
 	player.state = fine;
-	int asteroids_to_destroy = 20; // In the first level there are 20 small asteroids to destroy
+	int asteroids_to_destroy = TO_DESTROY_LEVEL_1_SMALL; // In the first level there are 20 small asteroids to destroy
 
 	// Initialize asteroids: max. 10 asteroids are on screen at once
 	// asteroid shape is either 0, 1 or 2
@@ -257,7 +257,7 @@ void drawTaskSingle(void * params) {
 
 //	Fired blaster cannon shots
 	// Initializations
-	struct shot shots[50] = { { 0 } };
+	struct shot shots[100] = { { 0 } };
 	void initialize_single_shot(int i){
 		shots[i].position.x = 0;
 		shots[i].position.y = 0;
@@ -842,7 +842,7 @@ void drawTaskSingle(void * params) {
 							all_asteroids[i]->position_locked = true;
 							all_asteroids[i]->remain_hits = none;
 							hit_timestamp_laser[incr] = xTaskGetTickCount();
-							score+=100;
+							score += POINTS_ASTEROID_SMALL;
 							one_asteroid_hit = true;
 							asteroids_to_destroy--;
 						}
@@ -874,7 +874,7 @@ void drawTaskSingle(void * params) {
 							the_saucers[i]->remain_hits = the_saucers[i]->remain_hits - 1;
 							hit_saucer_timestamp = xTaskGetTickCount();
 							if (the_saucers[i]->remain_hits == none) {
-								score += 1000;
+								score += POINTS_SAUCER_HIT;
 								the_saucers[i]->position.x = -15;
 								the_saucers[i]->position.y = -15;
 								for (j = 0; j <= 9; j++) {

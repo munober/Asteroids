@@ -27,12 +27,14 @@ void drawTaskCheats(void * params) {
 
 	struct joystick_angle_pulse joystick_internal;
 
-	char single [1][20] = {"3 lives"};
+	char single [1][20] = {"Classic | 3 lives"};
 	char multi [1][20] = {"9000 lives"};
 	char settings [1][20] = {"Granaular: "};
 	char cheats [1][20] = {"Back"};
 	char user_help[1][70] = {"CHEATS MENU. Navigate with joystick, select with E."};
 	char lives_display[1][20];
+	char dash [1][5] = {">"};
+	char dash_reverse [1][5] = {"<"};
 
 	unsigned int starting_lives = 3;
 	unsigned int starting_lives_old = starting_lives;
@@ -74,40 +76,40 @@ void drawTaskCheats(void * params) {
 
 			switch (menu_select) {
 			case CLASSIC_3_LIVES:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 30, single[i],	font1, Yellow);
-					gdispDrawString(120, 90, multi[i],	font1, White);
-					gdispDrawString(120, 150, settings[i],	font1, White);
-					gdispDrawString(120, 210, cheats[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-					gdispDrawString(190, 150, lives_display[i],	font1, White);
-				}
+				gdispDrawString(120, 30, single[0],	font1, Yellow);
+				gdispDrawString(120, 90, multi[0],	font1, White);
+				gdispDrawString(120, 150, settings[0],	font1, White);
+				gdispDrawString(120, 210, cheats[0],	font1, White);
+				gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
+				gdispDrawString(190, 150, lives_display[0],	font1, White);
+				gdispDrawString(110, 30, dash[0], font1, Yellow);
+				gdispDrawString(225, 30, dash_reverse[0], font1, Yellow);
 				if(buttonCount(BUT_E)){
 					starting_lives = 3;
 				}
 				break;
 			case INFINITE_LIVES:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 30, single[i],	font1, White);
-					gdispDrawString(120, 90, multi[i],	font1, Yellow);
-					gdispDrawString(120, 150, settings[i],	font1, White);
-					gdispDrawString(120, 210, cheats[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-					gdispDrawString(190, 150, lives_display[i],	font1, White);
-				}
+				gdispDrawString(120, 30, single[0],	font1, White);
+				gdispDrawString(120, 90, multi[0],	font1, Yellow);
+				gdispDrawString(120, 150, settings[0],	font1, White);
+				gdispDrawString(120, 210, cheats[0],	font1, White);
+				gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
+				gdispDrawString(190, 150, lives_display[0],	font1, White);
+				gdispDrawString(110, 90, dash[0], font1, Yellow);
+				gdispDrawString(225, 90, dash_reverse[0], font1, Yellow);
 				if(buttonCount(BUT_E)){
 					starting_lives = 9000;
 				}
 				break;
 			case GRANULAR_SELECT:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 30, single[i],	font1, White);
-					gdispDrawString(120, 90, multi[i],	font1, White);
-					gdispDrawString(120, 150, settings[i],	font1, Yellow);
-					gdispDrawString(120, 210, cheats[i],	font1, White);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-					gdispDrawString(190, 150, lives_display[i],	font1, White);
-				}
+				gdispDrawString(120, 30, single[0],	font1, White);
+				gdispDrawString(120, 90, multi[0],	font1, White);
+				gdispDrawString(120, 150, settings[0],	font1, Yellow);
+				gdispDrawString(120, 210, cheats[0],	font1, White);
+				gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
+				gdispDrawString(190, 150, lives_display[0],	font1, White);
+				gdispDrawString(110, 150, dash[0], font1, Yellow);
+				gdispDrawString(225, 150, dash_reverse[0], font1, Yellow);
 
 				xQueueReceive(JoystickQueue, &joystick_internal, 0);
 				if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
@@ -132,14 +134,14 @@ void drawTaskCheats(void * params) {
 
 				break;
 			case BACK:
-				for (unsigned char i = 0; i < 1; i++){
-					gdispDrawString(120, 30, single[i],	font1, White);
-					gdispDrawString(120, 90, multi[i],	font1, White);
-					gdispDrawString(120, 150, settings[i],	font1, White);
-					gdispDrawString(120, 210, cheats[i],	font1, Yellow);
-					gdispDrawString(TEXT_X(user_help[i]), 10, user_help[i],font1, White);
-					gdispDrawString(190, 150, lives_display[i],	font1, White);
-				}
+				gdispDrawString(120, 30, single[0],	font1, White);
+				gdispDrawString(120, 90, multi[0],	font1, White);
+				gdispDrawString(120, 150, settings[0],	font1, White);
+				gdispDrawString(120, 210, cheats[0],	font1, Yellow);
+				gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
+				gdispDrawString(190, 150, lives_display[0],	font1, White);
+				gdispDrawString(110, 210, dash[0], font1, Yellow);
+				gdispDrawString(225, 210, dash_reverse[0], font1, Yellow);
 				if(buttonCount(BUT_E)){
 					menu_select = CLASSIC_3_LIVES;
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);

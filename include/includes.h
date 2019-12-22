@@ -32,18 +32,6 @@
 #include "buttons.h"
 #include "gameConfig.h"
 
-#define STATE_COUNT					9
-
-#define MAIN_MENU_STATE  		 	1
-#define SINGLE_PLAYER_STATE			2
-#define PAUSE_MENU_STATE  			3
-#define CHEATS_MENU_STATE			4
-#define HIGHSCORE_DISPLAY_STATE		5
-#define HIGHSCORE_INTERFACE_STATE	6
-#define MULTIPLAYER_STATE			7
-#define SINGLE_PLAYER_LEVEL_2		8
-#define SINGLE_PLAYER_LEVEL_3		9
-
 #define DISPLAY_SIZE_X  		320
 #define DISPLAY_SIZE_Y  		240
 

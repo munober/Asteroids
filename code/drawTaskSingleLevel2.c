@@ -2,7 +2,7 @@
  * drawTaskSingleLevel2.c
  *
  *  Created on: Dec 18, 2019
- *      Author: lab_espl_stud04
+ *  Author: Teodor Fratiloiu
  */
 
 #include "includes.h"
@@ -24,8 +24,8 @@ extern QueueHandle_t HighScoresQueue;
 
 #define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
-//#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
-//#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
+#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
+#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
 
 void drawTaskSingleLevel2 (void * params){
 	// Asteroid shapes SMALL
@@ -68,11 +68,9 @@ void drawTaskSingleLevel2 (void * params){
 	//	A few buffer, empty strings to print to
 	char str[100]; // buffer for messages to draw to display
 	char str2[100]; // another buffer for messages to draw to display
-	char str3[100]; // another buffer for messages to draw to display
-	char str4[100]; // another buffer for messages to draw to display
 
 	unsigned int exeCount = 0;
-	gamestart2:
+	gamestart2: // Will return here if game over
 	if(exeCount != 0){
 		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 	}
@@ -85,7 +83,7 @@ void drawTaskSingleLevel2 (void * params){
 	int time_passed = 0; // Simple clock at top of screen
 
 	boolean one_asteroid_hit = false;
-	int16_t score = 4000;
+	int16_t score = LEVEL_TWO_SCORE_THRESHOLD;
 
 	/* This the only random value generated.
 	 * This is used to only need to send 1 variable via UART.
@@ -100,7 +98,7 @@ void drawTaskSingleLevel2 (void * params){
 	const point** shapes_all[3] = {shapes_small, shapes_medium, shapes_large};
 
 	TickType_t hit_timestamp;
-	TickType_t hit_timestamp_laser[10] = { {0} };
+	TickType_t hit_saucer_timestamp = xTaskGetTickCount();
 	TickType_t inertia_timer;
 	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
@@ -117,6 +115,8 @@ void drawTaskSingleLevel2 (void * params){
 
 	unsigned int thrustCount = 0;
 	int i = 0;
+	int j = 0;
+	int k = 0;
 
 // 	Spawn player in display center
 	struct direction direction;
@@ -131,7 +131,9 @@ void drawTaskSingleLevel2 (void * params){
 	player.position_old.x = player.position.x;
 	player.position_old.y = player.position.y;
 	player.state = fine;
-	int asteroids_to_destroy = 20; // In the first level there are 20 small asteroids to destroy
+//	Number of asteroids to be destroyed in this level
+	int asteroids_to_destroy_small = TO_DESTROY_LEVEL_2_SMALL;
+	int asteroids_to_destroy_medium = TO_DESTROY_LEVEL_2_MEDIUM;
 
 	// Initialize asteroids: max. 10 asteroids are on screen at once
 	// asteroid shape is either 0, 1 or 2
@@ -141,7 +143,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_1.spawn_position.y = 180;
 	asteroid_1.position.x = -10;
 	asteroid_1.position.y = 180;
-	asteroid_1.remain_hits = one;
+	asteroid_1.remain_hits = two;
 	asteroid_1.shape = super_random % 3;
 	asteroid_1.position_locked = false;
 	struct asteroid asteroid_2 = { { 0 } };
@@ -149,7 +151,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_2.spawn_position.y = 0;
 	asteroid_2.position.x = -10;
 	asteroid_2.position.y = 0;
-	asteroid_2.remain_hits = one;
+	asteroid_2.remain_hits = two;
 	asteroid_2.shape = (super_random + 1) % 3;
 	asteroid_2.position_locked = false;
 	struct asteroid asteroid_3 = { { 0 } };
@@ -157,7 +159,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_3.spawn_position.y = -10;
 	asteroid_3.position.x = 240;
 	asteroid_3.position.y = -10;
-	asteroid_3.remain_hits = one;
+	asteroid_3.remain_hits = two;
 	asteroid_3.shape = (super_random + 2) % 3;
 	asteroid_3.position_locked = false;
 	struct asteroid asteroid_4 = { { 0 } };
@@ -165,7 +167,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_4.spawn_position.y = 190;
 	asteroid_4.position.x = 320;
 	asteroid_4.position.y = 190;
-	asteroid_4.remain_hits = one;
+	asteroid_4.remain_hits = two;
 	asteroid_4.shape = super_random % 3;
 	asteroid_4.position_locked = false;
 	struct asteroid asteroid_5 = { { 0 } };
@@ -173,7 +175,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_5.spawn_position.y = 40;
 	asteroid_5.position.x = 320;
 	asteroid_5.position.y = 40;
-	asteroid_5.remain_hits = one;
+	asteroid_5.remain_hits = two;
 	asteroid_5.shape = (super_random + 1) % 3;
 	asteroid_5.position_locked = false;
 	struct asteroid asteroid_6 = { { 0 } };
@@ -183,7 +185,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_6.position.y = 240;
 	asteroid_6.remain_hits = one;
 	asteroid_6.shape = (super_random + 2) % 3;
-	asteroid_6.position_locked = true;
+	asteroid_6.position_locked = false;
 	struct asteroid asteroid_7 = { { 0 } };
 	asteroid_7.spawn_position.x = 280;
 	asteroid_7.spawn_position.y = 240;
@@ -191,7 +193,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_7.position.y = 240;
 	asteroid_7.remain_hits = one;
 	asteroid_7.shape = super_random % 3;
-	asteroid_7.position_locked = true;
+	asteroid_7.position_locked = false;
 	struct asteroid asteroid_8 = { { 0 } };
 	asteroid_8.spawn_position.x = 180;
 	asteroid_8.spawn_position.y = -10;
@@ -199,7 +201,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_8.position.y = -10;
 	asteroid_8.remain_hits = one;
 	asteroid_8.shape = (super_random + 1) % 3;
-	asteroid_8.position_locked = true;
+	asteroid_8.position_locked = false;
 	struct asteroid asteroid_9 = { { 0 } };
 	asteroid_9.spawn_position.x = 70;
 	asteroid_9.spawn_position.y = -10;
@@ -207,7 +209,7 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_9.position.y = -10;
 	asteroid_9.remain_hits = one;
 	asteroid_9.shape = (super_random + 2) % 3;
-	asteroid_9.position_locked = true;
+	asteroid_9.position_locked = false;
 	struct asteroid asteroid_10 = { { 0 } };
 	asteroid_10.spawn_position.x = 320;
 	asteroid_10.spawn_position.y = 180;
@@ -215,14 +217,14 @@ void drawTaskSingleLevel2 (void * params){
 	asteroid_10.position.y = 180;
 	asteroid_10.remain_hits = one;
 	asteroid_10.shape = super_random % 3;
-	asteroid_10.position_locked = true;
+	asteroid_10.position_locked = false;
 
 	// Putting all asteroid variables inside a single array
 	struct asteroid* all_asteroids[10] = { &asteroid_1, &asteroid_2, &asteroid_3,
 			&asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7, &asteroid_8,
 			&asteroid_9, &asteroid_10 };
 
-	// Initialize Saucer
+	// Initialize flying saucers
 	struct saucer saucer_1 = { { 0 } };
 	saucer_1.route_number = super_random % 6;
 	saucer_1.position.x = -10;
@@ -243,6 +245,9 @@ void drawTaskSingleLevel2 (void * params){
 		saucer_2.shots[i].x = 0;
 		saucer_2.shots[i].y = 0;
 	}
+
+	// Put the saucers inside an array
+	struct saucer* the_saucers[2] = { &saucer_1, &saucer_2 };
 
 	struct joystick_angle_pulse joystick_internal;
 	float angle_float = 0;
@@ -271,7 +276,7 @@ void drawTaskSingleLevel2 (void * params){
 
 //	Fired blaster cannon shots
 	// Initializations
-	struct shot shots[50] = { { 0 } };
+	struct shot shots[100] = { { 0 } };
 	void initialize_single_shot(int i){
 		shots[i].position.x = 0;
 		shots[i].position.y = 0;
@@ -386,7 +391,6 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 // 			Player ship rotation
-
 			memcpy(&form, &form_orig, 3 * sizeof(struct point));
 			for(incr = 0; incr < 3; incr++){
 				form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
@@ -396,7 +400,6 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 // 			Get player ship direction
-
 			direction.x1 = form[2].x;
 			direction.y1 = form[2].y;
 			direction.x2 = form[2].x;
@@ -416,8 +419,6 @@ void drawTaskSingleLevel2 (void * params){
 				else if((player.position.y - player.position_old.y) < 0){
 					player.position.y--;
 				}
-//				player.position.x += (player.position.x - player.position_old.x);
-//				player.position.y += (player.position.y - player.position_old.y);
 			}
 			else if((direction_old.x1 != direction.x1) || (direction_old.y1 != direction.y1)
 					|| (direction_old.x2 != direction.x2) || (direction_old.y2 != direction.y2)){
@@ -431,7 +432,6 @@ void drawTaskSingleLevel2 (void * params){
 
 //			Handling cannon shot firing
 //			Spawning new cannon shots on player input
-
 			if(buttonCountWithLiftup(BUT_B)){
 				shots[input.shots_fired].status = spawn;
 				shots[input.shots_fired].position.x = player.position.x;
@@ -474,8 +474,6 @@ void drawTaskSingleLevel2 (void * params){
 			}
 //			Handling movement of fired shots
 			for(incr = 0; incr < input.shots_fired; incr++){
-//				shots[incr].position.x += 0.25 * (shots[incr].shot_direction.x2 - shots[incr].shot_direction.x1);
-//				shots[incr].position.y += 0.25 * (shots[incr].shot_direction.y2 - shots[incr].shot_direction.y1);
 				switch(shots[incr].angle){
 				case JOYSTICK_ANGLE_N:
 					shots[incr].position.y -= LASER_BLASTER_SPEED;
@@ -513,23 +511,30 @@ void drawTaskSingleLevel2 (void * params){
 
 			exeCount++;
 
-			/*
-			 * Here we re-spawn asteroids
-			 */
-			if ((one_asteroid_hit == true) && (asteroids_to_destroy >= 10)) {
+//			Re-spawning asteroids
+			if (one_asteroid_hit == true){ 
 				// Detect which asteroid was destroyed
-				for (i = 0; i <= 9; i++) {
+				// i will store small, j medium, k large
+				for (i = 5; i <= 9; i++) { // For small asteroid hits
 					if (all_asteroids[i]->remain_hits == none)
 						break;
 				}
-
-				// Re-spawn the asteroid_i
-				all_asteroids[i]->remain_hits = one;
-				all_asteroids[i]->shape = rand() % 3;
-				all_asteroids[i]->position_locked = false;
-				all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
-				all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
-				one_asteroid_hit = false;
+				// for (j = 0; j <= 4; j++) { // For medium asteroid hits
+				// 	if (all_asteroids[j]->remain_hits == one)
+				// 		break;
+				// }
+				// for (k = 0; k <= 9; k++) { // For large asteroid hits
+				// 	if (all_asteroids[k]->remain_hits == two)
+				// 		break;
+				// }
+				if(asteroids_to_destroy_small >= RESPAWN_SMALL_LEVEL_2){
+					all_asteroids[i]->remain_hits = one;
+					all_asteroids[i]->shape = rand() % 3;
+					all_asteroids[i]->position_locked = false;
+					all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
+					all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
+				}
+				one_asteroid_hit = false;			
 			}
 
 			// This creates the seed for all the following rand-Functions
@@ -862,62 +867,123 @@ void drawTaskSingleLevel2 (void * params){
 				}
 			}
 
-			/* Check if players ship was hit by asteroid
-			 * Threshold zone is a square around the players ship center
-			 */
+			/* Check if the player's ship was hit by asteroid */
 			for (i = 0; i <= 9; i++) {
-				if ((abs(all_asteroids[i]->position.x - player.position.x)
-						<= HIT_LIMIT_SMALL)
-						&& (abs(
-								all_asteroids[i]->position.y
-										- player.position.y) <= HIT_LIMIT_SMALL)) {
-					player.state = hit;
-					hit_timestamp = xTaskGetTickCount();
+				if(all_asteroids[i]->remain_hits == one){
+					if ((abs(all_asteroids[i]->position.x - player.position.x) <= HIT_LIMIT_SMALL)
+					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_SMALL)) {
+						player.state = hit;
+						hit_timestamp = xTaskGetTickCount();
+					}
+				}
+				if(all_asteroids[i]->remain_hits == two){
+					if ((abs(all_asteroids[i]->position.x - player.position.x) <= HIT_LIMIT_MEDIUM)
+					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_MEDIUM)) {
+						player.state = hit;
+						hit_timestamp = xTaskGetTickCount();
+					}	
 				}
 			}
 
 			/* Check if asteroids were hit by shot cannon blaster laser thigs
-			 * Threshold zone is a square around the asteroid center
+			 * Threshold zone is a square around the asteroid center with 5px side length
 			 */
-//			for(incr = 0; incr < input.shots_fired; incr++){
-//				for (i = 0; i <= 9; i++) {
-//					switch (all_asteroids[i]->shape){
-//					case type_1:
-//						break;
-//					case type_2:
-//						break;
-//					case type_3:
-//						break;
-//					case type_4:
-//						break;
-//					case type_5:
-//						break;
-//					case type_6:
-//						break;
-//					case type_7:
-//						break;
-//					case type_8:
-//						break;
-//					case type_9:
-//						break;
-//					}
-//				}
-//			}
+			for(incr = 0; incr < input.shots_fired; incr++){
+				for (i = 0; i <= 4; i++) {
+					if(all_asteroids[i]->remain_hits == two){
+						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
+								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)) {
+							if(all_asteroids[i]->remain_hits != one) {
+								all_asteroids[i]->remain_hits = one;
+								score += POINTS_ASTEROID_MEDIUM;
+								one_asteroid_hit = true;
+								asteroids_to_destroy_medium--;
+							}
+						}
+					}
+					else if(all_asteroids[i]->remain_hits == one){
+						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
+							if(all_asteroids[i]->remain_hits != none) {
+								all_asteroids[i]->position.x = 0;
+								all_asteroids[i]->position.y = 0;
+								all_asteroids[i]->position_locked = true;
+								all_asteroids[i]->remain_hits = none;
+								score += POINTS_ASTEROID_SMALL;
+								one_asteroid_hit = true;
+								asteroids_to_destroy_small--;
+							}
+						}	
+					}
+				}
+				for (i = 5; i <= 9; i++) {
+					if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+							&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
+						if(all_asteroids[i]->remain_hits != none) {
+							all_asteroids[i]->position.x = 0;
+							all_asteroids[i]->position.y = 0;
+							all_asteroids[i]->position_locked = true;
+							all_asteroids[i]->remain_hits = none;
+							score += POINTS_ASTEROID_SMALL;
+							one_asteroid_hit = true;
+							asteroids_to_destroy_small--;
+						}
+					}
+				}
+			}
 
-			// Drawing functions
+			/* Check if player was hit by saucer fire
+			 * Threshold zone is a square around the players ship center with 6px side length
+			 */
+			for (i = 0; i <= 1; i++) {
+				for (j = 0; j <= 9; j++) {
+					if ((abs(the_saucers[i]->shots[j].x - player.position.x) <= HIT_LIMIT_SHOT_SMALL)
+							&& (abs(the_saucers[i]->shots[j].y - player.position.y) <= HIT_LIMIT_SHOT_SMALL)) {
+						player.state = hit;
+						hit_timestamp = xTaskGetTickCount();
+					}
+				}
+			}
+
+			/* Check if saucer was hit by players laser blaster
+			 * Threshold zone is a square around the saucer center with 5px side length
+			 */
+			for (incr = 0; incr < input.shots_fired; incr++) {
+				for (i = 0; i <= 1; i++) {
+					if ((abs( the_saucers[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+							&& (abs(the_saucers[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
+						if (xTaskGetTickCount() - hit_saucer_timestamp > delay_hit) {
+							the_saucers[i]->remain_hits = the_saucers[i]->remain_hits - 1;
+							hit_saucer_timestamp = xTaskGetTickCount();
+							if (the_saucers[i]->remain_hits == none) {
+								score += POINTS_SAUCER_HIT;
+								the_saucers[i]->position.x = -15;
+								the_saucers[i]->position.y = -15;
+								for (j = 0; j <= 9; j++) {
+									the_saucers[i]->shots[j].x = -5;
+									the_saucers[i]->shots[j].y = -5;
+								}
+							}
+						}
+					}
+				}
+			}
+
+// 			Drawing functions
+
 			gdispClear(Black);
 
-			// Simple clock at top of screen
+// 			Simple clock at top of screen
 		    if (timer_1sec == 1)
 		    	time_passed++;
 			sprintf(str2, "%d sec", time_passed);
 			gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
 
-			// Score board
+//			Score board
 			sprintf(str, "Score: %i", score);
 			gdispDrawString(5, 10, str, font1, White);
 
-			// Life count
+// 			Life count
 			sprintf(str, "Lives: %d", life_count);
 			gdispDrawString(260, 10, str, font1, White);
 
@@ -927,6 +993,12 @@ void drawTaskSingleLevel2 (void * params){
 			sprintf(str2, "Level 2");
 			gdispDrawString(0, 220, str2, font1, White);
 
+//			Drawing the fired canon shots
+			for(incr = 0; incr < input.shots_fired; incr++){
+				if(shots[incr].status == spawn){
+					gdispFillCircle(shots[incr].position.x, shots[incr].position.y, 3, Yellow);
+				}
+			}
 
 			// Drawing the player's ship and asteroids
 			if (life_count != 0) {
@@ -949,29 +1021,44 @@ void drawTaskSingleLevel2 (void * params){
 				}
 
 				// Asteroid 1
-				if (asteroid_1.remain_hits != none)
+				if (asteroid_1.remain_hits == two)
 					gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
-						shapes_medium[asteroid_1.shape], NUM_POINTS_SMALL, White);
+						shapes_medium[asteroid_1.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_1.remain_hits == one)
+					gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
+						shapes_small[asteroid_1.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 2
-				if (asteroid_2.remain_hits != none)
+				if (asteroid_2.remain_hits == two)
 					gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,
-						shapes_medium[asteroid_2.shape], NUM_POINTS_SMALL, White);
+						shapes_medium[asteroid_2.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_2.remain_hits == one)
+					gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,
+						shapes_small[asteroid_2.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 3
-				if (asteroid_3.remain_hits != none)
+				if (asteroid_3.remain_hits == two)
 					gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
-						shapes_medium[asteroid_3.shape], NUM_POINTS_SMALL, White);
+						shapes_medium[asteroid_3.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_3.remain_hits == one)
+					gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
+						shapes_small[asteroid_3.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 4
-				if (asteroid_4.remain_hits != none)
+				if (asteroid_4.remain_hits == two)
 					gdispDrawPoly(asteroid_4.position.x, asteroid_4.position.y,
-						shapes_medium[asteroid_4.shape], NUM_POINTS_SMALL, White);
+						shapes_medium[asteroid_4.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_4.remain_hits == one)
+					gdispDrawPoly(asteroid_4.position.x, asteroid_4.position.y,
+						shapes_small[asteroid_4.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 5
-				if (asteroid_5.remain_hits != none)
+				if (asteroid_5.remain_hits == two)
 					gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
-						shapes_medium[asteroid_5.shape], NUM_POINTS_SMALL, White);
+						shapes_medium[asteroid_5.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_5.remain_hits == one)
+					gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
+						shapes_small[asteroid_5.shape], NUM_POINTS_SMALL, White);
 
 				// Asteroid 6
 				if (asteroid_6.remain_hits != none)
@@ -1036,32 +1123,13 @@ void drawTaskSingleLevel2 (void * params){
 				}
 			}
 
-			// TRANSITION TO LEVEL 3
+			// TRANSITION TO LEVEL 3 when user presses D
 			if (score == LEVEL_THREE_SCORE_THRESHOLD) {
 				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
-				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
+				sprintf(str, "LEVEL 2 DONE. Press D for LEVEL 3."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D
-//					life_count = restart_lives;
-//					moved = 0;
-//					// TODO:
-//					// Put asteroids in their original places
-//					// Reset score and level
-//					// Clean up bullets, alien ship etc.
-//					// Reset game timer
-//					time_passed = 0;
-//					xQueueSend(HighScoresQueue, &score, 0);
-//					score = 0;
+				if (buttonCount(BUT_D)) {
 					xQueueSend(StateQueue, &next_state_signal_level3, 100);
-				}
-			}
-
-
-
-//			Drawing the fired canon shots
-			for(incr = 0; incr < input.shots_fired; incr++){
-				if(shots[incr].status == spawn){
-					gdispFillCircle(shots[incr].position.x, shots[incr].position.y, 3, Yellow);
 				}
 			}
 			joy_direct_old.x = joy_direct.x;
