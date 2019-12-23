@@ -109,7 +109,7 @@ void drawTaskSingleLevel2 (void * params){
 	// Timer stuff
 	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
 	const TickType_t one_and_a_half_seconds = 1500 / portTICK_PERIOD_MS;
-	const TickType_t two_seconds = 1500 / portTICK_PERIOD_MS;
+	const TickType_t two_seconds = 2000 / portTICK_PERIOD_MS;
 	TickType_t lastTime_1 = xTaskGetTickCount();
 	TickType_t lastTime_2 = xTaskGetTickCount();
 	TickType_t lastTime_3 = xTaskGetTickCount();
@@ -231,6 +231,7 @@ void drawTaskSingleLevel2 (void * params){
 	saucer_1.position.x = -10;
 	saucer_1.position.y = saucer_routes[saucer_1.route_number][0];
 	saucer_1.turning = false;
+	saucer_1.remain_hits = two;
 	for (i = 0; i <= 9; i++) {
 		saucer_1.shot_fired[i] = false;
 		saucer_1.shots[i].x = 0;
@@ -241,6 +242,7 @@ void drawTaskSingleLevel2 (void * params){
 	saucer_2.position.x = -10;
 	saucer_2.position.y = saucer_routes[saucer_2.route_number][0];
 	saucer_2.turning = false;
+	saucer_2.remain_hits = two;
 	for (i = 0; i <= 9; i++) {
 		saucer_2.shot_fired[i] = false;
 		saucer_2.shots[i].x = 0;
@@ -648,7 +650,7 @@ void drawTaskSingleLevel2 (void * params){
 			 * The following sets the movement of the saucers. Offset 10 pixel (10 pixel off screen)
 			 */
 			// SAUCER #1, spawns after 20 sec
-			if (time_passed > 20) {
+			if ((time_passed > 20) && (saucer_1.remain_hits != none)) {
 				if (saucer_1.position.x == 100) {
 					saucer_1.turn_number = 1;
 					saucer_1.turning = true;
@@ -685,12 +687,13 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 			// SACUER #1 fire
-			if ((timer_1halfsec == 1) && (time_passed > 20)) {
+			if ((timer_1halfsec == 1) && (time_passed > 20) && (saucer_1.remain_hits != none)) {
 				if ((player.position.y - saucer_1.position.y != 0) && (player.position.x - saucer_1.position.x != 0)) {
 					saucer_1.ratios[saucer_1.shot_number] = (player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y);
 				}
-				else
-					break;
+				else {
+					saucer_1.ratios[saucer_1.shot_number] = 1;
+				}
 
 				// Get shot ready
 				saucer_1.shots[saucer_1.shot_number].x = saucer_1.position.x;
@@ -710,51 +713,8 @@ void drawTaskSingleLevel2 (void * params){
 				saucer_1.shot_number = (saucer_1.shot_number + 1) % 10; // Get the next shot ready
 			}
 
-			// SAUCER #1 shots movement
-			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
-			for (i = 0; i <= 9; i++) {
-				if (saucer_1.shot_fired[i] == true) {
-					switch (saucer_1.shot_direction[i]) {
-					case up_and_left:
-						saucer_1.shots[i].x = saucer_1.shots[i].x
-								- saucer_1.ratios[i] * 2;
-						saucer_1.shots[i].y = saucer_1.shots[i].y - 2;
-						break;
-					case up_and_right:
-						saucer_1.shots[i].x = saucer_1.shots[i].x
-								+ saucer_1.ratios[i] * 2;
-						saucer_1.shots[i].y = saucer_1.shots[i].y - 2;
-						break;
-					case down_and_right:
-						saucer_1.shots[i].x = saucer_1.shots[i].x
-								+ saucer_1.ratios[i] * 2;
-						saucer_1.shots[i].y = saucer_1.shots[i].y + 2;
-						break;
-					case down_and_left:
-						saucer_1.shots[i].x = saucer_1.shots[i].x
-								- saucer_1.ratios[i] * 2;
-						saucer_1.shots[i].y = saucer_1.shots[i].y + 2;
-						break;
-					}
-				}
-			}
-
-			// SACUER #1 catch shots which have moved off the screen; offset: 5 pxl
-			for (i = 0; i <= 9; i++) {
-				if ((saucer_1.shots[i].x > 325) || (saucer_1.shots[i].x < -5)) {
-					saucer_1.shots[i].x = 0;
-					saucer_1.shots[i].y = 0;
-					saucer_1.shot_fired[i] = false;
-				}
-				if ((saucer_1.shots[i].y > 245) || (saucer_1.shots[i].y < -5)) {
-					saucer_1.shots[i].x = 0;
-					saucer_1.shots[i].y = 0;
-					saucer_1.shot_fired[i] = false;
-				}
-			}
-
 			// SAUCER #2, spawns after 35 sec
-			if (time_passed > 35) {
+			if ((time_passed > 35) && (saucer_2.remain_hits != none)) {
 				if (saucer_2.position.x == 100) {
 					saucer_2.turn_number = 1;
 					saucer_2.turning = true;
@@ -791,12 +751,13 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 			// SACUER #2 fire
-			if ((timer_2sec == 1) && (time_passed > 35)) {
+			if ((timer_2sec == 1) && (time_passed > 35) && (saucer_2.remain_hits != none)) {
 				if ((player.position.y - saucer_2.position.y != 0) && (player.position.x - saucer_2.position.x != 0)) {
 					saucer_2.ratios[saucer_2.shot_number] = (player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y);
 				}
-				else
-					break;
+				else {
+					saucer_2.ratios[saucer_2.shot_number] = 1;
+				}
 
 				// Get shot ready
 				saucer_2.shots[saucer_2.shot_number].x = saucer_2.position.x;
@@ -816,48 +777,60 @@ void drawTaskSingleLevel2 (void * params){
 				saucer_2.shot_number = (saucer_2.shot_number + 1) % 10; // Get the next shot ready
 			}
 
-			// SAUCER #2 shots movement
+			// SAUCER #1 and #2 shots movement
 			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
-			for (i = 0; i <= 9; i++) {
-				if (saucer_2.shot_fired[i] == true) {
-					switch (saucer_2.shot_direction[i]) {
-					case up_and_left:
-						saucer_2.shots[i].x = saucer_2.shots[i].x
-								- saucer_2.ratios[i] * 2;
-						saucer_2.shots[i].y = saucer_2.shots[i].y - 2;
-						break;
-					case up_and_right:
-						saucer_2.shots[i].x = saucer_2.shots[i].x
-								+ saucer_2.ratios[i] * 2;
-						saucer_2.shots[i].y = saucer_2.shots[i].y - 2;
-						break;
-					case down_and_right:
-						saucer_2.shots[i].x = saucer_2.shots[i].x
-								+ saucer_2.ratios[i] * 2;
-						saucer_2.shots[i].y = saucer_2.shots[i].y + 2;
-						break;
-					case down_and_left:
-						saucer_2.shots[i].x = saucer_2.shots[i].x
-								- saucer_2.ratios[i] * 2;
-						saucer_2.shots[i].y = saucer_2.shots[i].y + 2;
-						break;
+			for (i = 0; i <= 1; i++) {
+				if (the_saucers[i]->remain_hits != none) {
+					for (j = 0; j <= 9; j++) {
+						if (the_saucers[i]->shot_fired[j] == true) {
+							if (the_saucers[i]->ratios[the_saucers[i]->shot_number] > 3.0)
+								the_saucers[i]->ratios[the_saucers[i]->shot_number] = 1;
+							switch (the_saucers[i]->shot_direction[i]) {
+							case up_and_left:
+								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
+												- the_saucers[i]->ratios[j] * 2;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - 2;
+								break;
+							case up_and_right:
+								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
+												+ the_saucers[i]->ratios[j] * 2;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - 2;
+								break;
+							case down_and_right:
+								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
+												+ the_saucers[i]->ratios[j] * 2;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + 2;
+								break;
+							case down_and_left:
+								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
+												- the_saucers[i]->ratios[j] * 2;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + 2;
+								break;
+							}
+						}
 					}
 				}
 			}
 
-			// SACUER #2 catch shots which have moved off the screen; offset: 5 pxl
-			for (i = 0; i <= 9; i++) {
-				if ((saucer_2.shots[i].x > 325) || (saucer_2.shots[i].x < -5)) {
-					saucer_2.shots[i].x = 0;
-					saucer_2.shots[i].y = 0;
-					saucer_2.shot_fired[i] = false;
-				}
-				if ((saucer_2.shots[i].y > 245) || (saucer_2.shots[i].y < -5)) {
-					saucer_2.shots[i].x = 0;
-					saucer_2.shots[i].y = 0;
-					saucer_2.shot_fired[i] = false;
+			// SACUER #1 and #2 catch shots which have moved off the screen; offset: 5 pxl
+			for (i = 0; i <= 1; i++) {
+				if (the_saucers[i]->remain_hits != none) {
+					for (j = 0; j <= 9; j++) {
+						if ((the_saucers[i]->shots[j].x > 325) || (the_saucers[i]->shots[j].x < -5)) {
+							the_saucers[i]->shots[j].x = 0;
+							the_saucers[i]->shots[j].y = 0;
+							the_saucers[i]->shot_fired[j] = false;
+						}
+						if ((the_saucers[i]->shots[j].y > 245) || (the_saucers[i]->shots[j].y < -5)) {
+							the_saucers[i]->shots[j].x = 0;
+							the_saucers[i]->shots[j].y = 0;
+							the_saucers[i]->shot_fired[j] = false;
+						}
+					}
 				}
 			}
+
+
 
 			/* Check if the player's ship was hit by asteroid */
 			for (i = 0; i <= 9; i++) {
@@ -1080,7 +1053,7 @@ void drawTaskSingleLevel2 (void * params){
 
 				// Saucer 1
 				gdispDrawPoly(saucer_1.position.x, saucer_1.position.y,
-						saucer_shape, NUM_POINTS_SAUCER, White);
+						saucer_shape, NUM_POINTS_SAUCER, Lime);
 
 				for (i = 0; i <= 9; i++) {
 					if (saucer_1.shot_fired[i] == true) {
@@ -1090,9 +1063,14 @@ void drawTaskSingleLevel2 (void * params){
 					}
 				}
 
+				if ((time_passed >= 20) && (saucer_1.remain_hits != none)) {
+					sprintf(str, "Lives: %d", saucer_1.remain_hits);
+					gdispDrawString(DISPLAY_CENTER_X - 70, 10, str, font1, Lime);
+				}
+
 				// Saucer 2
 				gdispDrawPoly(saucer_2.position.x, saucer_2.position.y,
-						saucer_shape, NUM_POINTS_SAUCER, White);
+						saucer_shape, NUM_POINTS_SAUCER, Cyan);
 
 				for (i = 0; i <= 9; i++) {
 					if (saucer_2.shot_fired[i] == true) {
@@ -1100,6 +1078,11 @@ void drawTaskSingleLevel2 (void * params){
 								&& (player.position.x - saucer_2.position.x != 0))
 							gdispFillCircle((int )saucer_2.shots[i].x, (int )saucer_2.shots[i].y, 3, Red);
 					}
+				}
+
+				if ((time_passed >= 35) && (saucer_2.remain_hits != none)) {
+					sprintf(str2, "Lives: %d", saucer_2.remain_hits);
+					gdispDrawString(DISPLAY_CENTER_X + 42, 10, str2, font1, Cyan);
 				}
 
 

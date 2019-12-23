@@ -86,7 +86,7 @@ void drawTaskSingle(void * params) {
 	// Timer stuff
 	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
 	const TickType_t one_and_a_half_seconds = 1500 / portTICK_PERIOD_MS;
-	const TickType_t two_seconds = 1500 / portTICK_PERIOD_MS;
+	const TickType_t two_seconds = 2000 / portTICK_PERIOD_MS;
 	TickType_t lastTime_1 = xTaskGetTickCount();
 	TickType_t lastTime_2 = xTaskGetTickCount();
 	TickType_t lastTime_3 = xTaskGetTickCount();
@@ -408,7 +408,6 @@ void drawTaskSingle(void * params) {
 
 //			Handling cannon shot firing
 //			Spawning new cannon shots on player input
-
 			if(buttonCountWithLiftup(BUT_B)){
 				shots[input.shots_fired].status = spawn;
 				shots[input.shots_fired].position.x = player.position.x;
@@ -878,7 +877,6 @@ void drawTaskSingle(void * params) {
 
 			// Drawing functions
 			gdispClear(Black);
-
 			// Simple clock at top of screen
 		    if (timer_1sec == 1)
 		    	time_passed++;
