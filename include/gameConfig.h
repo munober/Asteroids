@@ -23,7 +23,7 @@
 #define SINGLE_PLAYER_LEVEL_2		        8
 #define SINGLE_PLAYER_LEVEL_3		        9
 
-#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_3 
+#define STARTING_STATE                      MAIN_MENU_STATE 
 #define STARTING_LIVES_LEVEL_TWO            3
 #define STARTING_LIVES_LEVEL_THREE          3                             
 
