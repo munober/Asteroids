@@ -515,8 +515,8 @@ void drawTaskSingleLevel3 (void * params){
 
 			exeCount++;
 
-//			Re-spawning small asteroids
-			if ((one_asteroid_hit_medium == true) && (asteroids_to_destroy_medium >= RESPAWN_MEDIUM_LEVEL_3)){ 
+//			Re-spawning asteroids
+			if ((one_asteroid_hit_small == true) && (asteroids_to_destroy_medium >= RESPAWN_MEDIUM_LEVEL_3)){ 
 				// Detect which medium asteroid was destroyed
 				for (i = 5; i <= 9; i++) { // For medium asteroid hits
 					if (all_asteroids[i]->remain_hits == none)
@@ -529,10 +529,10 @@ void drawTaskSingleLevel3 (void * params){
 				all_asteroids[i]->position_locked = false;
 				all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
 				all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
-				one_asteroid_hit_medium = false;			
+				one_asteroid_hit_small = false;			
 			}
 
-			if ((one_asteroid_hit_large == true) && (asteroids_to_destroy_large >= RESPAWN_LARGE_LEVEL_3)){ 
+			if ((one_asteroid_hit_small == true) && (asteroids_to_destroy_large >= RESPAWN_LARGE_LEVEL_3)){ 
 				// Detect which large asteroid was destroyed
 				for (i = 0; i <= 4; i++) { // For large asteroid hits
 					if (all_asteroids[i]->remain_hits == none)
@@ -545,7 +545,7 @@ void drawTaskSingleLevel3 (void * params){
 				all_asteroids[i]->position_locked = false;
 				all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
 				all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
-				one_asteroid_hit_large = false;			
+				one_asteroid_hit_small = false;			
 			}
 
 			// This creates the seed for all the following rand-Functions
@@ -865,6 +865,13 @@ void drawTaskSingleLevel3 (void * params){
 						hit_timestamp = xTaskGetTickCount();
 					}	
 				}
+				if(all_asteroids[i]->remain_hits == three){
+					if ((abs(all_asteroids[i]->position.x - player.position.x) <= HIT_LIMIT_LARGE)
+					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_LARGE)) {
+						player.state = hit;
+						hit_timestamp = xTaskGetTickCount();
+					}	
+				}
 			}
 
 			/* Check if asteroids were hit by shot cannon blaster laser thigs
@@ -906,8 +913,8 @@ void drawTaskSingleLevel3 (void * params){
 					if(all_asteroids[i]->remain_hits == three){
 						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_LARGE)
 								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_LARGE)) {
-							if(all_asteroids[i]->remain_hits != one) {
-								all_asteroids[i]->remain_hits = one;
+							if(all_asteroids[i]->remain_hits != two) {
+								all_asteroids[i]->remain_hits = two;
 								score += POINTS_ASTEROID_LARGE;
 								one_asteroid_hit_medium = true;
 								asteroids_to_destroy_large--;
@@ -918,11 +925,8 @@ void drawTaskSingleLevel3 (void * params){
 					else if((all_asteroids[i]->remain_hits == two) && ((xTaskGetTickCount() - hit_timestamp_laser) > shot_delay)){
 						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
 								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)) {
-							if(all_asteroids[i]->remain_hits != none) {
-								all_asteroids[i]->position.x = 0;
-								all_asteroids[i]->position.y = 0;
-								all_asteroids[i]->position_locked = true;
-								all_asteroids[i]->remain_hits = none;
+							if(all_asteroids[i]->remain_hits != one) {
+								all_asteroids[i]->remain_hits = one;
 								score += POINTS_ASTEROID_MEDIUM;
 								one_asteroid_hit_medium = true;
 								asteroids_to_destroy_medium--;
@@ -1012,7 +1016,7 @@ void drawTaskSingleLevel3 (void * params){
 				}
 			}
 
-			// Drawing the player's ship and asteroids
+// 			Drawing the player's ship and asteroids
 			if (life_count != 0) {
 				// Player ship
 				if (player.state == fine)
@@ -1092,7 +1096,7 @@ void drawTaskSingleLevel3 (void * params){
 				if (asteroid_6.remain_hits == two)
 					gdispDrawPoly(asteroid_6.position.x, asteroid_6.position.y,
 						shapes_medium[asteroid_6.shape], NUM_POINTS_MEDIUM, White);
-				else if (asteroid_5.remain_hits == one)
+				else if (asteroid_6.remain_hits == one)
 					gdispDrawPoly(asteroid_6.position.x, asteroid_6.position.y,
 						shapes_small[asteroid_6.shape], NUM_POINTS_SMALL, White);
 
@@ -1108,7 +1112,7 @@ void drawTaskSingleLevel3 (void * params){
 				if (asteroid_8.remain_hits == two)
 					gdispDrawPoly(asteroid_8.position.x, asteroid_8.position.y,
 						shapes_medium[asteroid_8.shape], NUM_POINTS_MEDIUM, White);
-				else if (asteroid_5.remain_hits == one)
+				else if (asteroid_8.remain_hits == one)
 					gdispDrawPoly(asteroid_8.position.x, asteroid_8.position.y,
 						shapes_small[asteroid_8.shape], NUM_POINTS_SMALL, White);
 
