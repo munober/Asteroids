@@ -23,7 +23,7 @@
 #define SINGLE_PLAYER_LEVEL_2		        8
 #define SINGLE_PLAYER_LEVEL_3		        9
 
-#define STARTING_STATE                      MAIN_MENU_STATE 
+#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_3 
 #define STARTING_LIVES_LEVEL_TWO            3
 #define STARTING_LIVES_LEVEL_THREE          3                             
 
@@ -62,8 +62,8 @@
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score
 #define LEVEL_TWO_SCORE_THRESHOLD          4000
-#define LEVEL_THREE_SCORE_THRESHOLD        12000
-#define BEAT_GAME_SCORE_THRESHOLD          24000
+#define LEVEL_THREE_SCORE_THRESHOLD        9000
+#define BEAT_GAME_SCORE_THRESHOLD          21000
 
 
 
