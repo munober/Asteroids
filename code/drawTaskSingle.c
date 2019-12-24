@@ -56,7 +56,7 @@ void drawTaskSingle(void * params) {
 		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 	}
 //	Variables to store the number of lives
-	unsigned int life_count = 3;	// For standard game mode
+	unsigned int life_count = STARTING_LIVES_LEVEL_ONE;	// For standard game mode
 	unsigned int life_readin = 3;	// Will be filled with queue readin
 	unsigned int restart_lives = 3;	// Lives to be had when game is restarted
 	boolean life_count_lock = false;	// Used for delays when player is hit
@@ -491,7 +491,7 @@ void drawTaskSingle(void * params) {
 			 * Here we re-spawn asteroids if the player still has to destroy more than 10 asteroids.
 			 * If there are only 10 or less asteroids left to destroy, no more new asteroids will be spawned.
 			 */
-			if ((one_asteroid_hit == true) && (asteroids_to_destroy >= 10)) {
+			if ((one_asteroid_hit == true) && (asteroids_to_destroy >= RESPAWN_SMALL_LEVEL_1)) {
 				// Detect which asteroid was destroyed
 				for (i = 0; i <= 9; i++) {
 					if (all_asteroids[i]->remain_hits == none)

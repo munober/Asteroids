@@ -294,7 +294,7 @@ void drawTaskSingleLevel2 (void * params){
 // 		Reading desired life count from cheats menu
 
 		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
-			life_count = life_readin;
+			life_count = life_readin + 3;
 		}
 
 // 		Timer logic

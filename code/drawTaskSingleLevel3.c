@@ -80,6 +80,7 @@ void drawTaskSingleLevel3 (void * params){
 	unsigned int restart_lives = 3;	// Lives to be had when game is restarted
 	boolean life_count_lock = false;	// Used for delays when player is hit
 	int time_passed = 0; // Simple clock at top of screen
+	boolean infinite_respawn = false;
 
 	boolean one_asteroid_hit_small = false;
 	boolean one_asteroid_hit_medium = false;
@@ -298,7 +299,7 @@ void drawTaskSingleLevel3 (void * params){
 // 		Reading desired life count from cheats menu
 
 		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
-			life_count = life_readin;
+			life_count = life_readin + 6;
 		}
 
 // 		Timer logic
@@ -518,7 +519,7 @@ void drawTaskSingleLevel3 (void * params){
 			exeCount++;
 
 //			Re-spawning asteroids
-			if ((one_asteroid_hit_small == true) && (asteroids_to_destroy_medium >= RESPAWN_MEDIUM_LEVEL_3)){ 
+			if (((one_asteroid_hit_small == true) && (asteroids_to_destroy_medium >= RESPAWN_MEDIUM_LEVEL_3)) || ((one_asteroid_hit_small == true) && (infinite_respawn == true))){ 
 				// Detect which medium asteroid was destroyed
 				for (i = 5; i <= 9; i++) { // For medium asteroid hits
 					if (all_asteroids[i]->remain_hits == none)
@@ -534,7 +535,7 @@ void drawTaskSingleLevel3 (void * params){
 				one_asteroid_hit_small = false;			
 			}
 
-			if ((one_asteroid_hit_small == true) && (asteroids_to_destroy_large >= RESPAWN_LARGE_LEVEL_3)){ 
+			if (((one_asteroid_hit_small == true) && (asteroids_to_destroy_large >= RESPAWN_LARGE_LEVEL_3)) || ((one_asteroid_hit_small == true) && (infinite_respawn == true))){ 
 				// Detect which large asteroid was destroyed
 				for (i = 0; i <= 4; i++) { // For large asteroid hits
 					if (all_asteroids[i]->remain_hits == none)
@@ -1188,8 +1189,7 @@ void drawTaskSingleLevel3 (void * params){
 				sprintf(str, "YOU WIN. Press D TO BECOME A LEGEND."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
 				if (buttonCount(BUT_D)) {
-					int asteroids_to_destroy_medium = 9000;
-					int asteroids_to_destroy_large = 9000;
+					infinite_respawn = true;
 					// xQueueSend(StateQueue, &next_state_signal_mainmenu, 100);
 				}
 			}
