@@ -8,7 +8,7 @@
 #ifndef INCLUDE_GAMECONFIG_H_
 #define INCLUDE_GAMECONFIG_H_
 
-#define BUILD_NUMBER                        696933      // This number should have 6 digits. Will be displayed on start menu.
+#define BUILD_NUMBER                        101010      // This number should have 6 digits. Will be displayed on start menu.
 
 // Possible states for state machine
 #define STATE_COUNT					        9
@@ -23,9 +23,9 @@
 #define SINGLE_PLAYER_LEVEL_2		        8
 #define SINGLE_PLAYER_LEVEL_3		        9
 
-#define STARTING_STATE                      MAIN_MENU_STATE 
+#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_3 
 #define STARTING_LIVES_LEVEL_TWO            3
-#define STARTING_LIVES_LEVEL_THREE          3                             
+#define STARTING_LIVES_LEVEL_THREE          900                           
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED			        3
@@ -40,8 +40,8 @@
 #define TO_DESTROY_LEVEL_1_SMALL            20
 #define TO_DESTROY_LEVEL_2_SMALL            15
 #define TO_DESTROY_LEVEL_2_MEDIUM           5
-#define TO_DESTROY_LEVEL_3_MEDIUM           10
-#define TO_DESTROY_LEVEL_3_LARGE            10
+#define TO_DESTROY_LEVEL_3_MEDIUM           15
+#define TO_DESTROY_LEVEL_3_LARGE            15
 
 // Respawn boundaries in each level (will respawn as long as number left is above this)
 #define RESPAWN_SMALL_LEVEL_2               5

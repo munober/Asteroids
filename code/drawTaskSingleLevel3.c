@@ -100,6 +100,7 @@ void drawTaskSingleLevel3 (void * params){
 
 	TickType_t hit_timestamp;
 	TickType_t hit_timestamp_laser;
+	TickType_t hit_timestamp_laser_2;
 	TickType_t hit_saucer_timestamp = xTaskGetTickCount();
 	TickType_t inertia_timer;
 	inertia_timer = xTaskGetTickCount();
@@ -135,6 +136,7 @@ void drawTaskSingleLevel3 (void * params){
 	player.position_old.y = player.position.y;
 	player.state = fine;
 //	Number of asteroids to be destroyed in this level
+	int asteroids_to_destroy_small = 0;
 	int asteroids_to_destroy_medium = TO_DESTROY_LEVEL_3_MEDIUM;
 	int asteroids_to_destroy_large = TO_DESTROY_LEVEL_3_LARGE;
 
@@ -901,7 +903,6 @@ void drawTaskSingleLevel3 (void * params){
 								all_asteroids[i]->remain_hits = none;
 								score += POINTS_ASTEROID_SMALL;
 								one_asteroid_hit_small = true;
-								// asteroids_to_destroy_small--;
 							}
 						}	
 					}
@@ -916,7 +917,7 @@ void drawTaskSingleLevel3 (void * params){
 							if(all_asteroids[i]->remain_hits != two) {
 								all_asteroids[i]->remain_hits = two;
 								score += POINTS_ASTEROID_LARGE;
-								one_asteroid_hit_medium = true;
+								one_asteroid_hit_large = true;
 								asteroids_to_destroy_large--;
 								hit_timestamp_laser = xTaskGetTickCount();
 							}
@@ -930,10 +931,12 @@ void drawTaskSingleLevel3 (void * params){
 								score += POINTS_ASTEROID_MEDIUM;
 								one_asteroid_hit_medium = true;
 								asteroids_to_destroy_medium--;
+								hit_timestamp_laser_2 = xTaskGetTickCount();
+								
 							}
 						}	
 					}
-					else if((all_asteroids[i]->remain_hits == one) && ((xTaskGetTickCount() - hit_timestamp_laser) > shot_delay)){
+					else if((all_asteroids[i]->remain_hits == one) && ((xTaskGetTickCount() - hit_timestamp_laser_2) > shot_delay)){
 						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
 								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
 							if(all_asteroids[i]->remain_hits != none) {
@@ -943,7 +946,6 @@ void drawTaskSingleLevel3 (void * params){
 								all_asteroids[i]->remain_hits = none;
 								score += POINTS_ASTEROID_SMALL;
 								one_asteroid_hit_small = true;
-								// asteroids_to_destroy_small--;
 							}
 						}	
 					}
@@ -1180,17 +1182,15 @@ void drawTaskSingleLevel3 (void * params){
 				}
 			}
 
-			// TRANSITION TO GAME WON STATE when user presses D
+			// TRANSITION TO GAME WON STATE when user presses D, basically generate asteroids indefinitely until player dies
 			if (score == BEAT_GAME_SCORE_THRESHOLD) {
-				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
-				sprintf(str, "YOU WIN. Press D TO CONTINUE."); // Generate game over message
+				gdispFillArea(15, DISPLAY_CENTER_Y - 2, 245, 15, White); // White border
+				sprintf(str, "YOU WIN. Press D TO BECOME A LEGEND."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
 				if (buttonCount(BUT_D)) {
-					/* TODO
-					Figure out what to do at game's end
-					*/
-					// xQueueSend(StateQueue, &next_state_signal_level3, 100);
-					xQueueSend(StateQueue, &next_state_signal_mainmenu, 100);
+					int asteroids_to_destroy_medium = 9000;
+					int asteroids_to_destroy_large = 9000;
+					// xQueueSend(StateQueue, &next_state_signal_mainmenu, 100);
 				}
 			}
 			joy_direct_old.x = joy_direct.x;
