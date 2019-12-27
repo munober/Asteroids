@@ -875,6 +875,16 @@ void drawTaskSingle(void * params) {
 				}
 			}
 
+			// TRANSITION TO LEVEL 2
+			if (score >= LEVEL_TWO_SCORE_THRESHOLD) {
+				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
+				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
+				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
+				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D					
+					xQueueSend(StateQueue, &next_state_signal_level2, 100);
+				}
+			}
+
 			// Drawing functions
 			gdispClear(Black);
 			// Simple clock at top of screen
@@ -1011,16 +1021,6 @@ void drawTaskSingle(void * params) {
 				if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D			
 					xQueueSend(HighScoresQueue, &score, 0);
 					goto gamestart;
-				}
-			}
-
-			// TRANSITION TO LEVEL 2
-			if (score == LEVEL_TWO_SCORE_THRESHOLD) {
-				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
-				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
-				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D					
-					xQueueSend(StateQueue, &next_state_signal_level2, 100);
 				}
 			}
 

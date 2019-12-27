@@ -20,10 +20,17 @@ extern SemaphoreHandle_t DrawReady;
 
 void drawTaskHighScore(void * params) {
 	// Possible next states
+	TickType_t receive_time;
+	receive_time = xTaskGetTickCount();
+	TickType_t delay;
+	delay = 1000;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	struct joystick_angle_pulse joystick_internal;
 	int i, j; // Iterators, used in a lot of places
+	uint16_t position = 0;
 	struct highscore new_highscore = { {0} };
+	struct highscore empty_highscore = { {0} };
+	empty_highscore.score = 0;
 	struct highscore highscore_list[5] = { {0} };
 	for(i = 0; i < 5; i++){
 		highscore_list[i].score = 0;
@@ -35,16 +42,22 @@ void drawTaskHighScore(void * params) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
 			if (buttonCount(BUT_D))
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
-			xQueueReceive(HighScoresQueue, &new_highscore, 0);
+			if(xQueueReceive(HighScoresQueue, &new_highscore, 0) == pdTRUE){
+				receive_time = xTaskGetTickCount();
+			}
 
-			for(i = 4; i >= 0; i--){
-				if(new_highscore.score > highscore_list[i].score){
-//					for(j = i - 1; j < 5; j++){
-//						memcpy(&highscore_list[i+1], &highscore_list[i], sizeof(struct highscore));
-//					}
-					memcpy(&highscore_list[i], &new_highscore, sizeof(struct highscore));
-					i = - 1;
+			if(new_highscore.score != 0){
+				for(position = 0; position < 5; position++){
+					if(new_highscore.score > highscore_list[position].score){
+						break;
+					}
 				}
+				
+				for(i = 3; i >= position; i--){
+					memcpy(&highscore_list[i+1], &highscore_list[i], sizeof(struct highscore));
+				}
+				memcpy(&highscore_list[position], &new_highscore, sizeof(struct highscore));
+				memcpy(&new_highscore, &empty_highscore, sizeof(struct highscore));
 			}
 
 			sprintf(print[0], "1. %s | %i ", highscore_list[0].tag, highscore_list[0].score);
@@ -54,17 +67,17 @@ void drawTaskHighScore(void * params) {
 			sprintf(print[4], "5. %s | %i ", highscore_list[4].tag, highscore_list[4].score);
 			sprintf(print[5], "x. Baby Yoda | 0 ");
 
+			// Display printing
 			gdispClear(Black);
-
 			gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
 			gdispDrawString(TEXT_X(user_help[1]), 30, user_help[1],font1, White);
 			for(i = 0; i < 5; i++){
 				if(highscore_list[i].score != 0){
 					gdispDrawString(TEXT_X(print[i]), (50 + 15 * i), print[i],font1, White);
 				}
-				else{
-					gdispDrawString(TEXT_X(print[5]), (50 + 15 * i), print[5],font1, White);
-				}
+				// else{
+				// 	gdispDrawString(TEXT_X(print[5]), (50 + 15 * i), print[5],font1, White);
+				// }
 			}
 
 		}

@@ -8,7 +8,7 @@
 #ifndef INCLUDE_GAMECONFIG_H_
 #define INCLUDE_GAMECONFIG_H_
 
-#define BUILD_NUMBER                        101010      // This number should have 6 digits. Will be displayed on start menu.
+#define BUILD_NUMBER                        222333      // This number should have 6 digits. Will be displayed on start menu.
 
 // Possible states for state machine
 #define STATE_COUNT					        9

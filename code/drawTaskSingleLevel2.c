@@ -1100,7 +1100,7 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 			// TRANSITION TO LEVEL 3 when user presses D
-			if (score == LEVEL_THREE_SCORE_THRESHOLD) {
+			if (score >= LEVEL_THREE_SCORE_THRESHOLD) {
 				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
 				sprintf(str, "LEVEL 2 DONE. Press D for LEVEL 3."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
