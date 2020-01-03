@@ -875,16 +875,6 @@ void drawTaskSingle(void * params) {
 				}
 			}
 
-			// TRANSITION TO LEVEL 2
-			if (score >= LEVEL_TWO_SCORE_THRESHOLD) {
-				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
-				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
-				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
-				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D					
-					xQueueSend(StateQueue, &next_state_signal_level2, 100);
-				}
-			}
-
 			// Drawing functions
 			gdispClear(Black);
 			// Simple clock at top of screen
@@ -900,6 +890,16 @@ void drawTaskSingle(void * params) {
 			// Life count
 			sprintf(str, "Lives: %d", life_count);
 			gdispDrawString(260, 10, str, font1, White);
+
+			// TRANSITION TO LEVEL 2
+			if (score >= LEVEL_TWO_SCORE_THRESHOLD) {
+				gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
+				sprintf(str, "LEVEL 1 DONE. Press D for LEVEL 2."); // Generate game over message
+				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
+				if (buttonCount(BUT_D)) { // Move on to level 2 when user presses D					
+					xQueueSend(StateQueue, &next_state_signal_level2, 100);
+				}
+			}
 
 //			Debug print line for angle and thrust
 			sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
