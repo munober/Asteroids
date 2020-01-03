@@ -24,7 +24,7 @@ extern QueueHandle_t ESPL_RxQueue;
 void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
-	char user_help[1][70] = {"MULTIPLAYER COMING IN 2020. EXIT WITH E."};
+	char user_help[1][70] = {"MULTIPLAYER COMING SOON. EXIT WITH D."};
 	char uart_input[1][70] = { {0} };
 	struct joystick_angle_pulse joystick_internal;
 
@@ -34,7 +34,7 @@ void drawTaskMultiplayer (void * params){
 		xQueueReceive(LifeCountQueue, &life_readin, 0);
 		xQueueReceive(JoystickQueue, &joystick_internal, 0);
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
-			if(buttonCount(BUT_E))
+			if(buttonCount(BUT_D))
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			gdispClear(Black);
 			if(xQueueReceive(ESPL_RxQueue, &uart_input, 0) == pdTRUE){

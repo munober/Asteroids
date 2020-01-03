@@ -67,4 +67,7 @@
 #define LEVEL_THREE_SCORE_THRESHOLD        17000
 #define BEAT_GAME_SCORE_THRESHOLD          21000
 
+// UART Configuration
+
+
 #endif /* INCLUDE_GAMECONFIG_H_ */
