@@ -2,7 +2,8 @@
  * drawTaskSingleLevel3.c
  *
  *  Created on: Dec 18, 2019
- *      Author: Teodor Fratiloiu
+ *      Authors: Teodor Fratiloiu
+ * 				 Frederik Zumegen
  */
 
 #include "includes.h"

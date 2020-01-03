@@ -2,7 +2,8 @@
  * drawTaskSingle.c
  *
  *  Created on: Dec 2, 2019
- *      Author: lab_espl_stud04
+ *      Authors: Teodor Fratiloiu
+ * 				 Frederik Zumegen
  */
 
 #include "includes.h"
