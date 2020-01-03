@@ -12,7 +12,6 @@
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
-extern QueueHandle_t LifeCountQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 
@@ -29,17 +28,16 @@ void drawTaskPause(void * params) {
 	char dash [1][5] = {">"};
 	char dash_reverse [1][5] = {"<"};
 	unsigned char menu_select = RESUME_SELECT;
+	boolean show_debug = false;
+	boolean first_check = false;
+	TickType_t delay = 2000;
+	TickType_t check_time = xTaskGetTickCount();
 	struct joystick_angle_pulse joystick_internal;
 
-	unsigned int life_readin = 3;
-
 	while (1) {
-		xQueueReceive(LifeCountQueue, &life_readin, 0);
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block until screen is ready
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
-				sprintf(status_debug, "x:%5d, y:%5d | DEG:%5d | P_x: %5d | P_y: %5d",
-						joystick_internal.axis.x, joystick_internal.axis.y, joystick_internal.angle,
-						joystick_internal.pulse.x, joystick_internal.pulse.y);
+				sprintf(status_debug, "You found an Easter Egg!");
 				if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
 					menu_select = QUIT_SELECT;
 				}
@@ -48,12 +46,26 @@ void drawTaskPause(void * params) {
 				}
 			}
 
-			gdispClear(Black);
-
-			for (unsigned char i = 0; i < 1; i++){
-//				gdispDrawString(TEXT_X(status_debug[i]), 0, status_debug[i], font1, White);
-				gdispDrawString(TEXT_X(user_help[i]), 60, user_help[i],font1, White);
+			if(first_check == false){
+				if(buttonCount(BUT_C)){
+					check_time = xTaskGetTickCount();
+					first_check = true;
+				}
 			}
+			if(first_check == true){
+				if(xTaskGetTickCount() - check_time <= delay){
+					if(buttonCount(BUT_C)){
+						first_check = false;
+						show_debug = !show_debug;
+					}
+				}
+			}
+
+			gdispClear(Black);
+			if(show_debug == true){
+				gdispDrawString(TEXT_X(status_debug[0]), 0, status_debug[0], font1, White);
+			}
+			gdispDrawString(TEXT_X(user_help[0]), 60, user_help[0],font1, White);
 
 			if(menu_select == RESUME_SELECT){
 				gdispDrawString(120, 90, resume, font1, Yellow);
@@ -71,7 +83,6 @@ void drawTaskPause(void * params) {
 				gdispDrawString(195, 150, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E)){
 					menu_select = RESUME_SELECT;
-					xQueueSend(LifeCountQueue, &life_readin, 100);
 					xQueueSend(StateQueue, &next_state_signal_menu, 100);
 				}
 			}
