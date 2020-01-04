@@ -25,7 +25,7 @@ void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 
-	char user_help[1][70] = {"MULTIPLAYER COMING SOON. EXIT WITH D."};
+	char user_help[1][70];
 	char uart_input;
 	char uart_text[1][70] = {"Nothing received over UART so far."};
 	struct joystick_angle_pulse joystick_internal;
@@ -36,6 +36,7 @@ void drawTaskMultiplayer (void * params){
 	TickType_t check_time = xTaskGetTickCount();
 
 	struct coord joy_direct;
+	struct coord joy_direct_old;
 	struct players_ship player_local;
 	struct players_ship player_remote;
 
@@ -50,13 +51,14 @@ void drawTaskMultiplayer (void * params){
 	float angle_x = 0;
 	float angle_y = 0;
 	unsigned int moved = 0;
-	TickType_t inertia_timer;
+	char heading_direction;
+	struct coord_player inertia_speed;
+	TickType_t inertia_start;
+	TickType_t inertia_period = 100;
 	char shot_fired_byte = 255;
 
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
-	struct direction direction;
-	struct direction direction_old;
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
@@ -68,8 +70,6 @@ void drawTaskMultiplayer (void * params){
 			}
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
-			player_local.position.x += (joy_direct.x - 128) / 32;
-			player_local.position.y += (joy_direct.y - 128) / 32;
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -85,24 +85,103 @@ void drawTaskMultiplayer (void * params){
 					}
 				}
 			}
-// 			Quitting multiplayer screen
-			if(buttonCount(BUT_D)){
-				xQueueSend(StateQueue, &next_state_signal_menu, 100);
-			}
 
+//			Local Player movement 
 			if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
 				moved = 1;
+				inertia_start = xTaskGetTickCount();
 			}
-			angle_x = (float)((int16_t)joy_direct.x-128);
-			angle_y = (float)((int16_t)joy_direct.y-128);
-			angle_float = 0;
-			if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
-				if((angle_x != 0) && (angle_y != 0)){
-					if(angle_y != 128){
-						angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+			else{
+				moved = 0;
+			}
+
+			if(moved){
+				if(player_local.position.x <= DISPLAY_SIZE_X && player_local.position.y <= DISPLAY_SIZE_Y){
+					player_local.position.x += (joy_direct.x - 128) / 32;
+					player_local.position.y += (joy_direct.y - 128) / 32;
+					if((player_local.position_old.x - player_local.position.x) > 0){
+						if((player_local.position_old.y - player_local.position.y) > 0){
+							heading_direction = HEADING_ANGLE_NW;
+						}
+						else if((player_local.position_old.y - player_local.position.y) < 0){
+							heading_direction = HEADING_ANGLE_NE;
+						}
+						else{
+							heading_direction = HEADING_ANGLE_N;
+						}
 					}
-					else
-						angle_float = 0;
+					else if((player_local.position_old.x - player_local.position.x) < 0){
+						if((player_local.position_old.y - player_local.position.y) > 0){
+							heading_direction = HEADING_ANGLE_SW;
+						}
+						else if((player_local.position_old.y - player_local.position.y) < 0){
+							heading_direction = HEADING_ANGLE_SE;
+						}
+						else{
+							heading_direction = HEADING_ANGLE_S;
+						}
+					}
+					else{
+						if((player_local.position_old.y - player_local.position.y) > 0){
+							heading_direction = HEADING_ANGLE_W;
+						}
+						else if((player_local.position_old.y - player_local.position.y) < 0){
+							heading_direction = HEADING_ANGLE_E;
+						}
+						else{
+							heading_direction = HEADING_ANGLE_NULL;
+						}	
+					} 
+					player_local.position_old.x = player_local.position.x;
+					player_local.position_old.y = player_local.position.y;
+				}
+			}
+
+			if(xTaskGetTickCount() == inertia_start){
+				inertia_speed.x = INERTIA_SPEED_INITIAL + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
+				inertia_speed.y = INERTIA_SPEED_INITIAL + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
+			}
+			if(inertia_speed.x > INERTIA_MIN_SPEED){
+				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+					inertia_speed.x -= INERTIA_DECELERATE;
+				}
+			}
+			if(inertia_speed.y > INERTIA_MIN_SPEED){
+				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+					inertia_speed.y -= INERTIA_DECELERATE;
+				}
+			}
+
+			if(!moved){
+				switch(heading_direction){
+					case HEADING_ANGLE_N:
+						player_local.position.x -= inertia_speed.x;
+						break;
+					case HEADING_ANGLE_S:
+						player_local.position.x += inertia_speed.x;
+						break;
+					case HEADING_ANGLE_E:
+						player_local.position.y += inertia_speed.y;
+						break;
+					case HEADING_ANGLE_W:
+						player_local.position.y -= inertia_speed.y;
+						break;
+					case HEADING_ANGLE_NE:
+						player_local.position.y += inertia_speed.y;
+						player_local.position.x -= inertia_speed.x;
+						break;
+					case HEADING_ANGLE_NW:
+						player_local.position.y -= inertia_speed.y;
+						player_local.position.x -= inertia_speed.x;
+						break;
+					case HEADING_ANGLE_SE:
+						player_local.position.y += inertia_speed.y;
+						player_local.position.x += inertia_speed.x;
+						break;
+					case HEADING_ANGLE_SW:
+						player_local.position.y -= inertia_speed.y;
+						player_local.position.x += inertia_speed.x;
+						break;
 				}
 			}
 
@@ -120,17 +199,7 @@ void drawTaskMultiplayer (void * params){
 				player_local.position.y = DISPLAY_SIZE_Y;
 			}
 
-//			Player movement input
-			if(moved){
-				if(player_local.position.x <= DISPLAY_SIZE_X && player_local.position.y <= DISPLAY_SIZE_Y){
-					player_local.position.x += (joy_direct.x - 128) / 32;
-					player_local.position.y += (joy_direct.y - 128) / 32;
-					if (joy_direct.x - 128 > 10 || joy_direct.y - 128 > 10){
-						inertia_timer = xTaskGetTickCount();
-					}
-				}
-			}
-// 			Player ship rotation
+//			Local Player Ship rotation
 			angle_x = (float)((int16_t)joy_direct.x-128);
 			angle_y = (float)((int16_t)joy_direct.y-128);
 			angle_float = 0;
@@ -139,8 +208,12 @@ void drawTaskMultiplayer (void * params){
 					if(angle_y != 128){
 						angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
 					}
-					else
+					else{
 						angle_float = 0;
+					}
+				}
+				else{
+					angle_float = 0;
 				}
 			}
 
@@ -152,38 +225,9 @@ void drawTaskMultiplayer (void * params){
 									+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
 			}
 
-// 			Get player ship direction
-			direction.x1 = form[2].x;
-			direction.y1 = form[2].y;
-			direction.x2 = form[2].x;
-			direction.y2 = form[1].y;
-//			Player inertia new implementation
-			if(moved){
-				if((player_local.position.x - player_local.position_old.x) > 0){
-					player_local.position.x++;
-				}
-				else if((player_local.position.x - player_local.position_old.x) < 0){
-					player_local.position.x--;
-				}
-				if((player_local.position.y - player_local.position_old.y) > 0){
-					player_local.position.y++;
-				}
-				else if((player_local.position.y - player_local.position_old.y) < 0){
-					player_local.position.y--;
-				}
-			}
-			else if((direction_old.x1 != direction.x1) || (direction_old.y1 != direction.y1)
-					|| (direction_old.x2 != direction.x2) || (direction_old.y2 != direction.y2)){
-				player_local.position_old.x = player_local.position.x;
-				player_local.position_old.y = player_local.position.y;
-			}
-			direction_old.x1 = direction.x1;
-			direction_old.x2 = direction.x2;
-			direction_old.y1 = direction.y1;
-			direction_old.y2 = direction.y2;
-
 //			Drawing functions
 			gdispClear(Black);
+			sprintf(user_help, "Angle: %i", moved);
 			gdispDrawString(TEXT_X(user_help[0]), 20, user_help[0],font1, White);
 			if(show_debug == true){
 				gdispDrawString(TEXT_X(uart_text[0]), 10, uart_text[0],font1, White);
@@ -196,12 +240,12 @@ void drawTaskMultiplayer (void * params){
 			if(buttonCountWithLiftup(BUT_B)){
 				UART_SendData(shot_fired_byte);
 			}
-//			Sample code for sending data over UART
-			// void UART_SendData(uint8_t data) {
-			// 	USART_SendData(USART1, (uint8_t) data);
-			// 	while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET) {// Stores lines to be drawn
-			// 	}
-			// }
+
+			memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
+// 			Quitting multiplayer screen
+			if(buttonCount(BUT_D)){
+				xQueueSend(StateQueue, &next_state_signal_menu, 100);
+			}
 
 		} // Block screen until ready to draw
 	} // while(1) loop

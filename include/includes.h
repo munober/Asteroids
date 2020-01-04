@@ -58,6 +58,16 @@
 #define JOYSTICK_ANGLE_S			270
 #define JOYSTICK_ANGLE_SE			315
 
+#define HEADING_ANGLE_NULL			0
+#define HEADING_ANGLE_E				1
+#define HEADING_ANGLE_NE			2
+#define HEADING_ANGLE_N				3
+#define HEADING_ANGLE_NW			4
+#define HEADING_ANGLE_W				5
+#define HEADING_ANGLE_SW			6
+#define HEADING_ANGLE_S				7
+#define HEADING_ANGLE_SE			8
+
 #define DISPLAY_CENTER_X DISPLAY_SIZE_X/2
 #define DISPLAY_CENTER_Y DISPLAY_SIZE_Y/2
 
@@ -71,6 +81,11 @@ typedef enum {
 struct coord_draw {
 	int16_t x;
 	int16_t y;
+};
+
+struct coord_player{
+	float x;
+	float y;
 };
 
 struct coord_saucer_shots {
@@ -110,8 +125,8 @@ typedef enum {
 } saucer_shot_direction;
 
 struct players_ship {
-	struct coord_draw position;
-	struct coord_draw position_old;
+	struct coord_player position;
+	struct coord_player position_old;
 	player_status state;
 };
 

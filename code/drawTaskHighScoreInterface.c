@@ -36,7 +36,7 @@ void drawTaskHighScoreInterface(void * params) {
 	unsigned int menu_select = NAME_INPUT;
 	unsigned int edit_mode = 0;
 	unsigned int selected_letter = 0;
-	char name[] = "AAAAAA";
+	char name[] = "BBYYDA";
 
 	char user_help[1][70] = {"HIGH SCORES. Navigate with joystick, select with E."};
 	char done[1][70] = {"Done"};

@@ -31,6 +31,11 @@
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED			        3
 
+// Inertia speed
+#define INERTIA_SPEED_INITIAL               2
+#define INERTIA_DECELERATE                  0.05
+#define INERTIA_MIN_SPEED                   0.2
+
 // Score amounts for hits
 #define POINTS_ASTEROID_SMALL               300 // destroyed after 1 hit
 #define POINTS_ASTEROID_MEDIUM              200 // turns into 1 small
