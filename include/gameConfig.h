@@ -9,7 +9,7 @@
 #define INCLUDE_GAMECONFIG_H_
 
 // This number should have 6 digits. It will be displayed on the start menu.
-#define BUILD_NUMBER                        301020
+#define BUILD_NUMBER                        696969
 
 // Configuration of the state machine
 #define STATE_COUNT					        9
@@ -29,18 +29,21 @@
 #define STARTING_LIVES_LEVEL_THREE          9                           
 
 // Speed of laser blaster shots
-#define LASER_BLASTER_SPEED			        3
+#define LASER_BLASTER_SPEED		   	            3
 
 // Inertia speed
-#define INERTIA_SPEED_INITIAL               2
-#define INERTIA_DECELERATE                  0.05
-#define INERTIA_MIN_SPEED                   0.2
+#define INERTIA_SPEED_INITIAL_X                 3
+#define INERTIA_SPEED_INITIAL_Y                 1.5
+#define INERTIA_DECELERATE_X                    0.2
+#define INERTIA_DECELERATE_Y                    0.1
+#define INERTIA_MIN_SPEED_X                     0.4
+#define INERTIA_MIN_SPEED_Y                     0.2
 
 // Score amounts for hits
-#define POINTS_ASTEROID_SMALL               300 // destroyed after 1 hit
-#define POINTS_ASTEROID_MEDIUM              200 // turns into 1 small
-#define POINTS_ASTEROID_LARGE               100 // turns into 1 medium
-#define POINTS_SAUCER_HIT                   1000 // for 1 hit
+#define POINTS_ASTEROID_SMALL                   300 // destroyed after 1 hit
+#define POINTS_ASTEROID_MEDIUM                  200 // turns into 1 small
+#define POINTS_ASTEROID_LARGE                   100 // turns into 1 medium
+#define POINTS_SAUCER_HIT                       1000 // for 1 hit
 
 // Number of asteroids to destroy in each level
 #define TO_DESTROY_LEVEL_1_SMALL            20
@@ -51,7 +54,7 @@
 
 // Respawn boundaries in each level (will respawn as long as number left is above this)
 #define RESPAWN_SMALL_LEVEL_1               10
-#define RESPAWN_SMALL_LEVEL_2               5
+#define RESPAWN_SMALL_LEVEL_2               4
 #define RESPAWN_SMALL_LEVEL_3               1
 #define RESPAWN_MEDIUM_LEVEL_3              5
 #define RESPAWN_LARGE_LEVEL_3               5

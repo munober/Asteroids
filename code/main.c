@@ -43,7 +43,9 @@ QueueHandle_t StateQueue;
 QueueHandle_t JoystickQueue;
 QueueHandle_t JoystickAngle360Queue;
 QueueHandle_t PlayerNavigationQueue;
-QueueHandle_t LifeCountQueue;
+QueueHandle_t LifeCountQueue1;
+QueueHandle_t LifeCountQueue2;
+QueueHandle_t LifeCountQueue3;
 QueueHandle_t HighScoresQueue;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
@@ -74,7 +76,9 @@ int main(void){
 	JoystickQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct joystick_angle_pulse));
 	JoystickAngle360Queue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(float));
 	PlayerNavigationQueue = xQueueCreate(JOYSTICK_QUEUE_LENGTH, sizeof(struct coord));
-	LifeCountQueue = xQueueCreate(10, sizeof(unsigned int));
+	LifeCountQueue1 = xQueueCreate(10, sizeof(unsigned int));
+	LifeCountQueue2 = xQueueCreate(10, sizeof(unsigned int));
+	LifeCountQueue3 = xQueueCreate(10, sizeof(unsigned int));
 	HighScoresQueue = xQueueCreate(10, sizeof(struct highscore));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();

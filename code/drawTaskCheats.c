@@ -10,7 +10,9 @@
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
-extern QueueHandle_t LifeCountQueue;
+extern QueueHandle_t LifeCountQueue1;
+extern QueueHandle_t LifeCountQueue2;
+extern QueueHandle_t LifeCountQueue3;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 
@@ -149,7 +151,9 @@ void drawTaskCheats(void * params) {
 				break;
 			}
 			if(starting_lives != starting_lives_old){
-				xQueueSend(LifeCountQueue, &starting_lives, 100);
+				xQueueSend(LifeCountQueue1, &starting_lives, 100);
+				xQueueSend(LifeCountQueue2, &starting_lives, 100);
+				xQueueSend(LifeCountQueue3, &starting_lives, 100);
 				starting_lives_old = starting_lives;
 			}
 

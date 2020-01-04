@@ -17,7 +17,7 @@ extern QueueHandle_t StateQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t JoystickQueue;
-extern QueueHandle_t LifeCountQueue;
+extern QueueHandle_t LifeCountQueue3;
 extern QueueHandle_t HighScoresQueue;
 
 #define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
@@ -264,6 +264,11 @@ void drawTaskSingleLevel3 (void * params){
 	struct coord joy_direct_old;
 	unsigned int moved = 0;
 
+	char heading_direction;
+	struct coord_player inertia_speed;
+	TickType_t inertia_start;
+	TickType_t inertia_period = 100;
+
 	float angle_x = 0;
 	float angle_y = 0;
 
@@ -299,8 +304,8 @@ void drawTaskSingleLevel3 (void * params){
 	while (1) {
 // 		Reading desired life count from cheats menu
 
-		if(xQueueReceive(LifeCountQueue, &life_readin, 0) == pdTRUE){
-			life_count = life_readin + 6;
+		if(xQueueReceive(LifeCountQueue3, &life_readin, 0) == pdTRUE){
+			life_count += life_readin;
 		}
 
 // 		Timer logic
@@ -356,20 +361,102 @@ void drawTaskSingleLevel3 (void * params){
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 
-//			Start player movement:
+//			Local Player movement 
 			if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
 				moved = 1;
+				inertia_start = xTaskGetTickCount();
 			}
-			angle_x = (float)((int16_t)joy_direct.x-128);
-			angle_y = (float)((int16_t)joy_direct.y-128);
-			angle_float = 0;
-			if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
-				if((angle_x != 0) && (angle_y != 0)){
-					if(angle_y != 128){
-						angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+			else{
+				moved = 0;
+			}
+
+			if(moved){
+				if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
+					player.position.x += (joy_direct.x - 128) / 32;
+					player.position.y += (joy_direct.y - 128) / 32;
+					if((player.position_old.x - player.position.x) > 0){
+						if((player.position_old.y - player.position.y) > 0){
+							heading_direction = HEADING_ANGLE_NW;
+						}
+						else if((player.position_old.y - player.position.y) < 0){
+							heading_direction = HEADING_ANGLE_NE;
+						}
+						else{
+							heading_direction = HEADING_ANGLE_N;
+						}
 					}
-					else
-						angle_float = 0;
+					else if((player.position_old.x - player.position.x) < 0){
+						if((player.position_old.y - player.position.y) > 0){
+							heading_direction = HEADING_ANGLE_SW;
+						}
+						else if((player.position_old.y - player.position.y) < 0){
+							heading_direction = HEADING_ANGLE_SE;
+						}
+						else{
+							heading_direction = HEADING_ANGLE_S;
+						}
+					}
+					else{
+						if((player.position_old.y - player.position.y) > 0){
+							heading_direction = HEADING_ANGLE_W;
+						}
+						else if((player.position_old.y - player.position.y) < 0){
+							heading_direction = HEADING_ANGLE_E;
+						}
+						else{
+							heading_direction = HEADING_ANGLE_NULL;
+						}	
+					} 
+					player.position_old.x = player.position.x;
+					player.position_old.y = player.position.y;
+				}
+			}
+
+			if(xTaskGetTickCount() == inertia_start){
+				inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
+				inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
+			}
+			if(inertia_speed.x > INERTIA_MIN_SPEED_X){
+				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+					inertia_speed.x -= INERTIA_DECELERATE_X;
+				}
+			}
+			if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
+				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+					inertia_speed.y -= INERTIA_DECELERATE_X;
+				}
+			}
+
+			if(!moved){
+				switch(heading_direction){
+					case HEADING_ANGLE_N:
+						player.position.x -= inertia_speed.x;
+						break;
+					case HEADING_ANGLE_S:
+						player.position.x += inertia_speed.x;
+						break;
+					case HEADING_ANGLE_E:
+						player.position.y += inertia_speed.y;
+						break;
+					case HEADING_ANGLE_W:
+						player.position.y -= inertia_speed.y;
+						break;
+					case HEADING_ANGLE_NE:
+						player.position.y += inertia_speed.y;
+						player.position.x -= inertia_speed.x;
+						break;
+					case HEADING_ANGLE_NW:
+						player.position.y -= inertia_speed.y;
+						player.position.x -= inertia_speed.x;
+						break;
+					case HEADING_ANGLE_SE:
+						player.position.y += inertia_speed.y;
+						player.position.x += inertia_speed.x;
+						break;
+					case HEADING_ANGLE_SW:
+						player.position.y -= inertia_speed.y;
+						player.position.x += inertia_speed.x;
+						break;
 				}
 			}
 
@@ -387,18 +474,23 @@ void drawTaskSingleLevel3 (void * params){
 				player.position.y = DISPLAY_SIZE_Y;
 			}
 
-//			Player movement input
-			if(moved){
-				if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
-					player.position.x += (joy_direct.x - 128) / 32;
-					player.position.y += (joy_direct.y - 128) / 32;
-					if (joy_direct.x - 128 > 10 || joy_direct.y - 128 > 10){
-						inertia_timer = xTaskGetTickCount();
+// 			Player ship rotation
+			angle_x = (float)((int16_t)joy_direct.x-128);
+			angle_y = (float)((int16_t)joy_direct.y-128);
+			angle_float = 0;
+			if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
+				if((angle_x != 0) && (angle_y != 0)){
+					if(angle_y != 128){
+						angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+					}
+					else{
+						angle_float = 0;
 					}
 				}
+				else{
+					angle_float = 0;
+				}
 			}
-
-// 			Player ship rotation
 			memcpy(&form, &form_orig, 3 * sizeof(struct point));
 			for(incr = 0; incr < 3; incr++){
 				form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
@@ -406,37 +498,6 @@ void drawTaskSingleLevel3 (void * params){
 				form[incr].y = form_orig[incr].x * sin(angle_float * CONVERT_TO_RAD)
 									+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
 			}
-
-// 			Get player ship direction
-			direction.x1 = form[2].x;
-			direction.y1 = form[2].y;
-			direction.x2 = form[2].x;
-			direction.y2 = form[1].y;
-
-//			Player inertia new implementation
-			if(moved){
-				if((player.position.x - player.position_old.x) > 0){
-					player.position.x++;
-				}
-				else if((player.position.x - player.position_old.x) < 0){
-					player.position.x--;
-				}
-				if((player.position.y - player.position_old.y) > 0){
-					player.position.y++;
-				}
-				else if((player.position.y - player.position_old.y) < 0){
-					player.position.y--;
-				}
-			}
-			else if((direction_old.x1 != direction.x1) || (direction_old.y1 != direction.y1)
-					|| (direction_old.x2 != direction.x2) || (direction_old.y2 != direction.y2)){
-				player.position_old.x = player.position.x;
-				player.position_old.y = player.position.y;
-			}
-			direction_old.x1 = direction.x1;
-			direction_old.x2 = direction.x2;
-			direction_old.y1 = direction.y1;
-			direction_old.y2 = direction.y2;
 
 //			Handling cannon shot firing
 //			Spawning new cannon shots on player input
@@ -1194,8 +1255,7 @@ void drawTaskSingleLevel3 (void * params){
 					// xQueueSend(StateQueue, &next_state_signal_mainmenu, 100);
 				}
 			}
-			joy_direct_old.x = joy_direct.x;
-			joy_direct_old.y = joy_direct.y;
+			memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
 		} // Block until screen is ready
 	} // While-loop
 } // Task

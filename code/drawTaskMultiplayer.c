@@ -138,17 +138,17 @@ void drawTaskMultiplayer (void * params){
 			}
 
 			if(xTaskGetTickCount() == inertia_start){
-				inertia_speed.x = INERTIA_SPEED_INITIAL + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
-				inertia_speed.y = INERTIA_SPEED_INITIAL + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
+				inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
+				inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
 			}
-			if(inertia_speed.x > INERTIA_MIN_SPEED){
+			if(inertia_speed.x > INERTIA_MIN_SPEED_X){
 				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
-					inertia_speed.x -= INERTIA_DECELERATE;
+					inertia_speed.x -= INERTIA_DECELERATE_X;
 				}
 			}
-			if(inertia_speed.y > INERTIA_MIN_SPEED){
+			if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
 				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
-					inertia_speed.y -= INERTIA_DECELERATE;
+					inertia_speed.y -= INERTIA_DECELERATE_Y;
 				}
 			}
 

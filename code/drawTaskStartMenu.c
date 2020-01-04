@@ -32,7 +32,7 @@ void drawTaskStartMenu(void * params) {
 	sprintf(version, "Build number -- %i", BUILD_NUMBER);
 	char single [1][20] = {"Singleplayer"};
 	char multi [1][20] = {"Multiplayer"};
-	char settings [1][20] = {"Settings"};
+	char settings [1][20] = {"About"};
 	char cheats [1][20] = {"Cheats"};
 	char highscores [1][20] = {"High Scores"};
 	char dash [1][5] = {">"};
