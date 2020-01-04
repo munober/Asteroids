@@ -21,6 +21,7 @@ extern SemaphoreHandle_t DrawReady;
 void drawTaskPause(void * params) {
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	const unsigned char next_state_signal_single = SINGLE_PLAYER_STATE;
+	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	char status_debug[1][70] = {{0}};
 	char user_help[1][70] = {"PAUSE MENU. Navigate with joystick, select with E."};
 	char resume[1][70] = {"Resume"};
@@ -83,7 +84,7 @@ void drawTaskPause(void * params) {
 				gdispDrawString(195, 150, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E)){
 					menu_select = RESUME_SELECT;
-					xQueueSend(StateQueue, &next_state_signal_menu, 100);
+					xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 				}
 			}
 

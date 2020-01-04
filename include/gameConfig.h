@@ -9,7 +9,7 @@
 #define INCLUDE_GAMECONFIG_H_
 
 // This number should have 6 digits. It will be displayed on the start menu.
-#define BUILD_NUMBER                        696969
+#define BUILD_NUMBER                        696922
 
 // Configuration of the state machine
 #define STATE_COUNT					        9
@@ -71,9 +71,9 @@
 
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score
-#define LEVEL_TWO_SCORE_THRESHOLD          8000
-#define LEVEL_THREE_SCORE_THRESHOLD        17000
-#define BEAT_GAME_SCORE_THRESHOLD          21000
+#define LEVEL_TWO_SCORE_THRESHOLD          8000 // Will transition to level 2 when getting to this score
+#define LEVEL_THREE_SCORE_THRESHOLD        17000 // Will transition to level 3 when getting to this score
+#define BEAT_GAME_SCORE_THRESHOLD          21000 // Will offer option to continue game to highscore when getting this score
 
 // UART Configuration
 

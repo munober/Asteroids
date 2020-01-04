@@ -304,6 +304,7 @@ void drawTaskSingle(void * params) {
 			restart_lives = life_readin;
 			if (life_count != 0) {
 				if (buttonCount(BUT_E)) {
+					xQueueSend(HighScoresQueue, &score, 0);
 					xQueueSend(StateQueue, &next_state_signal_pause, 100);
 				}
 				if (buttonCountWithLiftup(BUT_A)) {
