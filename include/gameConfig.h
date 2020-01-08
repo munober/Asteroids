@@ -24,7 +24,7 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_2
+#define STARTING_STATE                      MULTIPLAYER_STATE
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
@@ -34,12 +34,13 @@
 #define LASER_BLASTER_SPEED		   	            3
 
 // Inertia speed
-#define INERTIA_SPEED_INITIAL_X                 3
-#define INERTIA_SPEED_INITIAL_Y                 1.5
-#define INERTIA_DECELERATE_X                    0.2
+#define INERTIA_SPEED_INITIAL_X                 4
+#define INERTIA_SPEED_INITIAL_Y                 2
+#define INERTIA_DECELERATE_X                    0.3
 #define INERTIA_DECELERATE_Y                    0.1
-#define INERTIA_MIN_SPEED_X                     0.4
+#define INERTIA_MIN_SPEED_X                     0.7
 #define INERTIA_MIN_SPEED_Y                     0.2
+#define INERTIA_TIME_INCREMENT					200
 
 // Score amounts for hits
 #define POINTS_ASTEROID_SMALL                   300 // destroyed after 1 hit

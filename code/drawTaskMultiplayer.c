@@ -98,7 +98,7 @@ void drawTaskMultiplayer (void * params){
 			if(moved){
 				if(player_local.position.x <= DISPLAY_SIZE_X && player_local.position.y <= DISPLAY_SIZE_Y){
 					player_local.position.x += (joy_direct.x - 128) / 32;
-					player_local.position.y += (joy_direct.y - 128) / 32;
+					player_local.position.y += (joy_direct.y - 128) / 64;
 					if((player_local.position_old.x - player_local.position.x) > 0){
 						if((player_local.position_old.y - player_local.position.y) > 0){
 							heading_direction = HEADING_ANGLE_NW;
@@ -138,16 +138,16 @@ void drawTaskMultiplayer (void * params){
 			}
 
 			if(xTaskGetTickCount() == inertia_start){
-				inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
+				inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 16);
 				inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
 			}
 			if(inertia_speed.x > INERTIA_MIN_SPEED_X){
-				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
 					inertia_speed.x -= INERTIA_DECELERATE_X;
 				}
 			}
 			if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
-				if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
 					inertia_speed.y -= INERTIA_DECELERATE_Y;
 				}
 			}
