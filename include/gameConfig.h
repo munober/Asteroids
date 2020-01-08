@@ -12,7 +12,7 @@
 #define BUILD_NUMBER                        101022
 
 // Configuration of the state machine
-#define STATE_COUNT					        9
+#define STATE_COUNT					        11
 #define MAIN_MENU_STATE  		 	        1
 #define SINGLE_PLAYER_STATE			        2
 #define PAUSE_MENU_STATE  			        3
@@ -22,7 +22,9 @@
 #define MULTIPLAYER_STATE			        7
 #define SINGLE_PLAYER_LEVEL_2		        8
 #define SINGLE_PLAYER_LEVEL_3		        9
-#define STARTING_STATE                      MAIN_MENU_STATE 
+#define PAUSE_MENU_LEVEL_2					10
+#define PAUSE_MENU_LEVEL_3					11
+#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_2
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6

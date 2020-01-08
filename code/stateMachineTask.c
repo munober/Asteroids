@@ -19,6 +19,8 @@ extern TaskHandle_t drawTaskMultiplayerHandle;
 extern TaskHandle_t uartTaskHandle;
 extern TaskHandle_t drawTaskSingleLevel2Handle;
 extern TaskHandle_t drawTaskSingleLevel3Handle;
+extern TaskHandle_t drawTaskPauseLevel2Handle;
+extern TaskHandle_t drawTaskPauseLevel3Handle;
 
 void stateMachineTask(void * params) {
 	unsigned char current_state = STARTING_STATE; // Default state
@@ -45,6 +47,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskStartMenuHandle);
 				state_changed = 0;
 				break;
@@ -58,6 +62,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskSingleHandle);
 				state_changed = 0;
 				break;
@@ -71,6 +77,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskPauseHandle);
 				state_changed = 0;
 				break;
@@ -84,6 +92,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskCheatsHandle);
 				state_changed = 0;
 				break;
@@ -97,6 +107,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskHighScoreHandle);
 				state_changed = 0;
 				break;
@@ -110,6 +122,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskHighScoreInterfaceHandle);
 				state_changed = 0;
 				break;
@@ -123,6 +137,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreHandle);
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(uartTaskHandle); // start resuming this when it works
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskMultiplayerHandle);
 				state_changed = 0;
 				break;
@@ -136,6 +152,8 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskSingleLevel2Handle);
 				state_changed = 0;
 				break;
@@ -149,7 +167,39 @@ void stateMachineTask(void * params) {
 			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
 			    vTaskSuspend(drawTaskMultiplayerHandle);
 			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
 			    vTaskResume(drawTaskSingleLevel3Handle);
+				state_changed = 0;
+				break;
+			case PAUSE_MENU_LEVEL_2:
+			    vTaskSuspend(drawTaskStartMenuHandle);
+			    vTaskSuspend(drawTaskSingleHandle);
+			    vTaskSuspend(drawTaskSingleLevel2Handle);
+			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
+			    vTaskSuspend(drawTaskMultiplayerHandle);
+			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel3Handle);
+			    vTaskSuspend(drawTaskSingleLevel3Handle);
+			    vTaskResume(drawTaskPauseLevel2Handle);
+				state_changed = 0;
+				break;
+			case PAUSE_MENU_LEVEL_3:
+			    vTaskSuspend(drawTaskStartMenuHandle);
+			    vTaskSuspend(drawTaskSingleHandle);
+			    vTaskSuspend(drawTaskSingleLevel2Handle);
+			    vTaskSuspend(drawTaskPauseHandle);
+			    vTaskSuspend(drawTaskCheatsHandle);
+			    vTaskSuspend(drawTaskHighScoreHandle);
+			    vTaskSuspend(drawTaskHighScoreInterfaceHandle);
+			    vTaskSuspend(drawTaskMultiplayerHandle);
+			    vTaskSuspend(uartTaskHandle);
+			    vTaskSuspend(drawTaskPauseLevel2Handle);
+			    vTaskSuspend(drawTaskSingleLevel3Handle);
+			    vTaskResume(drawTaskPauseLevel3Handle);
 				state_changed = 0;
 				break;
 			default:

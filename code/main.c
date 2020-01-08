@@ -37,6 +37,8 @@ void checkJoystickTask (void * params);
 void uartTask (void * params);
 void drawTaskSingleLevel2 (void * params);
 void drawTaskSingleLevel3 (void * params);
+void drawTaskPauseLevel2 (void * params);
+void drawTaskPauseLevel3 (void * params);
 
 //QueueHandle_t ButtonQueue;
 QueueHandle_t StateQueue;
@@ -64,6 +66,8 @@ TaskHandle_t drawTaskHighScoreInterfaceHandle;
 TaskHandle_t uartTaskHandle;
 TaskHandle_t drawTaskSingleLevel2Handle;
 TaskHandle_t drawTaskSingleLevel3Handle;
+TaskHandle_t drawTaskPauseLevel2Handle;
+TaskHandle_t drawTaskPauseLevel3Handle;
 
 int main(void){
 
@@ -102,6 +106,8 @@ int main(void){
 	xTaskCreate(drawTaskHighScoreInterface, "drawTaskHighScoreInterface", 1000, NULL, 2, &drawTaskHighScoreInterfaceHandle);
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
 	xTaskCreate(uartTask, "uartTask", 1000, NULL, 3, &uartTaskHandle);
+	xTaskCreate(drawTaskPauseLevel2, "drawTaskPauseLevel2", 1000, NULL, 2, &drawTaskPauseLevel2Handle);
+	xTaskCreate(drawTaskPauseLevel3, "drawTaskPauseLevel3", 1000, NULL, 2, &drawTaskPauseLevel3Handle);
 
 //	Suspending ALL tasks that draw to the screen, will be handled by state machine.
 
@@ -115,6 +121,8 @@ int main(void){
     vTaskSuspend(drawTaskHighScoreHandle);
     vTaskSuspend(drawTaskHighScoreInterfaceHandle);
     vTaskSuspend(uartTaskHandle);
+    vTaskSuspend(drawTaskPauseLevel2Handle);
+    vTaskSuspend(drawTaskPauseLevel3Handle);
 
 	vTaskStartScheduler();
 }
