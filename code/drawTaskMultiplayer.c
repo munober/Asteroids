@@ -47,12 +47,14 @@ void drawTaskMultiplayer (void * params){
 	player_local.state = fine;
 
 	int incr;
-	float angle_float = 0;
+	float angle_float_goal = 0;
+	float angle_float_current = 0;
 	float angle_x = 0;
 	float angle_y = 0;
 	unsigned int moved = 0;
 	char heading_direction;
 	struct coord_player inertia_speed;
+	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
 	TickType_t inertia_period = 100;
 	char shot_fired_byte = 255;
@@ -87,7 +89,7 @@ void drawTaskMultiplayer (void * params){
 			}
 
 //			Local Player movement 
-			if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
+			if((joy_direct.x > 132) || (joy_direct.x < 124) || (joy_direct.y > 132) || (joy_direct.y < 124)){
 				moved = 1;
 				inertia_start = xTaskGetTickCount();
 			}
@@ -97,8 +99,30 @@ void drawTaskMultiplayer (void * params){
 
 			if(moved){
 				if(player_local.position.x <= DISPLAY_SIZE_X && player_local.position.y <= DISPLAY_SIZE_Y){
-					player_local.position.x += (joy_direct.x - 128) / 32;
-					player_local.position.y += (joy_direct.y - 128) / 64;
+					if(abs(joy_direct_old.x - joy_direct.x) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_X){
+						player_local.speed_goal.x = (joy_direct.x - 128) / SPEED_SCALING_FACTOR;
+					}
+					if(abs(joy_direct_old.y - joy_direct.y) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_Y){
+						player_local.speed_goal.y = (joy_direct.y - 128) / SPEED_SCALING_FACTOR;
+					}
+					if(abs(player_local.speed_current.x - player_local.speed_goal.x) >= 0.1){
+						if(player_local.speed_current.x > player_local.speed_goal.x){
+							player_local.speed_current.x -= PLAYER_STANDARD_ACCELERATION_X;
+						}
+						if(player_local.speed_current.x < player_local.speed_goal.x){
+							player_local.speed_current.x += PLAYER_STANDARD_ACCELERATION_X;
+						}
+					}
+					if(abs(player_local.speed_current.y - player_local.speed_goal.y) >= 0.1){
+						if(player_local.speed_current.y > player_local.speed_goal.y){
+							player_local.speed_current.y -= PLAYER_STANDARD_ACCELERATION_Y;
+						}
+						if(player_local.speed_current.y < player_local.speed_goal.y){
+							player_local.speed_current.y += PLAYER_STANDARD_ACCELERATION_Y;
+						}
+					}
+					player_local.position.x += player_local.speed_current.x;
+					player_local.position.y += player_local.speed_current.y;
 					if((player_local.position_old.x - player_local.position.x) > 0){
 						if((player_local.position_old.y - player_local.position.y) > 0){
 							heading_direction = HEADING_ANGLE_NW;
@@ -128,27 +152,38 @@ void drawTaskMultiplayer (void * params){
 						else if((player_local.position_old.y - player_local.position.y) < 0){
 							heading_direction = HEADING_ANGLE_E;
 						}
-						else{
-							heading_direction = HEADING_ANGLE_NULL;
-						}	
-					} 
+					}
 					player_local.position_old.x = player_local.position.x;
 					player_local.position_old.y = player_local.position.y;
 				}
-			}
+				inertia_speed.x = abs(player_local.speed_current.x);
+				inertia_speed.y = abs(player_local.speed_current.y);
 
-			if(xTaskGetTickCount() == inertia_start){
-				inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 16);
-				inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
-			}
-			if(inertia_speed.x > INERTIA_MIN_SPEED_X){
-				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
-					inertia_speed.x -= INERTIA_DECELERATE_X;
+				inertia_speed_final.x = INERTIA_MIN_SPEED_X;
+				inertia_speed_final.y = INERTIA_MIN_SPEED_Y;
+				if((abs(joy_direct_old.x - joy_direct.x) / 16) <= INERTIA_MIN_SPEED_X){
+					inertia_speed_final.x += ((abs(joy_direct_old.x - joy_direct.x)) / SPEED_SCALING_FACTOR);
 				}
-			}
-			if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
-				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
-					inertia_speed.y -= INERTIA_DECELERATE_Y;
+				if((abs(joy_direct_old.y - joy_direct.y) / 16) <= INERTIA_MIN_SPEED_Y){
+					inertia_speed_final.y += ((abs(joy_direct_old.y - joy_direct.y)) / SPEED_SCALING_FACTOR);
+				}
+
+//				Getting joystick angle
+				angle_x = (float)((int16_t)joy_direct.x-128);
+				angle_y = (float)((int16_t)joy_direct.y-128);
+				angle_float_goal = 0;
+				if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
+					if((angle_x != 0) && (angle_y != 0)){
+						if(angle_y != 128){
+							angle_float_goal = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 270;
+						}
+						else{
+							angle_float_goal = 0;
+						}
+					}
+					else{
+						angle_float_goal = 0;
+					}
 				}
 			}
 
@@ -185,6 +220,17 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 
+			if(inertia_speed.x > inertia_speed_final.x){
+				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
+					inertia_speed.x -= INERTIA_DECELERATE_X;
+				}
+			}
+			if(inertia_speed.y > inertia_speed_final.y){
+				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
+					inertia_speed.y -= INERTIA_DECELERATE_Y;
+				}
+			}
+
 //			Make player show up at the other side of the screen when reaching screen border
 			if(player_local.position.x >= DISPLAY_SIZE_X){
 				player_local.position.x = 0;
@@ -199,30 +245,31 @@ void drawTaskMultiplayer (void * params){
 				player_local.position.y = DISPLAY_SIZE_Y;
 			}
 
-//			Local Player Ship rotation
-			angle_x = (float)((int16_t)joy_direct.x-128);
-			angle_y = (float)((int16_t)joy_direct.y-128);
-			angle_float = 0;
-			if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
-				if((angle_x != 0) && (angle_y != 0)){
-					if(angle_y != 128){
-						angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+//			Doing actual player ship rotation here
+			memcpy(&form, &form_orig, 3 * sizeof(struct point));
+			if(abs(angle_float_current - angle_float_goal) >= 2){
+				if(abs(angle_float_current - angle_float_goal) < 180){
+					if(angle_float_current > angle_float_goal){
+						angle_float_current += ROTATION_SPEED;
 					}
-					else{
-						angle_float = 0;
+					if(angle_float_current < angle_float_goal){
+						angle_float_current -= ROTATION_SPEED;
 					}
 				}
-				else{
-					angle_float = 0;
+				else if(abs(angle_float_current - angle_float_goal) >= 180){
+					if(angle_float_current > angle_float_goal){
+						angle_float_current -= ROTATION_SPEED;
+					}
+					if(angle_float_current < angle_float_goal){
+						angle_float_current += ROTATION_SPEED;
+					}
 				}
 			}
-
-			memcpy(&form, &form_orig, 3 * sizeof(struct point));
 			for(incr = 0; incr < 3; incr++){
-				form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
-									- form_orig[incr].y * sin(angle_float * CONVERT_TO_RAD);
-				form[incr].y = form_orig[incr].x * sin(angle_float * CONVERT_TO_RAD)
-									+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
+				form[incr].x = form_orig[incr].x * cos(angle_float_current * CONVERT_TO_RAD)
+									- form_orig[incr].y * sin(angle_float_current * CONVERT_TO_RAD);
+				form[incr].y = form_orig[incr].x * sin(angle_float_current * CONVERT_TO_RAD)
+									+ form_orig[incr].y * cos(angle_float_current * CONVERT_TO_RAD);
 			}
 
 //			Drawing functions
@@ -236,7 +283,7 @@ void drawTaskMultiplayer (void * params){
 
 			UART_SendData(player_local.position.x / 2);
 			UART_SendData(player_local.position.y);
-			UART_SendData(angle_float / 2);
+			UART_SendData(angle_float_goal / 2);
 			if(buttonCountWithLiftup(BUT_B)){
 				UART_SendData(shot_fired_byte);
 			}

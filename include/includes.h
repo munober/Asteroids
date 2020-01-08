@@ -127,6 +127,8 @@ typedef enum {
 struct players_ship {
 	struct coord_player position;
 	struct coord_player position_old;
+	struct coord_player speed_current;
+	struct coord_player speed_goal;
 	player_status state;
 };
 

@@ -9,7 +9,7 @@
 #define INCLUDE_GAMECONFIG_H_
 
 // This number should have 6 digits. It will be displayed on the start menu.
-#define BUILD_NUMBER                        101022
+#define BUILD_NUMBER                        112200
 
 // Configuration of the state machine
 #define STATE_COUNT					        11
@@ -34,13 +34,19 @@
 #define LASER_BLASTER_SPEED		   	            3
 
 // Inertia speed
-#define INERTIA_SPEED_INITIAL_X                 4
+#define SPEED_SCALING_FACTOR					32
+#define INERTIA_SPEED_INITIAL_X                 3
 #define INERTIA_SPEED_INITIAL_Y                 2
 #define INERTIA_DECELERATE_X                    0.3
 #define INERTIA_DECELERATE_Y                    0.1
-#define INERTIA_MIN_SPEED_X                     0.7
-#define INERTIA_MIN_SPEED_Y                     0.2
-#define INERTIA_TIME_INCREMENT					200
+#define INERTIA_MIN_SPEED_X                     0.4
+#define INERTIA_MIN_SPEED_Y                     0.3
+#define INERTIA_TIME_INCREMENT					100
+#define ROTATION_SPEED							2 // in degrees per frame
+#define	PLAYER_SPEED_MAX_X						5
+#define	PLAYER_SPEED_MAX_Y						5
+#define PLAYER_STANDARD_ACCELERATION_X			0.1
+#define PLAYER_STANDARD_ACCELERATION_Y			0.1
 
 // Score amounts for hits
 #define POINTS_ASTEROID_SMALL                   300 // destroyed after 1 hit
