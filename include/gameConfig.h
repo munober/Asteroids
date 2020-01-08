@@ -24,14 +24,16 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      MULTIPLAYER_STATE
+#define STARTING_STATE                      SINGLE_PLAYER_STATE
 
-#define STARTING_LIVES_LEVEL_ONE            3
+#define STARTING_LIVES_LEVEL_ONE            300
 #define STARTING_LIVES_LEVEL_TWO            6
 #define STARTING_LIVES_LEVEL_THREE          9                           
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
+// Speed of saucer blaster
+#define SAUCER_BLASTER_SPEED					1
 
 // Inertia speed
 #define INERTIA_SPEED_INITIAL_X                 4

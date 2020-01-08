@@ -229,10 +229,11 @@ void drawTaskSingleLevel2 (void * params){
 	// Initialize flying saucers
 	struct saucer saucer_1 = { { 0 } };
 	saucer_1.route_number = super_random % 6;
-	saucer_1.position.x = -10;
+	saucer_1.position.x = -15;
 	saucer_1.position.y = saucer_routes[saucer_1.route_number][0];
 	saucer_1.turning = false;
 	saucer_1.remain_hits = two;
+	saucer_1.shot_number = 0;
 	for (i = 0; i <= 9; i++) {
 		saucer_1.shot_fired[i] = false;
 		saucer_1.shots[i].x = 0;
@@ -240,10 +241,11 @@ void drawTaskSingleLevel2 (void * params){
 	}
 	struct saucer saucer_2 = { { 0 } };
 	saucer_2.route_number = (super_random + 3) % 6;
-	saucer_2.position.x = -10;
+	saucer_2.position.x = -15;
 	saucer_2.position.y = saucer_routes[saucer_2.route_number][0];
 	saucer_2.turning = false;
 	saucer_2.remain_hits = two;
+	saucer_2.shot_number = 0;
 	for (i = 0; i <= 9; i++) {
 		saucer_2.shot_fired[i] = false;
 		saucer_2.shots[i].x = 0;
@@ -731,8 +733,7 @@ void drawTaskSingleLevel2 (void * params){
 
 				if (saucer_1.turning == true) {
 					if (saucer_routes[saucer_1.route_number][saucer_1.turn_number]
-							> saucer_routes[saucer_1.route_number][saucer_1.turn_number
-									- 1]) {
+							> saucer_routes[saucer_1.route_number][saucer_1.turn_number	- 1]) {
 						saucer_1.position.x++;
 						saucer_1.position.y = saucer_1.position.y + 2;
 					} else {
@@ -750,7 +751,7 @@ void drawTaskSingleLevel2 (void * params){
 			// SACUER #1 fire
 			if ((timer_1halfsec == 1) && (time_passed > 20) && (saucer_1.remain_hits != none)) {
 				if ((player.position.y - saucer_1.position.y != 0) && (player.position.x - saucer_1.position.x != 0)) {
-					saucer_1.ratios[saucer_1.shot_number] = (player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y);
+					saucer_1.ratios[saucer_1.shot_number] = abs((player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y));
 				}
 				else {
 					saucer_1.ratios[saucer_1.shot_number] = 1;
@@ -814,7 +815,7 @@ void drawTaskSingleLevel2 (void * params){
 			// SACUER #2 fire
 			if ((timer_2sec == 1) && (time_passed > 35) && (saucer_2.remain_hits != none)) {
 				if ((player.position.y - saucer_2.position.y != 0) && (player.position.x - saucer_2.position.x != 0)) {
-					saucer_2.ratios[saucer_2.shot_number] = (player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y);
+					saucer_2.ratios[saucer_2.shot_number] = abs((player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y));
 				}
 				else {
 					saucer_2.ratios[saucer_2.shot_number] = 1;
@@ -839,33 +840,33 @@ void drawTaskSingleLevel2 (void * params){
 			}
 
 			// SAUCER #1 and #2 shots movement
-			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
+			// ratio is multiplied to x increment only, because ratio = x/y.
 			for (i = 0; i <= 1; i++) {
 				if (the_saucers[i]->remain_hits != none) {
 					for (j = 0; j <= 9; j++) {
 						if (the_saucers[i]->shot_fired[j] == true) {
-							if (the_saucers[i]->ratios[the_saucers[i]->shot_number] > 3.0)
-								the_saucers[i]->ratios[the_saucers[i]->shot_number] = 1;
-							switch (the_saucers[i]->shot_direction[i]) {
+							if (the_saucers[i]->ratios[j] > 3.0)
+								the_saucers[i]->ratios[j] = 1;
+							switch (the_saucers[i]->shot_direction[j]) {
 							case up_and_left:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												- the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - 2;
+												- the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - SAUCER_BLASTER_SPEED;
 								break;
 							case up_and_right:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												+ the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - 2;
+												+ the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - SAUCER_BLASTER_SPEED;
 								break;
 							case down_and_right:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												+ the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + 2;
+												+ the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + SAUCER_BLASTER_SPEED;
 								break;
 							case down_and_left:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												- the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + 2;
+												- the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + SAUCER_BLASTER_SPEED;
 								break;
 							}
 						}
@@ -897,14 +898,16 @@ void drawTaskSingleLevel2 (void * params){
 			for (i = 0; i <= 9; i++) {
 				if(all_asteroids[i]->remain_hits == one){
 					if ((abs(all_asteroids[i]->position.x - player.position.x) <= HIT_LIMIT_SMALL)
-					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_SMALL)) {
+					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_SMALL)
+					&& (all_asteroids[i]->remain_hits != none)) {
 						player.state = hit;
 						hit_timestamp = xTaskGetTickCount();
 					}
 				}
 				if(all_asteroids[i]->remain_hits == two){
 					if ((abs(all_asteroids[i]->position.x - player.position.x) <= HIT_LIMIT_MEDIUM)
-					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_MEDIUM)) {
+					&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_MEDIUM)
+					&& (all_asteroids[i]->remain_hits != none)) {
 						player.state = hit;
 						hit_timestamp = xTaskGetTickCount();
 					}	
@@ -1144,7 +1147,7 @@ void drawTaskSingleLevel2 (void * params){
 				if ((time_passed >= 35) && (saucer_2.remain_hits != none)) {
 					sprintf(str2, "Lives: %d", saucer_2.remain_hits);
 					gdispDrawString(DISPLAY_CENTER_X + 42, 10, str2, font1, Cyan);
-				}
+				}&& (all_asteroids[i]->remain_hits != none)
 
 
 			}
