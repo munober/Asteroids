@@ -34,19 +34,19 @@
 #define LASER_BLASTER_SPEED		   	            3
 
 // Inertia speed
-#define SPEED_SCALING_FACTOR					32
-#define INERTIA_SPEED_INITIAL_X                 3
-#define INERTIA_SPEED_INITIAL_Y                 2
-#define INERTIA_DECELERATE_X                    0.3
-#define INERTIA_DECELERATE_Y                    0.1
-#define INERTIA_MIN_SPEED_X                     0.4
-#define INERTIA_MIN_SPEED_Y                     0.3
-#define INERTIA_TIME_INCREMENT					100
+#define SPEED_SCALING_FACTOR					32 // dividing joystick input by this factor
+#define INERTIA_SPEED_INITIAL_X                 3 // starting inertial movement spped on x axis
+#define INERTIA_SPEED_INITIAL_Y                 2 // starting inertial movement spped on y axis
+#define INERTIA_DECELERATE_X                    0.3 // rate of inertial decelaration on x axis
+#define INERTIA_DECELERATE_Y                    0.1 // rate of inertial decelaration on y axis
+#define INERTIA_MIN_SPEED_X                     0.4 // minimum movement speed on x axis
+#define INERTIA_MIN_SPEED_Y                     0.3 // minimum movement speed on y axis
+#define INERTIA_TIME_INCREMENT					100 // period at which the object will decelerate with above rates
 #define ROTATION_SPEED							2 // in degrees per frame
-#define	PLAYER_SPEED_MAX_X						5
-#define	PLAYER_SPEED_MAX_Y						5
-#define PLAYER_STANDARD_ACCELERATION_X			0.1
-#define PLAYER_STANDARD_ACCELERATION_Y			0.1
+#define	PLAYER_SPEED_MAX_X						5 // maximum reachable speed on x axis
+#define	PLAYER_SPEED_MAX_Y						5 // maximum reachable speed on y axis
+#define PLAYER_STANDARD_ACCELERATION_X			0.1 // rate of acceleration on joystick input on x axis
+#define PLAYER_STANDARD_ACCELERATION_Y			0.1 // rate of acceleration on joystick input on y axis
 
 // Score amounts for hits
 #define POINTS_ASTEROID_SMALL                   300 // destroyed after 1 hit

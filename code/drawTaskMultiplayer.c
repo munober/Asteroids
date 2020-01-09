@@ -26,8 +26,6 @@ void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 
 	char user_help[1][70];
-	char uart_input;
-	char uart_text[1][70] = {"Nothing received over UART so far."};
 	struct joystick_angle_pulse joystick_internal;
 	uint8_t uart_package[4];
 	boolean show_debug = false;
@@ -35,17 +33,16 @@ void drawTaskMultiplayer (void * params){
 	TickType_t delay = 2000;
 	TickType_t check_time = xTaskGetTickCount();
 
+//	Movement
 	struct coord joy_direct;
 	struct coord joy_direct_old;
 	struct players_ship player_local;
 	struct players_ship player_remote;
-
 	player_local.position.x = DISPLAY_CENTER_X;
 	player_local.position.y = DISPLAY_CENTER_Y;
 	player_local.position_old.x = player_local.position.x;
 	player_local.position_old.y = player_local.position.y;
 	player_local.state = fine;
-
 	int incr;
 	float angle_float_goal = 0;
 	float angle_float_current = 0;
@@ -56,8 +53,14 @@ void drawTaskMultiplayer (void * params){
 	struct coord_player inertia_speed;
 	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
-	TickType_t inertia_period = 100;
-	char shot_fired_byte = 255;
+//	UART
+	char uart_input = 0;
+	TickType_t uart_check_start = xTaskGetTickCount();
+	TickType_t uart_alive_period = 1000;
+	TickType_t uart_init_delay = 5000;
+	static const uint8_t alive_byte_start = 0xAA, alive_byte_uart_connected = 0x55;
+	unsigned int can_start_game = 0;
+	unsigned int uart_connected = 0;
 
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
@@ -66,10 +69,18 @@ void drawTaskMultiplayer (void * params){
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
 //			Receving over UART
-			if(USART_GetITStatus(USART1, USART_IT_RXNE)){
-				uart_input = USART1->DR;
-				sprintf(uart_text, uart_input);
+			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
+			if(uart_input == alive_byte_uart_connected){
+				uart_connected = 1;
 			}
+			else{
+				uart_connected = 0;
+			}
+			uart_input = 0;
+// 			Sending over UART
+			UART_SendData(alive_byte_uart_connected);
+
+//			Joystick input
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 // 			Toggle to show debug content and UART Input
@@ -274,19 +285,18 @@ void drawTaskMultiplayer (void * params){
 
 //			Drawing functions
 			gdispClear(Black);
-			sprintf(user_help, "Angle: %i", moved);
-			gdispDrawString(TEXT_X(user_help[0]), 20, user_help[0],font1, White);
+
 			if(show_debug == true){
-				gdispDrawString(TEXT_X(uart_text[0]), 10, uart_text[0],font1, White);
+				if(uart_connected == 1){
+					sprintf(user_help, "> UART connected. <");
+					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0],font1, Green);
+				}
+				else if(uart_connected == 0){
+					sprintf(user_help, "> UART disconnected. <");
+					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0],font1, Red);
+				}
 			}
 			gdispFillConvexPoly(player_local.position.x, player_local.position.y, form, (sizeof(form)/sizeof(form[0])), White);
-
-			UART_SendData(player_local.position.x / 2);
-			UART_SendData(player_local.position.y);
-			UART_SendData(angle_float_goal / 2);
-			if(buttonCountWithLiftup(BUT_B)){
-				UART_SendData(shot_fired_byte);
-			}
 
 			memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
 // 			Quitting multiplayer screen
