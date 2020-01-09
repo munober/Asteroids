@@ -49,6 +49,8 @@ QueueHandle_t LifeCountQueue1;
 QueueHandle_t LifeCountQueue2;
 QueueHandle_t LifeCountQueue3;
 QueueHandle_t HighScoresQueue;
+QueueHandle_t RemoteQueuePlayer;
+QueueHandle_t RemoteQueueSync;
 QueueHandle_t ESPL_RxQueue; // DONT DELETE THIS LINE
 SemaphoreHandle_t ESPL_DisplayReady;
 
@@ -84,6 +86,8 @@ int main(void){
 	LifeCountQueue2 = xQueueCreate(10, sizeof(unsigned int));
 	LifeCountQueue3 = xQueueCreate(10, sizeof(unsigned int));
 	HighScoresQueue = xQueueCreate(10, sizeof(struct highscore));
+	RemoteQueuePlayer = xQueueCreate(20, sizeof(struct remote_player));
+	RemoteQueueSync = xQueueCreate(20, sizeof(struct remote_sync));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();

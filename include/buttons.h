@@ -8,8 +8,6 @@
 #ifndef INCLUDE_BUTTONS_H_
 #define INCLUDE_BUTTONS_H_
 
-
-
 struct coord {
 	uint16_t x;
 	uint16_t y;

@@ -78,6 +78,11 @@ typedef enum {
 	true = 1
 } boolean;
 
+typedef enum {
+	is_slave = 0,
+	is_master = 1
+} uart_master_or_slave;
+
 struct coord_draw {
 	int16_t x;
 	int16_t y;
@@ -164,4 +169,20 @@ struct shot {
 	struct coord_draw position;
 	int16_t angle;
 	shot_status status;
+};
+
+struct coord_byte {
+	uint8_t x;
+	uint8_t y;
+};
+
+struct remote_player {
+	struct coord_byte player;
+	uint8_t player_angle;
+	struct coord_byte laser[10];
+};
+
+struct remote_sync {
+	struct coord_byte asteroid[10];
+	uint8_t score;
 };

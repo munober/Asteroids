@@ -9,7 +9,7 @@
 #define INCLUDE_GAMECONFIG_H_
 
 // This number should have 6 digits. It will be displayed on the start menu.
-#define BUILD_NUMBER                        112200
+#define BUILD_NUMBER                        222333
 
 // Configuration of the state machine
 #define STATE_COUNT					        11
@@ -33,7 +33,7 @@
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
 
-// Inertia speed
+// Inertia and movement
 #define SPEED_SCALING_FACTOR					32 // dividing joystick input by this factor
 #define INERTIA_SPEED_INITIAL_X                 3 // starting inertial movement spped on x axis
 #define INERTIA_SPEED_INITIAL_Y                 2 // starting inertial movement spped on y axis
@@ -47,6 +47,13 @@
 #define	PLAYER_SPEED_MAX_Y						5 // maximum reachable speed on y axis
 #define PLAYER_STANDARD_ACCELERATION_X			0.1 // rate of acceleration on joystick input on x axis
 #define PLAYER_STANDARD_ACCELERATION_Y			0.1 // rate of acceleration on joystick input on y axis
+
+// UART
+#define UART_CONNECTED_BYTE						0x55
+#define UART_STANDARD_BYTE						0xAA
+#define ONE_FRAME_DURATION						20 // milsecs
+#define UART_SEND_ALIVE_PERIOD					ONE_FRAME_DURATION
+#define UART_CHECK_ALIVE_PERIOD					ONE_FRAME_DURATION * 50
 
 // Score amounts for hits
 #define POINTS_ASTEROID_SMALL                   300 // destroyed after 1 hit

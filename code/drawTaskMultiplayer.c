@@ -17,6 +17,8 @@ extern QueueHandle_t LifeCountQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
+extern QueueHandle_t RemoteQueuePlayer;
+extern QueueHandle_t RemoteQueueSync;
 
 #define RESUME_SELECT		1
 #define QUIT_SELECT			2
@@ -40,9 +42,14 @@ void drawTaskMultiplayer (void * params){
 	struct players_ship player_remote;
 	player_local.position.x = DISPLAY_CENTER_X;
 	player_local.position.y = DISPLAY_CENTER_Y;
+	player_remote.position.x = DISPLAY_CENTER_X;
+	player_remote.position.y = DISPLAY_CENTER_Y;
 	player_local.position_old.x = player_local.position.x;
 	player_local.position_old.y = player_local.position.y;
+	player_remote.position_old.x = player_remote.position.x;
+	player_remote.position_old.y = player_remote.position.y;
 	player_local.state = fine;
+	player_remote.state = fine;
 	int incr;
 	float angle_float_goal = 0;
 	float angle_float_current = 0;
@@ -54,35 +61,52 @@ void drawTaskMultiplayer (void * params){
 	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
 //	UART
-	char uart_input = 0;
-	TickType_t uart_check_start = xTaskGetTickCount();
-	TickType_t uart_alive_period = 1000;
-	TickType_t uart_init_delay = 5000;
-	static const uint8_t alive_byte_start = 0xAA, alive_byte_uart_connected = 0x55;
+	char uart_input;
+	char uart_buffer[20] = { { 0 } };
+	char checksum;
+	TickType_t uart_start = xTaskGetTickCount();
+	TickType_t uart_send_alive_period = UART_SEND_ALIVE_PERIOD;
+	TickType_t uart_check_alive_period = UART_CHECK_ALIVE_PERIOD;
+	static const uint8_t alive_byte_standard = UART_STANDARD_BYTE;
+	static const uint8_t alive_byte_uart_connected = UART_CONNECTED_BYTE;
 	unsigned int can_start_game = 0;
-	unsigned int uart_connected = 0;
+	boolean uart_connected = false;
+	uint8_t pos = 0;
+	uart_master_or_slave uart_master_or_slave = is_master; // Initial status is master, will change if receives signal from other board within 5 secs
+	uint8_t player_local_position_x_int = (uint8_t) (player_local.position.x / 2);
+	player_local_position_x_int = player_local_position_x_int * 2;
+	uint8_t player_local_position_y_int = (uint8_t) (player_local.position.y / 2);
+	player_local_position_y_int = player_local_position_y_int * 2;
+
+	struct remote_player remote_player;
+	struct remote_sync remote_sync;
+	uint8_t player_remote_position_x_int = (uint8_t) (player_remote.position.x / 2);
+	player_remote_position_x_int = player_remote_position_x_int * 2;
+	uint8_t player_remote_position_y_int = (uint8_t) (player_remote.position.y / 2);
+	player_remote_position_y_int = player_remote_position_y_int * 2;
 
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
+	const point saucer_shape[] = { { -10, 3 }, { -6, 6 }, { 6, 6 }, { 10, 3 }, { -10, 3 },
+			{ -6, 0 }, { 6, 0 }, { 10, 3 }, { 6, 0 }, { 4, -5 }, { -4, -5 },
+			{ -6, 0 } };
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
-//			Receving over UART
-			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
-			if(uart_input == alive_byte_uart_connected){
-				uart_connected = 1;
-			}
-			else{
-				uart_connected = 0;
-			}
-			uart_input = 0;
-// 			Sending over UART
-			UART_SendData(alive_byte_uart_connected);
-
+			xQueueReceive(RemoteQueuePlayer, &remote_player, 0);
+			xQueueReceive(RemoteQueueSync, &remote_sync, 0);
+			player_remote_position_x_int = remote_player.player.x;
+			player_remote_position_y_int = remote_player.player.y;
 //			Joystick input
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+			if(uart_buffer[0] == alive_byte_uart_connected){
+				uart_connected = true;
+			}
+			else{
+				uart_connected = false;
+			}
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -287,23 +311,25 @@ void drawTaskMultiplayer (void * params){
 			gdispClear(Black);
 
 			if(show_debug == true){
-				if(uart_connected == 1){
+				if(uart_connected == true){
 					sprintf(user_help, "> UART connected. <");
 					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0],font1, Green);
 				}
-				else if(uart_connected == 0){
+				else if(uart_connected == false){
 					sprintf(user_help, "> UART disconnected. <");
 					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0],font1, Red);
 				}
 			}
 			gdispFillConvexPoly(player_local.position.x, player_local.position.y, form, (sizeof(form)/sizeof(form[0])), White);
+			gdispFillConvexPoly(player_remote_position_x_int * 2, player_remote_position_y_int, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
 			memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
 // 			Quitting multiplayer screen
 			if(buttonCount(BUT_D)){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			}
-
+			player_local_position_x_int = (uint8_t) (player_local.position.x / 2);
+			player_local_position_y_int = (uint8_t) (player_local.position.y);
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
