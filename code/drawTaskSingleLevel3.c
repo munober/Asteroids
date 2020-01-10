@@ -267,7 +267,7 @@ void drawTaskSingleLevel3 (void * params){
 	unsigned int moved = 0;
 
 	char heading_direction;
-	struct coord_player inertia_speed;
+	struct coord_flt inertia_speed;
 	TickType_t inertia_start;
 	TickType_t inertia_period = 100;
 

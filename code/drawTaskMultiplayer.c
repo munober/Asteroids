@@ -52,7 +52,7 @@ void drawTaskMultiplayer (void * params){
 	float angle_y = 0;
 	unsigned int moved = 0;
 	char heading_direction;
-	struct coord_player inertia_speed;
+	struct coord_flt inertia_speed;
 	TickType_t inertia_start;
 	TickType_t inertia_period = 100;
 	char shot_fired_byte = 255;

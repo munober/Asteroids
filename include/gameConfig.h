@@ -24,16 +24,18 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      SINGLE_PLAYER_STATE
+#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_2
 
 #define STARTING_LIVES_LEVEL_ONE            300
-#define STARTING_LIVES_LEVEL_TWO            6
-#define STARTING_LIVES_LEVEL_THREE          9                           
+#define STARTING_LIVES_LEVEL_TWO            600
+#define STARTING_LIVES_LEVEL_THREE          900
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
 // Speed of saucer blaster
 #define SAUCER_BLASTER_SPEED					1
+// Speed of asteroids
+#define ASTEROID_SPEED							0.5
 
 // Inertia speed
 #define INERTIA_SPEED_INITIAL_X                 4
@@ -52,7 +54,7 @@
 
 // Number of asteroids to destroy in each level
 #define TO_DESTROY_LEVEL_1_SMALL            20
-#define TO_DESTROY_LEVEL_2_SMALL            15
+#define TO_DESTROY_LEVEL_2_SMALL            20
 #define TO_DESTROY_LEVEL_2_MEDIUM           5
 #define TO_DESTROY_LEVEL_3_MEDIUM           9000
 #define TO_DESTROY_LEVEL_3_LARGE            9000
