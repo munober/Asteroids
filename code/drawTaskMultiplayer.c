@@ -44,6 +44,8 @@ void drawTaskMultiplayer (void * params){
 	player_local.position_old.y = player_local.position.y;
 	int local_x = (int) player_local.position.x;
 	int local_y = (int) player_local.position.y;
+	int local_x_old = local_x;
+	int local_y_old = local_y;
 	int pos_x_old = 0;
 	int pos_y_old = 0;
 	int difference_x = 0;
@@ -65,9 +67,9 @@ void drawTaskMultiplayer (void * params){
 	struct coord_player inertia_speed;
 	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
+
 //	UART
 	char uart_input = 0;
-//	int uart_input_number;
 	uint8_t to_send_x = ((int) player_local.position.x) / 4 + 1;
 	uint8_t to_send_y = 100 + ((int) player_local.position.y) / 3;
 
@@ -114,52 +116,6 @@ void drawTaskMultiplayer (void * params){
 				else if(uart_input >= 100){
 					remote_y = (uart_input - 100) * 3;
 				}
-//			Decoding received UART message
-//				uart_input_number = uart_input;
-//				received_buffer[3] = uart_input_number % 5;
-//				temp = uart_input_number / 5;
-//				received_buffer[2] = temp % 5;
-//				temp = temp / 5;
-//				received_buffer[1] = temp % 5;
-//				temp = temp / 5;
-//				received_buffer[0] = temp % 5;
-
-//				switch(received_buffer[3]){
-//				case 0:
-//					remote_diff_x = -2;
-//					break;
-//				case 1:
-//					remote_diff_x = -1;
-//					break;
-//				case 2:
-//					remote_diff_x = 0;
-//					break;
-//				case 3:
-//					remote_diff_x = 1;
-//					break;
-//				case 4:
-//					remote_diff_x = 2;
-//					break;
-//				}
-//				switch(received_buffer[2]){
-//				case 0:
-//					remote_diff_y = -2;
-//					break;
-//				case 1:
-//					remote_diff_y = -1;
-//					break;
-//				case 2:
-//					remote_diff_y = 0;
-//					break;
-//				case 3:
-//					remote_diff_y = 1;
-//					break;
-//				case 4:
-//					remote_diff_y = 2;
-//					break;
-//				}
-//				remote_x += remote_diff_x;
-//				remote_y += remote_diff_y;
 
 	//			Joystick input
 				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
@@ -322,21 +278,6 @@ void drawTaskMultiplayer (void * params){
 					player_local.position.y = DISPLAY_SIZE_Y;
 				}
 
-//			Make remote player show up at the other side of the screen when reaching screen border
-//				if(remote_x >= DISPLAY_SIZE_X){
-//					remote_x = 0;
-//				}
-//				else if(remote_x <= 0){
-//					remote_x = DISPLAY_SIZE_X;
-//				}
-//				if(remote_y >= DISPLAY_SIZE_Y){
-//					remote_y = 0;
-//				}
-//				else if(remote_y <= 0){
-//					remote_y = DISPLAY_SIZE_Y;
-//				}
-
-
 	//			Doing actual player ship rotation here
 				memcpy(&form, &form_orig, 3 * sizeof(struct point));
 				if(abs(angle_float_current - angle_float_goal) >= 2){
@@ -368,75 +309,30 @@ void drawTaskMultiplayer (void * params){
 //			Dumbed down local player movement
 				local_x = (int) player_local.position.x;
 				local_y = (int) player_local.position.y;
-
-	//			Some math for remote board
-//				difference_x = (int) (player_local.position.x - pos_x_old);
-//				difference_y = (int) (player_local.position.y - pos_y_old);
-//				pos_x_old = player_local.position.x;
-//				pos_y_old = player_local.position.y;
-
-//				to_send = to_send_buffer[3] + 5 * to_send_buffer[2] + 25 * to_send_buffer[1] + 125 * to_send_buffer[0];
-
-
-//			Encoding UART package
-//				switch(difference_x){
-//				case -2:
-//					to_send_buffer[3] = 0;
-//					break;
-//				case -1:
-//					to_send_buffer[3] = 1;
-//					break;
-//				case 0:
-//					to_send_buffer[3] = 2;
-//					break;
-//				case 1:
-//					to_send_buffer[3] = 3;
-//					break;
-//				case 2:
-//					to_send_buffer[3] = 4;
-//					break;
-//				}
-//				switch(difference_y){
-//				case -2:
-//					to_send_buffer[2] = 0;
-//					break;
-//				case -1:
-//					to_send_buffer[2] = 1;
-//					break;
-//				case 0:
-//					to_send_buffer[2] = 2;
-//					break;
-//				case 1:
-//					to_send_buffer[2] = 3;
-//					break;
-//				case 2:
-//					to_send_buffer[2] = 4;
-//					break;
-//				}
 			}
 
 //			Drawing functions
 			gdispClear(Black);
 
-			if(show_debug == true){
-				if(uart_connected == true){
-					sprintf(user_help, "> UART connected. <");
-					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
-				}
-				else if(uart_connected == false){
-					sprintf(user_help, "> UART disconnected. <");
-					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Red);
-				}
+			if(uart_connected == true){
+				sprintf(user_help, "> UART connected. <");
+				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
+			}
+			else if(uart_connected == false){
+				sprintf(user_help, "> UART disconnected. <");
+				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Red);
 			}
 
 //			Drawing 2 player ships
-			gdispFillConvexPoly(local_x, local_y, form, (sizeof(form)/sizeof(form[0])), White);
+			gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
 			gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
 			uint8_t to_send_x = local_x / 4 + 1;
 			uint8_t to_send_y = 100 + local_y / 3;
-			sprintf(user_help, "To send: %d, %d", to_send_x, to_send_y);
-			gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, White);
+			if(show_debug == true){
+				sprintf(user_help, "Local: %d, %d | Remote: %d, %d", local_x_old, local_y_old, remote_x, remote_y);
+				gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, White);
+			}
 			if(last_sent){
 				UART_SendData(to_send_y);
 			}
@@ -450,6 +346,8 @@ void drawTaskMultiplayer (void * params){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			}
 			uart_input = 0;
+			local_x_old = local_x;
+			local_y_old = local_y;
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
