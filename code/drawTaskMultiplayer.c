@@ -61,7 +61,7 @@ void drawTaskMultiplayer (void * params){
 	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
 //	UART
-	char uart_input;
+	uint8_t uart_input = 0;
 	char uart_buffer[20] = { { 0 } };
 	char checksum;
 	TickType_t uart_start = xTaskGetTickCount();
@@ -70,13 +70,21 @@ void drawTaskMultiplayer (void * params){
 	static const uint8_t alive_byte_standard = UART_STANDARD_BYTE;
 	static const uint8_t alive_byte_uart_connected = UART_CONNECTED_BYTE;
 	unsigned int can_start_game = 0;
+	uint8_t to_send = 69;
+	uint8_t message[4];
+	message[0] = 2;
+	message[1] = 2;
+	message[2] = 0;
+	message[3] = 0;
 	boolean uart_connected = false;
 	uint8_t pos = 0;
 	uart_master_or_slave uart_master_or_slave = is_master; // Initial status is master, will change if receives signal from other board within 5 secs
-	uint8_t player_local_position_x_int = (uint8_t) (player_local.position.x / 2);
-	player_local_position_x_int = player_local_position_x_int * 2;
-	uint8_t player_local_position_y_int = (uint8_t) (player_local.position.y / 2);
-	player_local_position_y_int = player_local_position_y_int * 2;
+	uint8_t player_local_position_x_int[2];
+	player_local_position_x_int[0] = (uint8_t) (player_local.position.x);
+	player_local_position_x_int[1] = 0;
+	uint8_t player_local_position_y_int[2];
+	player_local_position_y_int[0] = (uint8_t) (player_local.position.y);
+	player_local_position_y_int[1] = 0;
 
 	struct remote_player remote_player;
 	struct remote_sync remote_sync;
@@ -94,14 +102,15 @@ void drawTaskMultiplayer (void * params){
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
-			xQueueReceive(RemoteQueuePlayer, &remote_player, 0);
-			xQueueReceive(RemoteQueueSync, &remote_sync, 0);
+//			xQueueReceive(RemoteQueuePlayer, &remote_player, 0);
+//			xQueueReceive(RemoteQueueSync, &remote_sync, 0);
+			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
 			player_remote_position_x_int = remote_player.player.x;
 			player_remote_position_y_int = remote_player.player.y;
 //			Joystick input
 			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
-			if(uart_buffer[0] == alive_byte_uart_connected){
+			if(uart_input != 0){
 				uart_connected = true;
 			}
 			else{
@@ -320,6 +329,10 @@ void drawTaskMultiplayer (void * params){
 					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0],font1, Red);
 				}
 			}
+			sprintf(user_help, "UART input: %i", &uart_input);
+			gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0],font1, Green);
+			sprintf(user_help, "Message: %i, %i, %i, %i", &message[0], &message[1], &message[2], &message[3]);
+			gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0],font1, Green);
 			gdispFillConvexPoly(player_local.position.x, player_local.position.y, form, (sizeof(form)/sizeof(form[0])), White);
 			gdispFillConvexPoly(player_remote_position_x_int * 2, player_remote_position_y_int, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
@@ -328,8 +341,23 @@ void drawTaskMultiplayer (void * params){
 			if(buttonCount(BUT_D)){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			}
-			player_local_position_x_int = (uint8_t) (player_local.position.x / 2);
-			player_local_position_y_int = (uint8_t) (player_local.position.y);
+			player_local_position_x_int[0] = (uint8_t) (player_local.position.x);
+			player_local_position_y_int[0] = (uint8_t) (player_local.position.y);
+			if(player_local_position_x_int[1] - player_local_position_x_int[0] == 1)
+				message[0] = 3;
+			else if(player_local_position_x_int[1] - player_local_position_x_int[0] == 2)
+				message[0] = 4;
+			else if(player_local_position_x_int[1] - player_local_position_x_int[0] == -1)
+					message[0] = 1;
+			else if(player_local_position_x_int[1] - player_local_position_x_int[0] == -2)
+				message[0] = 0;
+			message[0] = player_local_position_x_int[1] - player_local_position_x_int[0];
+			message[1] = player_local_position_y_int[1] - player_local_position_y_int[0];
+
+			to_send = message[0] + message[1] * 5 + message[2] * 25 + message[3] * 125;
+			UART_SendData(to_send);
+			player_local_position_x_int[1] = player_local_position_x_int[0];
+			player_local_position_y_int[1] = player_local_position_y_int[0];
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
