@@ -19,6 +19,7 @@ extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
 extern QueueHandle_t RemoteQueuePlayer;
 extern QueueHandle_t RemoteQueueSync;
+extern QueueHandle_t HighScoresQueue;
 
 #define RESUME_SELECT		1
 #define QUIT_SELECT			2
@@ -26,7 +27,16 @@ extern QueueHandle_t RemoteQueueSync;
 void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
-
+	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
+	int exeCount = 0;
+	start:
+	if(exeCount != 0){
+		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
+	}
+	exeCount = 1;
+	int score[2];
+	score[0] = 0;
+	score[1] = 0;
 	char user_help[1][70];
 	struct joystick_angle_pulse joystick_internal;
 	boolean show_debug = false;
@@ -75,12 +85,50 @@ void drawTaskMultiplayer (void * params){
 	TickType_t inertia_start;
 
 //	UART
+/*
+ * The way UART is implemented:
+ * We have all numbers btw. 000 ... 255
+ * 000 is reserved for lost connection.
+ * For x coordinate of player: value btw. 001 ... 091
+ * For shot bullet: value btw. 092 ... 099
+ * For y coordinate of player: value btw. 100 ... 180
+ * For Pause: 181
+ * For Quitting the game session: 182
+ */
 	char uart_input = 0;
 	uint8_t to_send_x = ((int) player_local.position.x) / 4 + 1;
 	uint8_t to_send_y = 100 + ((int) player_local.position.y) / 3;
+	char pause_byte = 181;
+	char quit_byte = 182;
 
 	boolean uart_connected = false;
+	boolean state_pause_local = false;
+	boolean state_pause_remote = false;
+	boolean state_quit_remote = false;
 	int last_sent = 0;
+	int send_bullet = 0;
+
+	int lives[2];
+	lives[0] = STARTING_LIVES_MULTIPLAYER; // local
+	lives[1] = STARTING_LIVES_MULTIPLAYER; // remote
+
+//	Bullets
+	int number_local_shots = 0;
+	struct shot_multiplayer local_shots[5];
+	for(int i = 0; i < 4; i++){
+		local_shots[i].status = hide;
+		local_shots[i].x = local_x_old;
+		local_shots[i].y = local_y_old;
+		local_shots[i].heading = HEADING_ANGLE_NULL;
+	}
+	int number_remote_shots = 0;
+	struct shot_multiplayer remote_shots[5];
+	for(int i = 0; i < 4; i++){
+		remote_shots[i].status = hide;
+		remote_shots[i].x = local_x_old;
+		remote_shots[i].y = local_y_old;
+		remote_shots[i].heading = HEADING_ANGLE_NULL;
+	}
 
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
@@ -96,9 +144,57 @@ void drawTaskMultiplayer (void * params){
 			if(uart_input != 0){
 				uart_connected = true;
 			}
-			else{
+			else if(uart_input == 0){
 				uart_connected = false;
 			}
+
+			if(uart_input == pause_byte){
+				state_pause_remote = true;
+			}
+			else if(uart_input != pause_byte){
+				state_pause_remote = false;
+			}
+
+			if(uart_input == quit_byte){
+				state_quit_remote = true;
+			}
+//			if(uart_input >= 91 || uart_input <= 99){
+//				if(number_remote_shots != 5){
+//					remote_shots[number_remote_shots].x = remote_x;
+//					remote_shots[number_remote_shots].y = remote_y;
+//					switch(uart_input){
+//					case 91:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_NULL;
+//						break;
+//					case 92:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_E;
+//						break;
+//					case 93:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_NE;
+//						break;
+//					case 94:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_N;
+//						break;
+//					case 95:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_NW;
+//						break;
+//					case 96:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_W;
+//						break;
+//					case 97:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_SW;
+//						break;
+//					case 98:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_S;
+//						break;
+//					case 99:
+//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_SE;
+//						break;
+//					}
+//					remote_shots[number_remote_shots].status = spawn;
+//					number_remote_shots++;
+//				}
+//			}
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -114,8 +210,8 @@ void drawTaskMultiplayer (void * params){
 					}
 				}
 			}
-//			Only runs if UART is connected
-			if(uart_connected == true){
+//			Only runs if UART is connected, game not paused and remote hasn't quit
+			if(uart_connected == true && state_pause_local == false && state_pause_remote == false && state_quit_remote == false){
 				if(uart_input < 100){
 					remote_x = (uart_input - 1) * 4;
 				}
@@ -312,9 +408,37 @@ void drawTaskMultiplayer (void * params){
 				}
 				memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord)); // Used for joystick coord difference
 
-//			Dumbed down local player movement
+//				Dumbed down local player movement
 				local_x = (int) player_local.position.x;
 				local_y = (int) player_local.position.y;
+
+//				Bullet direction
+				if(buttonCountWithLiftup(BUT_B)){
+					if(number_local_shots != 5){
+						local_shots[number_local_shots].x = local_x_old;
+						local_shots[number_local_shots].y = local_y_old;
+						local_shots[number_local_shots].heading = heading_direction;
+						local_shots[number_local_shots].status = spawn;
+						number_local_shots++;
+					}
+				}
+//				Detecting hits of remote player by local bullet
+				for(int i = 0; i < 4; i++){
+					if((abs(local_x_old - local_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
+							&& (abs(local_y_old - local_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
+						lives[1]--;
+						number_local_shots--;
+					}
+				}
+//				Detecting hits of local player by remote bullet
+				for(int i = 0; i < 4; i++){
+					if((abs(remote_x - remote_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
+							&& (abs(remote_y - remote_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
+						lives[0]--;
+						number_remote_shots--;
+					}
+				}
+
 			}
 
 //			Drawing functions
@@ -324,7 +448,7 @@ void drawTaskMultiplayer (void * params){
 				sprintf(user_help, "> UART connected. <");
 				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
 			}
-			else if(uart_connected == false){
+			else if(uart_connected == false && state_quit_remote == false){
 				sprintf(user_help, "> UART disconnected. <");
 				gdispFillArea(80, DISPLAY_CENTER_Y + 20, 160, 10, Red);
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
@@ -334,6 +458,20 @@ void drawTaskMultiplayer (void * params){
 			gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
 			gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
+//			Drawing bullets
+//			Local
+			for(incr = 0; incr < number_local_shots; incr++){
+				if(local_shots[incr].status == spawn){
+					gdispFillCircle(local_shots[incr].x, local_shots[incr].y, 3, Green);
+				}
+			}
+//			Remote
+			for(incr = 0; incr < number_remote_shots; incr++){
+				if(remote_shots[incr].status == spawn){
+					gdispFillCircle(remote_shots[incr].x, remote_shots[incr].y, 3, Red);
+				}
+			}
+
 			uint8_t to_send_x = local_x / 4 + 1;
 			uint8_t to_send_y = 100 + local_y / 3;
 			if(show_debug == true){
@@ -341,26 +479,72 @@ void drawTaskMultiplayer (void * params){
 				sprintf(user_help, "Local: %d, %d | Remote: %d, %d", local_x_lowpoly, local_y_lowpoly, remote_x, remote_y);
 				gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, White);
 			}
-			if(last_sent){
-				UART_SendData(to_send_y);
+			if(state_pause_local == false){
+				if(last_sent){
+					UART_SendData(to_send_y);
+				}
+				else if(!last_sent){
+					UART_SendData(to_send_x);
+				}
+				last_sent = !last_sent;
 			}
-			else if(!last_sent){
-				UART_SendData(to_send_x);
+			else if(state_pause_local == true){
+				UART_SendData(pause_byte);
 			}
-			last_sent = !last_sent;
+
+//			Player enters pause menu
+			if(buttonCount(BUT_E)){
+				state_pause_local = !state_pause_local;
+			}
 
 // 			Quitting multiplayer screen
-			if(buttonCount(BUT_D)){
-				xQueueSend(StateQueue, &next_state_signal_menu, 100);
+			if(state_pause_local == true || state_pause_remote == true){
+				if(state_quit_remote == false){
+					sprintf(user_help, "> GAME PAUSED. D to quit. <");
+					gdispFillArea(75, DISPLAY_CENTER_Y + 20, 160, 10, Yellow);
+					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
+				}
+				else if(state_quit_remote == true){
+					sprintf(user_help, "Other player quit. D to exit.");
+					gdispFillArea(70, DISPLAY_CENTER_Y + 20, 165, 10, Yellow);
+					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
+				}
+				if(buttonCount(BUT_D)){
+					UART_SendData(quit_byte);
+					xQueueSend(HighScoresQueue, &score, 0);
+					goto start;
+				}
 			}
+			if(state_quit_remote == true){
+				sprintf(user_help, "Other player quit. D to exit.");
+				gdispFillArea(70, DISPLAY_CENTER_Y + 20, 165, 10, Yellow);
+				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
+				if(buttonCount(BUT_D)){
+					UART_SendData(quit_byte);
+					xQueueSend(HighScoresQueue, &score, 0);
+					goto start;
+				}
+			}
+//			Printing number of lives for both players
+			sprintf(user_help, "Lives: %d|", lives[0]);
+			gdispDrawString(260, 10, user_help, font1, White);
+			sprintf(user_help, "          %d", lives[1]);
+			gdispDrawString(260, 10, user_help, font1, Yellow);
+
+//			Printing scores for both players
+			sprintf(user_help, "Score: %d|", score[0]);
+			gdispDrawString(20, 10, user_help, font1, White);
+			sprintf(user_help, "          %d", score[1]);
+			gdispDrawString(20, 10, user_help, font1, Yellow);
+
 //			Resetting received uart byte to guarantee quick detection of connection loss
 			uart_input = 0;
-//			Updating some rogue position variables
-			local_x_old = local_x;
-			local_y_old = local_y;
-			local_x_lowpoly = local_x_old / 4;
+//			Updating some position variables
+			local_x_old = local_x; // Position of x from previous frame
+			local_y_old = local_y; // Position of y from previous frame
+			local_x_lowpoly = local_x_old / 4; // Low-res x, used for collisions and score
 			local_x_lowpoly = local_x_lowpoly * 4;
-			local_y_lowpoly = local_y_old / 3;
+			local_y_lowpoly = local_y_old / 3; // Low-res y, used for collisions and score
 			local_y_lowpoly = local_y_lowpoly * 3;
 		} // Block screen until ready to draw
 	} // while(1) loop

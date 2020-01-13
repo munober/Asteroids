@@ -9,7 +9,7 @@
 #define INCLUDE_GAMECONFIG_H_
 
 // This number should have 6 digits. It will be displayed on the start menu.
-#define BUILD_NUMBER                        222333
+#define BUILD_NUMBER                        221133
 
 // Configuration of the state machine
 #define STATE_COUNT					        11
@@ -28,7 +28,8 @@
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
-#define STARTING_LIVES_LEVEL_THREE          9                           
+#define STARTING_LIVES_LEVEL_THREE          9
+#define STARTING_LIVES_MULTIPLAYER			10
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
@@ -83,7 +84,10 @@
 // How close the asteroids have to get to the player to register a hit
 #define HIT_LIMIT_SMALL				        6
 #define HIT_LIMIT_MEDIUM			        8
-#define HIT_LIMIT_LARGE				        12 
+#define HIT_LIMIT_LARGE				        12
+
+// MULTIPLAYER
+#define HIT_LIMIT_PLAYER_SHOT_MULTI				8
 
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score

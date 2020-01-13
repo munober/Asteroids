@@ -1247,7 +1247,7 @@ void drawTaskSingleLevel3 (void * params){
 
 			// TRANSITION TO GAME WON STATE when user presses D, basically generate asteroids indefinitely until player dies
 			if (score >= BEAT_GAME_SCORE_THRESHOLD) {
-				gdispFillArea(15, DISPLAY_CENTER_Y - 2, 245, 15, White); // White border
+				gdispFillArea(35, DISPLAY_CENTER_Y - 2, 245, 15, White); // White border
 				sprintf(str, "YOU WIN. Press D TO BECOME A LEGEND."); // Generate game over message
 				gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
 				if (buttonCount(BUT_D)) {

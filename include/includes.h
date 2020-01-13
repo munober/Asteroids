@@ -171,6 +171,13 @@ struct shot {
 	shot_status status;
 };
 
+struct shot_multiplayer {
+	int x;
+	int y;
+	int heading;
+	shot_status status;
+};
+
 struct coord_byte {
 	uint8_t x;
 	uint8_t y;
