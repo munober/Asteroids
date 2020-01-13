@@ -44,8 +44,14 @@ void drawTaskMultiplayer (void * params){
 	player_local.position_old.y = player_local.position.y;
 	int local_x = (int) player_local.position.x;
 	int local_y = (int) player_local.position.y;
+//	Will draw the position of local ship from previous frame
 	int local_x_old = local_x;
 	int local_y_old = local_y;
+//	Will use low poly version of local ship for collision detections
+	int local_x_lowpoly = local_x_old / 4;
+	local_x_lowpoly = local_x_lowpoly * 4;
+	int local_y_lowpoly = local_y_old / 3;
+	local_y_lowpoly = local_y_lowpoly * 3;
 	int pos_x_old = 0;
 	int pos_y_old = 0;
 	int difference_x = 0;
@@ -108,7 +114,7 @@ void drawTaskMultiplayer (void * params){
 					}
 				}
 			}
-
+//			Only runs if UART is connected
 			if(uart_connected == true){
 				if(uart_input < 100){
 					remote_x = (uart_input - 1) * 4;
@@ -320,7 +326,8 @@ void drawTaskMultiplayer (void * params){
 			}
 			else if(uart_connected == false){
 				sprintf(user_help, "> UART disconnected. <");
-				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Red);
+				gdispFillArea(80, DISPLAY_CENTER_Y + 20, 160, 10, Red);
+				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
 			}
 
 //			Drawing 2 player ships
@@ -330,7 +337,8 @@ void drawTaskMultiplayer (void * params){
 			uint8_t to_send_x = local_x / 4 + 1;
 			uint8_t to_send_y = 100 + local_y / 3;
 			if(show_debug == true){
-				sprintf(user_help, "Local: %d, %d | Remote: %d, %d", local_x_old, local_y_old, remote_x, remote_y);
+				// Using lowpoly local version for debugging
+				sprintf(user_help, "Local: %d, %d | Remote: %d, %d", local_x_lowpoly, local_y_lowpoly, remote_x, remote_y);
 				gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, White);
 			}
 			if(last_sent){
@@ -345,9 +353,15 @@ void drawTaskMultiplayer (void * params){
 			if(buttonCount(BUT_D)){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			}
+//			Resetting received uart byte to guarantee quick detection of connection loss
 			uart_input = 0;
+//			Updating some rogue position variables
 			local_x_old = local_x;
 			local_y_old = local_y;
+			local_x_lowpoly = local_x_old / 4;
+			local_x_lowpoly = local_x_lowpoly * 4;
+			local_y_lowpoly = local_y_old / 3;
+			local_y_lowpoly = local_y_lowpoly * 3;
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
