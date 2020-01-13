@@ -434,12 +434,8 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 
+//			Drawing 2 player ships
 			gdispFillConvexPoly(local_x, local_y, form, (sizeof(form)/sizeof(form[0])), White);
-
-
-			sprintf(user_help, "UART to send: %d, %d", difference_x, difference_y);
-			gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0],font1, White);
-
 			gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
 // 			Quitting multiplayer screen
