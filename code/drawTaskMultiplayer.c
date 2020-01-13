@@ -29,27 +29,32 @@ void drawTaskMultiplayer (void * params){
 
 	char user_help[1][70];
 	struct joystick_angle_pulse joystick_internal;
-	uint8_t uart_package[4];
 	boolean show_debug = false;
 	boolean first_check = false;
-	TickType_t delay = 2000;
+	TickType_t double_toggle_delay = 2000;
 	TickType_t check_time = xTaskGetTickCount();
 
 //	Movement
 	struct coord joy_direct;
 	struct coord joy_direct_old;
 	struct players_ship player_local;
-	struct players_ship player_remote;
 	player_local.position.x = DISPLAY_CENTER_X;
 	player_local.position.y = DISPLAY_CENTER_Y;
-	player_remote.position.x = DISPLAY_CENTER_X;
-	player_remote.position.y = DISPLAY_CENTER_Y;
 	player_local.position_old.x = player_local.position.x;
 	player_local.position_old.y = player_local.position.y;
-	player_remote.position_old.x = player_remote.position.x;
-	player_remote.position_old.y = player_remote.position.y;
+	int local_x = (int) player_local.position.x;
+	int local_y = (int) player_local.position.y;
+	int pos_x_old = 0;
+	int pos_y_old = 0;
+	int difference_x = 0;
+	int difference_y = 0;
+
+	int remote_x = DISPLAY_CENTER_X;
+	int remote_y = DISPLAY_CENTER_Y;
+	int remote_diff_x = 0;
+	int remote_diff_y = 0;
+
 	player_local.state = fine;
-	player_remote.state = fine;
 	int incr;
 	float angle_float_goal = 0;
 	float angle_float_current = 0;
@@ -61,37 +66,24 @@ void drawTaskMultiplayer (void * params){
 	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
 //	UART
-	uint8_t uart_input = 0;
-	char uart_buffer[20] = { { 0 } };
-	char checksum;
-	TickType_t uart_start = xTaskGetTickCount();
-	TickType_t uart_send_alive_period = UART_SEND_ALIVE_PERIOD;
-	TickType_t uart_check_alive_period = UART_CHECK_ALIVE_PERIOD;
-	static const uint8_t alive_byte_standard = UART_STANDARD_BYTE;
-	static const uint8_t alive_byte_uart_connected = UART_CONNECTED_BYTE;
-	unsigned int can_start_game = 0;
-	uint8_t to_send = 69;
-	uint8_t message[4];
-	message[0] = 2;
-	message[1] = 2;
-	message[2] = 0;
-	message[3] = 0;
-	boolean uart_connected = false;
-	uint8_t pos = 0;
-	uart_master_or_slave uart_master_or_slave = is_master; // Initial status is master, will change if receives signal from other board within 5 secs
-	uint8_t player_local_position_x_int[2];
-	player_local_position_x_int[0] = (uint8_t) (player_local.position.x);
-	player_local_position_x_int[1] = 0;
-	uint8_t player_local_position_y_int[2];
-	player_local_position_y_int[0] = (uint8_t) (player_local.position.y);
-	player_local_position_y_int[1] = 0;
+	char uart_input = 0;
+	int uart_input_number;
 
-	struct remote_player remote_player;
-	struct remote_sync remote_sync;
-	uint8_t player_remote_position_x_int = (uint8_t) (player_remote.position.x / 2);
-	player_remote_position_x_int = player_remote_position_x_int * 2;
-	uint8_t player_remote_position_y_int = (uint8_t) (player_remote.position.y / 2);
-	player_remote_position_y_int = player_remote_position_y_int * 2;
+	uint8_t to_send = UART_CONNECTED_BYTE;
+	int to_send_buffer[4];
+	to_send_buffer[0] = 1;
+	to_send_buffer[1] = 0;
+	to_send_buffer[2] = 0;
+	to_send_buffer[3] = 0;
+
+	int temp = 0;
+	int received_buffer[4];
+	received_buffer[0] = 1;
+	received_buffer[1] = 0;
+	received_buffer[2] = 0;
+	received_buffer[3] = 0;
+
+	boolean uart_connected = false;
 
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
@@ -102,14 +94,8 @@ void drawTaskMultiplayer (void * params){
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
-//			xQueueReceive(RemoteQueuePlayer, &remote_player, 0);
-//			xQueueReceive(RemoteQueueSync, &remote_sync, 0);
 			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
-			player_remote_position_x_int = remote_player.player.x;
-			player_remote_position_y_int = remote_player.player.y;
-//			Joystick input
-			joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-			joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+
 			if(uart_input != 0){
 				uart_connected = true;
 			}
@@ -124,7 +110,7 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 			if(first_check == true){
-				if(xTaskGetTickCount() - check_time <= delay){
+				if(xTaskGetTickCount() - check_time <= double_toggle_delay){
 					if(buttonCount(BUT_C)){
 						first_check = false;
 						show_debug = !show_debug;
@@ -132,190 +118,308 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 
-//			Local Player movement 
-			if((joy_direct.x > 132) || (joy_direct.x < 124) || (joy_direct.y > 132) || (joy_direct.y < 124)){
-				moved = 1;
-				inertia_start = xTaskGetTickCount();
-			}
-			else{
-				moved = 0;
-			}
+			if(uart_connected == true){
+	//			Decoding received UART message
+				uart_input_number = uart_input;
+				received_buffer[3] = uart_input_number % 5;
+				temp = uart_input_number / 5;
+				received_buffer[2] = temp % 5;
+				temp = temp / 5;
+				received_buffer[1] = temp % 5;
+				temp = temp / 5;
+				received_buffer[0] = temp % 5;
 
-			if(moved){
-				if(player_local.position.x <= DISPLAY_SIZE_X && player_local.position.y <= DISPLAY_SIZE_Y){
-					if(abs(joy_direct_old.x - joy_direct.x) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_X){
-						player_local.speed_goal.x = (joy_direct.x - 128) / SPEED_SCALING_FACTOR;
-					}
-					if(abs(joy_direct_old.y - joy_direct.y) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_Y){
-						player_local.speed_goal.y = (joy_direct.y - 128) / SPEED_SCALING_FACTOR;
-					}
-					if(abs(player_local.speed_current.x - player_local.speed_goal.x) >= 0.1){
-						if(player_local.speed_current.x > player_local.speed_goal.x){
-							player_local.speed_current.x -= PLAYER_STANDARD_ACCELERATION_X;
+
+				switch(received_buffer[3]){
+				case 0:
+					remote_diff_x = -2;
+					break;
+				case 1:
+					remote_diff_x = -1;
+					break;
+				case 2:
+					remote_diff_x = 0;
+					break;
+				case 3:
+					remote_diff_x = 1;
+					break;
+				case 4:
+					remote_diff_x = 2;
+					break;
+				}
+				switch(received_buffer[2]){
+				case 0:
+					remote_diff_y = -2;
+					break;
+				case 1:
+					remote_diff_y = -1;
+					break;
+				case 2:
+					remote_diff_y = 0;
+					break;
+				case 3:
+					remote_diff_y = 1;
+					break;
+				case 4:
+					remote_diff_y = 2;
+					break;
+				}
+				remote_x += remote_diff_x;
+				remote_y += remote_diff_y;
+
+	//			Joystick input
+				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+				joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+
+	//			Local Player movement
+				if((joy_direct.x > 132) || (joy_direct.x < 124) || (joy_direct.y > 132) || (joy_direct.y < 124)){
+					moved = 1;
+					inertia_start = xTaskGetTickCount();
+				}
+				else{
+					moved = 0;
+				}
+
+				if(moved){
+					if(player_local.position.x <= DISPLAY_SIZE_X && player_local.position.y <= DISPLAY_SIZE_Y){
+						if(abs(joy_direct_old.x - joy_direct.x) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_X){
+							player_local.speed_goal.x = (joy_direct.x - 128) / SPEED_SCALING_FACTOR;
 						}
-						if(player_local.speed_current.x < player_local.speed_goal.x){
-							player_local.speed_current.x += PLAYER_STANDARD_ACCELERATION_X;
+						if(abs(joy_direct_old.y - joy_direct.y) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_Y){
+							player_local.speed_goal.y = (joy_direct.y - 128) / SPEED_SCALING_FACTOR;
 						}
-					}
-					if(abs(player_local.speed_current.y - player_local.speed_goal.y) >= 0.1){
-						if(player_local.speed_current.y > player_local.speed_goal.y){
-							player_local.speed_current.y -= PLAYER_STANDARD_ACCELERATION_Y;
+						if(abs(player_local.speed_current.x - player_local.speed_goal.x) >= 0.1){
+							if(player_local.speed_current.x > player_local.speed_goal.x){
+								player_local.speed_current.x -= PLAYER_STANDARD_ACCELERATION_X;
+							}
+							if(player_local.speed_current.x < player_local.speed_goal.x){
+								player_local.speed_current.x += PLAYER_STANDARD_ACCELERATION_X;
+							}
 						}
-						if(player_local.speed_current.y < player_local.speed_goal.y){
-							player_local.speed_current.y += PLAYER_STANDARD_ACCELERATION_Y;
+						if(abs(player_local.speed_current.y - player_local.speed_goal.y) >= 0.1){
+							if(player_local.speed_current.y > player_local.speed_goal.y){
+								player_local.speed_current.y -= PLAYER_STANDARD_ACCELERATION_Y;
+							}
+							if(player_local.speed_current.y < player_local.speed_goal.y){
+								player_local.speed_current.y += PLAYER_STANDARD_ACCELERATION_Y;
+							}
 						}
-					}
-					player_local.position.x += player_local.speed_current.x;
-					player_local.position.y += player_local.speed_current.y;
-					if((player_local.position_old.x - player_local.position.x) > 0){
-						if((player_local.position_old.y - player_local.position.y) > 0){
-							heading_direction = HEADING_ANGLE_NW;
+						player_local.position.x += player_local.speed_current.x;
+						player_local.position.y += player_local.speed_current.y;
+						if((player_local.position_old.x - player_local.position.x) > 0){
+							if((player_local.position_old.y - player_local.position.y) > 0){
+								heading_direction = HEADING_ANGLE_NW;
+							}
+							else if((player_local.position_old.y - player_local.position.y) < 0){
+								heading_direction = HEADING_ANGLE_NE;
+							}
+							else{
+								heading_direction = HEADING_ANGLE_N;
+							}
 						}
-						else if((player_local.position_old.y - player_local.position.y) < 0){
-							heading_direction = HEADING_ANGLE_NE;
+						else if((player_local.position_old.x - player_local.position.x) < 0){
+							if((player_local.position_old.y - player_local.position.y) > 0){
+								heading_direction = HEADING_ANGLE_SW;
+							}
+							else if((player_local.position_old.y - player_local.position.y) < 0){
+								heading_direction = HEADING_ANGLE_SE;
+							}
+							else{
+								heading_direction = HEADING_ANGLE_S;
+							}
 						}
 						else{
-							heading_direction = HEADING_ANGLE_N;
+							if((player_local.position_old.y - player_local.position.y) > 0){
+								heading_direction = HEADING_ANGLE_W;
+							}
+							else if((player_local.position_old.y - player_local.position.y) < 0){
+								heading_direction = HEADING_ANGLE_E;
+							}
 						}
+						player_local.position_old.x = player_local.position.x;
+						player_local.position_old.y = player_local.position.y;
 					}
-					else if((player_local.position_old.x - player_local.position.x) < 0){
-						if((player_local.position_old.y - player_local.position.y) > 0){
-							heading_direction = HEADING_ANGLE_SW;
-						}
-						else if((player_local.position_old.y - player_local.position.y) < 0){
-							heading_direction = HEADING_ANGLE_SE;
-						}
-						else{
-							heading_direction = HEADING_ANGLE_S;
-						}
-					}
-					else{
-						if((player_local.position_old.y - player_local.position.y) > 0){
-							heading_direction = HEADING_ANGLE_W;
-						}
-						else if((player_local.position_old.y - player_local.position.y) < 0){
-							heading_direction = HEADING_ANGLE_E;
-						}
-					}
-					player_local.position_old.x = player_local.position.x;
-					player_local.position_old.y = player_local.position.y;
-				}
-				inertia_speed.x = abs(player_local.speed_current.x);
-				inertia_speed.y = abs(player_local.speed_current.y);
+					inertia_speed.x = abs(player_local.speed_current.x);
+					inertia_speed.y = abs(player_local.speed_current.y);
 
-				inertia_speed_final.x = INERTIA_MIN_SPEED_X;
-				inertia_speed_final.y = INERTIA_MIN_SPEED_Y;
-				if((abs(joy_direct_old.x - joy_direct.x) / 16) <= INERTIA_MIN_SPEED_X){
-					inertia_speed_final.x += ((abs(joy_direct_old.x - joy_direct.x)) / SPEED_SCALING_FACTOR);
-				}
-				if((abs(joy_direct_old.y - joy_direct.y) / 16) <= INERTIA_MIN_SPEED_Y){
-					inertia_speed_final.y += ((abs(joy_direct_old.y - joy_direct.y)) / SPEED_SCALING_FACTOR);
-				}
+					inertia_speed_final.x = INERTIA_MIN_SPEED_X;
+					inertia_speed_final.y = INERTIA_MIN_SPEED_Y;
+					if((abs(joy_direct_old.x - joy_direct.x) / 16) <= INERTIA_MIN_SPEED_X){
+						inertia_speed_final.x += ((abs(joy_direct_old.x - joy_direct.x)) / SPEED_SCALING_FACTOR);
+					}
+					if((abs(joy_direct_old.y - joy_direct.y) / 16) <= INERTIA_MIN_SPEED_Y){
+						inertia_speed_final.y += ((abs(joy_direct_old.y - joy_direct.y)) / SPEED_SCALING_FACTOR);
+					}
 
-//				Getting joystick angle
-				angle_x = (float)((int16_t)joy_direct.x-128);
-				angle_y = (float)((int16_t)joy_direct.y-128);
-				angle_float_goal = 0;
-				if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
-					if((angle_x != 0) && (angle_y != 0)){
-						if(angle_y != 128){
-							angle_float_goal = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 270;
+	//				Getting joystick angle
+					angle_x = (float)((int16_t)joy_direct.x-128);
+					angle_y = (float)((int16_t)joy_direct.y-128);
+					angle_float_goal = 0;
+					if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
+						if((angle_x != 0) && (angle_y != 0)){
+							if(angle_y != 128){
+								angle_float_goal = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 270;
+							}
+							else{
+								angle_float_goal = 0;
+							}
 						}
 						else{
 							angle_float_goal = 0;
 						}
 					}
-					else{
-						angle_float_goal = 0;
+				}
+
+				if(!moved){
+					switch(heading_direction){
+						case HEADING_ANGLE_N:
+							player_local.position.x -= inertia_speed.x;
+							break;
+						case HEADING_ANGLE_S:
+							player_local.position.x += inertia_speed.x;
+							break;
+						case HEADING_ANGLE_E:
+							player_local.position.y += inertia_speed.y;
+							break;
+						case HEADING_ANGLE_W:
+							player_local.position.y -= inertia_speed.y;
+							break;
+						case HEADING_ANGLE_NE:
+							player_local.position.y += inertia_speed.y;
+							player_local.position.x -= inertia_speed.x;
+							break;
+						case HEADING_ANGLE_NW:
+							player_local.position.y -= inertia_speed.y;
+							player_local.position.x -= inertia_speed.x;
+							break;
+						case HEADING_ANGLE_SE:
+							player_local.position.y += inertia_speed.y;
+							player_local.position.x += inertia_speed.x;
+							break;
+						case HEADING_ANGLE_SW:
+							player_local.position.y -= inertia_speed.y;
+							player_local.position.x += inertia_speed.x;
+							break;
 					}
 				}
-			}
 
-			if(!moved){
-				switch(heading_direction){
-					case HEADING_ANGLE_N:
-						player_local.position.x -= inertia_speed.x;
-						break;
-					case HEADING_ANGLE_S:
-						player_local.position.x += inertia_speed.x;
-						break;
-					case HEADING_ANGLE_E:
-						player_local.position.y += inertia_speed.y;
-						break;
-					case HEADING_ANGLE_W:
-						player_local.position.y -= inertia_speed.y;
-						break;
-					case HEADING_ANGLE_NE:
-						player_local.position.y += inertia_speed.y;
-						player_local.position.x -= inertia_speed.x;
-						break;
-					case HEADING_ANGLE_NW:
-						player_local.position.y -= inertia_speed.y;
-						player_local.position.x -= inertia_speed.x;
-						break;
-					case HEADING_ANGLE_SE:
-						player_local.position.y += inertia_speed.y;
-						player_local.position.x += inertia_speed.x;
-						break;
-					case HEADING_ANGLE_SW:
-						player_local.position.y -= inertia_speed.y;
-						player_local.position.x += inertia_speed.x;
-						break;
-				}
-			}
-
-			if(inertia_speed.x > inertia_speed_final.x){
-				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
-					inertia_speed.x -= INERTIA_DECELERATE_X;
-				}
-			}
-			if(inertia_speed.y > inertia_speed_final.y){
-				if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
-					inertia_speed.y -= INERTIA_DECELERATE_Y;
-				}
-			}
-
-//			Make player show up at the other side of the screen when reaching screen border
-			if(player_local.position.x >= DISPLAY_SIZE_X){
-				player_local.position.x = 0;
-			}
-			else if(player_local.position.x <= 0){
-				player_local.position.x = DISPLAY_SIZE_X;
-			}
-			if(player_local.position.y >= DISPLAY_SIZE_Y){
-				player_local.position.y = 0;
-			}
-			else if(player_local.position.y <= 0){
-				player_local.position.y = DISPLAY_SIZE_Y;
-			}
-
-//			Doing actual player ship rotation here
-			memcpy(&form, &form_orig, 3 * sizeof(struct point));
-			if(abs(angle_float_current - angle_float_goal) >= 2){
-				if(abs(angle_float_current - angle_float_goal) < 180){
-					if(angle_float_current > angle_float_goal){
-						angle_float_current += ROTATION_SPEED;
-					}
-					if(angle_float_current < angle_float_goal){
-						angle_float_current -= ROTATION_SPEED;
+				if(inertia_speed.x > inertia_speed_final.x){
+					if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
+						inertia_speed.x -= INERTIA_DECELERATE_X;
 					}
 				}
-				else if(abs(angle_float_current - angle_float_goal) >= 180){
-					if(angle_float_current > angle_float_goal){
-						angle_float_current -= ROTATION_SPEED;
-					}
-					if(angle_float_current < angle_float_goal){
-						angle_float_current += ROTATION_SPEED;
+				if(inertia_speed.y > inertia_speed_final.y){
+					if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
+						inertia_speed.y -= INERTIA_DECELERATE_Y;
 					}
 				}
-			}
-			for(incr = 0; incr < 3; incr++){
-				form[incr].x = form_orig[incr].x * cos(angle_float_current * CONVERT_TO_RAD)
-									- form_orig[incr].y * sin(angle_float_current * CONVERT_TO_RAD);
-				form[incr].y = form_orig[incr].x * sin(angle_float_current * CONVERT_TO_RAD)
-									+ form_orig[incr].y * cos(angle_float_current * CONVERT_TO_RAD);
-			}
 
+	//			Make player show up at the other side of the screen when reaching screen border
+				if(player_local.position.x >= DISPLAY_SIZE_X){
+					player_local.position.x = 0;
+				}
+				else if(player_local.position.x <= 0){
+					player_local.position.x = DISPLAY_SIZE_X;
+				}
+				if(player_local.position.y >= DISPLAY_SIZE_Y){
+					player_local.position.y = 0;
+				}
+				else if(player_local.position.y <= 0){
+					player_local.position.y = DISPLAY_SIZE_Y;
+				}
+
+	//			Make remote player show up at the other side of the screen when reaching screen border
+				if(remote_x >= DISPLAY_SIZE_X){
+					remote_x = 0;
+				}
+				else if(remote_x <= 0){
+					remote_x = DISPLAY_SIZE_X;
+				}
+				if(remote_y >= DISPLAY_SIZE_Y){
+					remote_y = 0;
+				}
+				else if(remote_y <= 0){
+					remote_y = DISPLAY_SIZE_Y;
+				}
+
+
+	//			Doing actual player ship rotation here
+				memcpy(&form, &form_orig, 3 * sizeof(struct point));
+				if(abs(angle_float_current - angle_float_goal) >= 2){
+					if(abs(angle_float_current - angle_float_goal) < 180){
+						if(angle_float_current > angle_float_goal){
+							angle_float_current += ROTATION_SPEED;
+						}
+						if(angle_float_current < angle_float_goal){
+							angle_float_current -= ROTATION_SPEED;
+						}
+					}
+					else if(abs(angle_float_current - angle_float_goal) >= 180){
+						if(angle_float_current > angle_float_goal){
+							angle_float_current -= ROTATION_SPEED;
+						}
+						if(angle_float_current < angle_float_goal){
+							angle_float_current += ROTATION_SPEED;
+						}
+					}
+				}
+				for(incr = 0; incr < 3; incr++){
+					form[incr].x = form_orig[incr].x * cos(angle_float_current * CONVERT_TO_RAD)
+										- form_orig[incr].y * sin(angle_float_current * CONVERT_TO_RAD);
+					form[incr].y = form_orig[incr].x * sin(angle_float_current * CONVERT_TO_RAD)
+										+ form_orig[incr].y * cos(angle_float_current * CONVERT_TO_RAD);
+				}
+
+	//			Dumbed down local player movement
+				local_x = (int) player_local.position.x;
+				local_y = (int) player_local.position.y;
+
+	//			Some math for remote board
+				difference_x = (int) (player_local.position.x - pos_x_old);
+				difference_y = (int) (player_local.position.y - pos_y_old);
+				pos_x_old = player_local.position.x;
+				pos_y_old = player_local.position.y;
+
+				to_send = to_send_buffer[3] + 5 * to_send_buffer[2] + 25 * to_send_buffer[1] + 125 * to_send_buffer[0];
+				memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
+
+	//			Encoding UART package
+				switch(difference_x){
+				case -2:
+					to_send_buffer[3] = 0;
+					break;
+				case -1:
+					to_send_buffer[3] = 1;
+					break;
+				case 0:
+					to_send_buffer[3] = 2;
+					break;
+				case 1:
+					to_send_buffer[3] = 3;
+					break;
+				case 2:
+					to_send_buffer[3] = 4;
+					break;
+				}
+				switch(difference_y){
+				case -2:
+					to_send_buffer[2] = 0;
+					break;
+				case -1:
+					to_send_buffer[2] = 1;
+					break;
+				case 0:
+					to_send_buffer[2] = 2;
+					break;
+				case 1:
+					to_send_buffer[2] = 3;
+					break;
+				case 2:
+					to_send_buffer[2] = 4;
+					break;
+				}
+			}
+			UART_SendData(to_send);
 //			Drawing functions
 			gdispClear(Black);
 
@@ -329,35 +433,20 @@ void drawTaskMultiplayer (void * params){
 					gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0],font1, Red);
 				}
 			}
-			sprintf(user_help, "UART input: %i", &uart_input);
-			gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0],font1, Green);
-			sprintf(user_help, "Message: %i, %i, %i, %i", &message[0], &message[1], &message[2], &message[3]);
-			gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0],font1, Green);
-			gdispFillConvexPoly(player_local.position.x, player_local.position.y, form, (sizeof(form)/sizeof(form[0])), White);
-			gdispFillConvexPoly(player_remote_position_x_int * 2, player_remote_position_y_int, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
-			memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
+			gdispFillConvexPoly(local_x, local_y, form, (sizeof(form)/sizeof(form[0])), White);
+
+
+			sprintf(user_help, "UART to send: %d, %d", difference_x, difference_y);
+			gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0],font1, White);
+
+			gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
+
 // 			Quitting multiplayer screen
 			if(buttonCount(BUT_D)){
 				xQueueSend(StateQueue, &next_state_signal_menu, 100);
 			}
-			player_local_position_x_int[0] = (uint8_t) (player_local.position.x);
-			player_local_position_y_int[0] = (uint8_t) (player_local.position.y);
-			if(player_local_position_x_int[1] - player_local_position_x_int[0] == 1)
-				message[0] = 3;
-			else if(player_local_position_x_int[1] - player_local_position_x_int[0] == 2)
-				message[0] = 4;
-			else if(player_local_position_x_int[1] - player_local_position_x_int[0] == -1)
-					message[0] = 1;
-			else if(player_local_position_x_int[1] - player_local_position_x_int[0] == -2)
-				message[0] = 0;
-			message[0] = player_local_position_x_int[1] - player_local_position_x_int[0];
-			message[1] = player_local_position_y_int[1] - player_local_position_y_int[0];
-
-			to_send = message[0] + message[1] * 5 + message[2] * 25 + message[3] * 125;
-			UART_SendData(to_send);
-			player_local_position_x_int[1] = player_local_position_x_int[0];
-			player_local_position_y_int[1] = player_local_position_y_int[0];
+			uart_input = 0;
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
