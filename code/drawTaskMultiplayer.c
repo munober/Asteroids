@@ -69,6 +69,9 @@ void drawTaskMultiplayer (void * params){
 
 	int remote_x = DISPLAY_CENTER_X;
 	int remote_y = DISPLAY_CENTER_Y;
+	int remote_bullet_dir_x = HEADING_ANGLE_NULL;
+	int remote_bullet_dir_y = HEADING_ANGLE_NULL;
+	int remote_bullet_dir_total = HEADING_ANGLE_NULL;
 	int remote_diff_x = 0;
 	int remote_diff_y = 0;
 
@@ -79,7 +82,7 @@ void drawTaskMultiplayer (void * params){
 	float angle_x = 0;
 	float angle_y = 0;
 	unsigned int moved = 0;
-	char heading_direction;
+	char heading_direction = HEADING_ANGLE_NULL;
 	struct coord_player inertia_speed;
 	struct coord_player inertia_speed_final;
 	TickType_t inertia_start;
@@ -98,14 +101,15 @@ void drawTaskMultiplayer (void * params){
 	char uart_input = 0;
 	uint8_t to_send_x = ((int) player_local.position.x) / 4 + 1;
 	uint8_t to_send_y = 100 + ((int) player_local.position.y) / 3;
-	char pause_byte = 181;
-	char quit_byte = 182;
+	const char pause_byte = 251;
+	const char quit_byte = 252;
 
 	boolean uart_connected = false;
 	boolean state_pause_local = false;
 	boolean state_pause_remote = false;
 	boolean state_quit_remote = false;
 	int last_sent = 0;
+	int last_received = 0;
 	int send_bullet = 0;
 
 	int lives[2];
@@ -158,43 +162,7 @@ void drawTaskMultiplayer (void * params){
 			if(uart_input == quit_byte){
 				state_quit_remote = true;
 			}
-//			if(uart_input >= 91 || uart_input <= 99){
-//				if(number_remote_shots != 5){
-//					remote_shots[number_remote_shots].x = remote_x;
-//					remote_shots[number_remote_shots].y = remote_y;
-//					switch(uart_input){
-//					case 91:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_NULL;
-//						break;
-//					case 92:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_E;
-//						break;
-//					case 93:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_NE;
-//						break;
-//					case 94:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_N;
-//						break;
-//					case 95:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_NW;
-//						break;
-//					case 96:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_W;
-//						break;
-//					case 97:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_SW;
-//						break;
-//					case 98:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_S;
-//						break;
-//					case 99:
-//						remote_shots[number_remote_shots].heading = HEADING_ANGLE_SE;
-//						break;
-//					}
-//					remote_shots[number_remote_shots].status = spawn;
-//					number_remote_shots++;
-//				}
-//			}
+
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -212,12 +180,68 @@ void drawTaskMultiplayer (void * params){
 			}
 //			Only runs if UART is connected, game not paused and remote hasn't quit
 			if(uart_connected == true && state_pause_local == false && state_pause_remote == false && state_quit_remote == false){
-				if(uart_input < 100){
-					remote_x = (uart_input - 1) * 4;
+				if(last_received){
+					if(uart_input >= 1 && uart_input <= 80){
+						remote_y = (uart_input - 1) * 3;
+						remote_bullet_dir_y = HEADING_ANGLE_N;
+					}
+					else if(uart_input >= 81 && uart_input <= 160){
+						remote_y = (uart_input - 81) * 3;
+						remote_bullet_dir_y = HEADING_ANGLE_NULL;
+					}
+					else if(uart_input >= 161 && uart_input <= 240){
+						remote_y = (uart_input - 161) * 3;
+						remote_bullet_dir_y = HEADING_ANGLE_W;
+					}
 				}
-				else if(uart_input >= 100){
-					remote_y = (uart_input - 100) * 3;
+				else if(!last_received){
+					if(uart_input >= 1 && uart_input <= 80){
+						remote_x = (uart_input - 1) * 4;
+						remote_bullet_dir_x = HEADING_ANGLE_W;
+					}
+					else if(uart_input >= 81 && uart_input <= 160){
+						remote_x = (uart_input - 81) * 4;
+						remote_bullet_dir_x = HEADING_ANGLE_NULL;
+					}
+					else if(uart_input >= 161 && uart_input <= 240){
+						remote_x = (uart_input - 161) * 4;
+						remote_bullet_dir_x = HEADING_ANGLE_E;
+					}
 				}
+				if(remote_bullet_dir_x == HEADING_ANGLE_NULL){
+					if(remote_bullet_dir_y == HEADING_ANGLE_N){
+						remote_bullet_dir_total = HEADING_ANGLE_N;
+					}
+					else if(remote_bullet_dir_y == HEADING_ANGLE_NULL){
+						remote_bullet_dir_total = HEADING_ANGLE_NULL;
+					}
+					else if(remote_bullet_dir_y == HEADING_ANGLE_S){
+						remote_bullet_dir_total = HEADING_ANGLE_S;
+					}
+				}
+				else if(remote_bullet_dir_x == HEADING_ANGLE_W){
+					if(remote_bullet_dir_y == HEADING_ANGLE_N){
+						remote_bullet_dir_total = HEADING_ANGLE_NW;
+					}
+					else if(remote_bullet_dir_y == HEADING_ANGLE_NULL){
+						remote_bullet_dir_total = HEADING_ANGLE_W;
+					}
+					else if(remote_bullet_dir_y == HEADING_ANGLE_S){
+						remote_bullet_dir_total = HEADING_ANGLE_SW;
+					}
+				}
+				else if(remote_bullet_dir_x == HEADING_ANGLE_E){
+					if(remote_bullet_dir_y == HEADING_ANGLE_N){
+						remote_bullet_dir_total = HEADING_ANGLE_NE;
+					}
+					else if(remote_bullet_dir_y == HEADING_ANGLE_NULL){
+						remote_bullet_dir_total = HEADING_ANGLE_E;
+					}
+					else if(remote_bullet_dir_y == HEADING_ANGLE_S){
+						remote_bullet_dir_total = HEADING_ANGLE_SE;
+					}
+				}
+				last_received = !last_received;
 
 	//			Joystick input
 				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
@@ -473,10 +497,47 @@ void drawTaskMultiplayer (void * params){
 			}
 
 			uint8_t to_send_x = local_x / 4 + 1;
-			uint8_t to_send_y = 100 + local_y / 3;
+			uint8_t to_send_y = local_y / 3 + 1;
+			switch(heading_direction){
+			case HEADING_ANGLE_NULL:
+				to_send_x += 80;
+				to_send_y += 80;
+				break;
+			case HEADING_ANGLE_E:
+				to_send_x += 160;
+				to_send_y += 80;
+				break;
+			case HEADING_ANGLE_NE:
+				to_send_x += 160;
+				break;
+			case HEADING_ANGLE_SW:
+				to_send_y += 160;
+				break;
+			case HEADING_ANGLE_S:
+				to_send_x += 80;
+				to_send_y += 160;
+				break;
+			case HEADING_ANGLE_SE:
+				to_send_x += 160;
+				to_send_y += 160;
+				break;
+			case HEADING_ANGLE_N:
+				to_send_x += 80;
+				break;
+			case HEADING_ANGLE_W:
+				to_send_y += 80;
+				break;
+			}
+
 			if(show_debug == true){
-				// Using lowpoly local version for debugging
-				sprintf(user_help, "Local: %d, %d | Remote: %d, %d", local_x_lowpoly, local_y_lowpoly, remote_x, remote_y);
+				// Using lowpoly position for local version for debugging for consistency with remote
+				sprintf(user_help, "UART> Local: %d, %d, %d | Remote: %d, %d", to_send_x, to_send_y, last_sent, uart_input, last_received);
+				gdispDrawString(TEXT_X(user_help[0]), 200, user_help[0], font1, White);
+				// Using lowpoly position for local version for debugging for consistency with remote
+				sprintf(user_help, "Position> Local: %d, %d | Remote: %d, %d", local_x_lowpoly, local_y_lowpoly, remote_x, remote_y);
+				gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0], font1, White);
+				// Local and remote bullet heading
+				sprintf(user_help, "Bullet heading> Local: %d | Remote: %d", heading_direction, remote_bullet_dir_total);
 				gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, White);
 			}
 			if(state_pause_local == false){
@@ -506,7 +567,7 @@ void drawTaskMultiplayer (void * params){
 				}
 				else if(state_quit_remote == true){
 					sprintf(user_help, "Other player quit. D to exit.");
-					gdispFillArea(70, DISPLAY_CENTER_Y + 20, 165, 10, Yellow);
+					gdispFillArea(75, DISPLAY_CENTER_Y + 20, 165, 10, Yellow);
 					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
 				}
 				if(buttonCount(BUT_D)){
@@ -517,7 +578,7 @@ void drawTaskMultiplayer (void * params){
 			}
 			if(state_quit_remote == true){
 				sprintf(user_help, "Other player quit. D to exit.");
-				gdispFillArea(70, DISPLAY_CENTER_Y + 20, 165, 10, Yellow);
+				gdispFillArea(75, DISPLAY_CENTER_Y + 20, 165, 10, Yellow);
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
 				if(buttonCount(BUT_D)){
 					UART_SendData(quit_byte);
