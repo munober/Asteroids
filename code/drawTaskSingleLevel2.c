@@ -607,12 +607,12 @@ void drawTaskSingleLevel2 (void * params){
 			// rand() % 231 returns a random number between 0 and 230
 			if (asteroid_1.position_locked == false) {
 				if (asteroid_1.orientation == NW) {
-					asteroid_1.position.x = asteroid_1.position.x - 1;
-					asteroid_1.position.y = asteroid_1.position.y - 1;
+					asteroid_1.position.x = asteroid_1.position.x - (1*ASTEROID_SPEED);
+					asteroid_1.position.y = asteroid_1.position.y - (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_1.position.x = asteroid_1.position.x + 1;
-					asteroid_1.position.y = asteroid_1.position.y - 1;
+					asteroid_1.position.x = asteroid_1.position.x + (1*ASTEROID_SPEED);
+					asteroid_1.position.y = asteroid_1.position.y - (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_1.position.x >= 330)
 						|| (asteroid_1.position.y <= -10)) {
@@ -624,8 +624,8 @@ void drawTaskSingleLevel2 (void * params){
 
 			// South-East movement of asteroid 2
 			if (asteroid_2.position_locked == false) {
-				asteroid_2.position.x = asteroid_2.position.x + 1;
-				asteroid_2.position.y = asteroid_2.position.y + 1;
+				asteroid_2.position.x = asteroid_2.position.x + (1*ASTEROID_SPEED);
+				asteroid_2.position.y = asteroid_2.position.y + (1*ASTEROID_SPEED);
 				if ((asteroid_2.position.x >= 330)
 						|| (asteroid_2.position.y >= 250)) {
 					asteroid_2.position.x = -10;
@@ -637,9 +637,10 @@ void drawTaskSingleLevel2 (void * params){
 			// South movement of asteroid 3
 			if (asteroid_3.position_locked == false) {
 				if (asteroid_3.orientation == W) {
-					asteroid_3.position.y = asteroid_3.position.x - 1;
-				} else {
-					asteroid_3.position.y = asteroid_3.position.y + 1;
+					asteroid_3.position.y = asteroid_3.position.x - (1*ASTEROID_SPEED);
+				}
+				else {
+					asteroid_3.position.y = asteroid_3.position.y + (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_3.position.y >= 250)
 						|| (asteroid_3.position.x <= -10)) {
@@ -652,10 +653,10 @@ void drawTaskSingleLevel2 (void * params){
 			// West movement of asteroid 4
 			if (asteroid_4.position_locked == false) {
 				if (asteroid_4.orientation == E) {
-					asteroid_4.position.x = asteroid_4.position.x + 1;
+					asteroid_4.position.x = asteroid_4.position.x + (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_4.position.x = asteroid_4.position.x - 1;
+					asteroid_4.position.x = asteroid_4.position.x - (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_4.position.x <= -10)
 						|| (asteroid_4.position.x >= 330)) {
@@ -668,11 +669,11 @@ void drawTaskSingleLevel2 (void * params){
 			// West-South-West movement of asteroid 5
 			if (asteroid_5.position_locked == false) {
 				if (asteroid_5.orientation == N) {
-					asteroid_5.position.y = asteroid_5.position.y - 1;
+					asteroid_5.position.y = asteroid_5.position.y - (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_5.position.x = asteroid_5.position.x - 2;
-					asteroid_5.position.y = asteroid_5.position.y + 1;
+					asteroid_5.position.x = asteroid_5.position.x - (2*ASTEROID_SPEED);
+					asteroid_5.position.y = asteroid_5.position.y + (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_5.position.x <= -10)
 						|| (asteroid_5.position.y >= 250) || (asteroid_5.position.y <= -10)) {
@@ -685,11 +686,11 @@ void drawTaskSingleLevel2 (void * params){
 			// North-East movement of asteroid 6
 			if (asteroid_6.position_locked == false) {
 				if (asteroid_6.orientation == S) {
-					asteroid_6.position.y = asteroid_6.position.y + 1;
+					asteroid_6.position.y = asteroid_6.position.y + (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_6.position.x = asteroid_6.position.x + 1;
-					asteroid_6.position.y = asteroid_6.position.y - 1;
+					asteroid_6.position.x = asteroid_6.position.x + (1*ASTEROID_SPEED);
+					asteroid_6.position.y = asteroid_6.position.y - (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_6.position.x >= 330)
 						|| (asteroid_6.position.y <= -10) || (asteroid_6.position.y >= 250)) {
@@ -702,12 +703,12 @@ void drawTaskSingleLevel2 (void * params){
 			// North-West movement of asteroid 7
 			if (asteroid_7.position_locked == false) {
 				if (asteroid_7.orientation == NE) {
-					asteroid_7.position.x = asteroid_7.position.x + 1;
-					asteroid_7.position.y = asteroid_7.position.y - 1;
+					asteroid_7.position.x = asteroid_7.position.x + (1*ASTEROID_SPEED);
+					asteroid_7.position.y = asteroid_7.position.y - (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_7.position.x = asteroid_7.position.x - 1;
-					asteroid_7.position.y = asteroid_7.position.y - 1;
+					asteroid_7.position.x = asteroid_7.position.x - (1*ASTEROID_SPEED);
+					asteroid_7.position.y = asteroid_7.position.y - (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_7.position.x <= -10)
 						|| (asteroid_7.position.y <= -10) || (asteroid_7.position.x >= 330)) {
@@ -720,12 +721,12 @@ void drawTaskSingleLevel2 (void * params){
 			// South-South-West movement of asteroid 8
 			if (asteroid_8.position_locked == false) {
 				if (asteroid_8.orientation == SW) {
-					asteroid_8.position.x = asteroid_8.position.x - 1;
-					asteroid_8.position.y = asteroid_8.position.y + 1;
+					asteroid_8.position.x = asteroid_8.position.x - (1*ASTEROID_SPEED);
+					asteroid_8.position.y = asteroid_8.position.y + (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_8.position.x = asteroid_8.position.x - 1;
-					asteroid_8.position.y = asteroid_8.position.y + 2;
+					asteroid_8.position.x = asteroid_8.position.x - (1*ASTEROID_SPEED);
+					asteroid_8.position.y = asteroid_8.position.y + (2*ASTEROID_SPEED);
 				}
 				if ((asteroid_8.position.x <= -10)
 						|| (asteroid_8.position.y >= 250)) {
@@ -738,11 +739,11 @@ void drawTaskSingleLevel2 (void * params){
 			// South-South-East movement of asteroid 9
 			if (asteroid_9.position_locked == false) {
 				if (asteroid_9.orientation == E) {
-					asteroid_9.position.x = asteroid_9.position.x + 1;
+					asteroid_9.position.x = asteroid_9.position.x + (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_9.position.x = asteroid_9.position.x + 1;
-					asteroid_9.position.y = asteroid_9.position.y + 2;
+					asteroid_9.position.x = asteroid_9.position.x + (1*ASTEROID_SPEED);
+					asteroid_9.position.y = asteroid_9.position.y + (2*ASTEROID_SPEED);
 				}
 				if ((asteroid_9.position.x >= 330)
 						|| (asteroid_9.position.y >= 250)) {
@@ -755,11 +756,11 @@ void drawTaskSingleLevel2 (void * params){
 			// West-North-West movement of asteroid 10
 			if (asteroid_10.position_locked == false) {
 				if (asteroid_10.orientation == W) {
-					asteroid_10.position.x = asteroid_10.position.x - 1;
+					asteroid_10.position.x = asteroid_10.position.x - (1*ASTEROID_SPEED);
 				}
 				else {
-					asteroid_10.position.x = asteroid_10.position.x - 2;
-					asteroid_10.position.y = asteroid_10.position.y - 1;
+					asteroid_10.position.x = asteroid_10.position.x - (2*ASTEROID_SPEED);
+					asteroid_10.position.y = asteroid_10.position.y - (1*ASTEROID_SPEED);
 				}
 				if ((asteroid_10.position.x <= -10)
 						|| (asteroid_10.position.y <= -10)) {
