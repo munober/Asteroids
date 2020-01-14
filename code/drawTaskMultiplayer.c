@@ -2,7 +2,7 @@
  * drawTaskMultiplayer.c
  *
  *  Created on: Dec 18, 2019
- *      Author: lab_espl_stud04
+ *      Author: Teodor Fratiloiu
  */
 #include "includes.h"
 #include "drawTaskMultiplayer.h"
@@ -17,23 +17,18 @@ extern QueueHandle_t LifeCountQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
-extern QueueHandle_t RemoteQueuePlayer;
-extern QueueHandle_t RemoteQueueSync;
 extern QueueHandle_t HighScoresQueue;
 
-#define RESUME_SELECT		1
-#define QUIT_SELECT			2
-
 void drawTaskMultiplayer (void * params){
-	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
-	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
-	int exeCount = 0;
+	boolean executed = false;
 	start:
-	if(exeCount != 0){
+	if(executed == true){
 		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 	}
-	exeCount = 1;
+	executed = true;
+	boolean is_master = false;
+	boolean remote_is_master = false;
 	int score[2];
 	score[0] = 0;
 	score[1] = 0;
@@ -62,18 +57,12 @@ void drawTaskMultiplayer (void * params){
 	local_x_lowpoly = local_x_lowpoly * 4;
 	int local_y_lowpoly = local_y_old / 3;
 	local_y_lowpoly = local_y_lowpoly * 3;
-	int pos_x_old = 0;
-	int pos_y_old = 0;
-	int difference_x = 0;
-	int difference_y = 0;
 
 	int remote_x = DISPLAY_CENTER_X;
 	int remote_y = DISPLAY_CENTER_Y;
 	int remote_bullet_dir_x = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_y = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_total = HEADING_ANGLE_NULL;
-	int remote_diff_x = 0;
-	int remote_diff_y = 0;
 
 	player_local.state = fine;
 	int incr;
@@ -90,18 +79,19 @@ void drawTaskMultiplayer (void * params){
 //	UART
 /*
  * The way UART is implemented:
- * We have all numbers btw. 000 ... 255
+ * We send one byte per frame, namely a number between 000 ... 255.
  * 000 is reserved for lost connection.
- * For x coordinate of player: value btw. 001 ... 091
- * For shot bullet: value btw. 092 ... 099
- * For y coordinate of player: value btw. 100 ... 180
- * For Pause: 181
- * For Quitting the game session: 182
+ * For x coordinate of player and x direction of shooting: values between 001 ... 240
+ * For y coordinate of player and y direction of shooting: values between 001 ... 240
+ * For Pause: 251
+ * For one side quitting the game session: 252
+ * Syncing bytes (253 and 254) are explained below.
  */
 	const char pause_byte = 251;
 	const char quit_byte = 252;
-	const char sync_byte_1 = 253; // tells remote sync order is x then y a.k.a next byte will be x
-	const char sync_byte_2 = 254; // tells remote sync order is y then x a.k.a next byte will be y
+	const char sync_byte_1 = 253; // initial byte to send to establish master and slave
+	const char sync_byte_2 = 254; // tells remote to be slave
+	const char sync_byte_3 = 255; // ack to remote to tell is slave
 	TickType_t last_sync = xTaskGetTickCount();
 	TickType_t sync_period = 200;
 
@@ -169,18 +159,6 @@ void drawTaskMultiplayer (void * params){
 				state_quit_remote = true;
 			}
 
-			if(uart_input == sync_byte_1){
-				last_received = 0;
-				no_sync = false;
-			}
-			else if(uart_input == sync_byte_2){
-				last_received = 1;
-				no_sync = false;
-			}
-			else if(uart_input != sync_byte_1 && uart_input != sync_byte_2){
-				no_sync = true;
-			}
-
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -198,7 +176,8 @@ void drawTaskMultiplayer (void * params){
 			}
 
 //			Only runs if UART is connected, game not paused and remote hasn't quit
-			if(no_sync == true && uart_connected == true && state_pause_local == false && state_pause_remote == false && state_quit_remote == false){
+			if(uart_connected == true && state_pause_local == false && state_pause_remote == false &&
+					state_quit_remote == false){
 				if(last_received){
 					if(uart_input >= 1 && uart_input <= 80){
 						remote_y = (uart_input - 1) * 3;
@@ -469,7 +448,7 @@ void drawTaskMultiplayer (void * params){
 				for(int i = 0; i < 4; i++){
 					if((abs(local_x_old - local_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
 							&& (abs(local_y_old - local_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
-						lives[1]--;
+//						lives[1]--;
 						number_local_shots--;
 					}
 				}
@@ -477,7 +456,7 @@ void drawTaskMultiplayer (void * params){
 				for(int i = 0; i < 4; i++){
 					if((abs(remote_x - remote_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
 							&& (abs(remote_y - remote_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
-						lives[0]--;
+//						lives[0]--;
 						number_remote_shots--;
 					}
 				}
@@ -487,34 +466,58 @@ void drawTaskMultiplayer (void * params){
 //			Drawing functions
 			gdispClear(Black);
 
+			if(is_master == true){
+				if(remote_is_master == true){
+					sprintf(user_help, "> Is master, other is master. <");
+				}
+				else
+					sprintf(user_help, "> Is master, other is slave. <");
+			}
+			else if(is_master == false){
+				if(remote_is_master == true){
+					sprintf(user_help, "> Is slave, other is master. <");
+				}
+				else
+					sprintf(user_help, "> Is slave, other is slave. <");
+			}
+			gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, Green);
 			if(uart_connected == true){
-				sprintf(user_help, "> UART connected. <");
+				sprintf(user_help, "> Connected. <");
 				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
 			}
 			else if(uart_connected == false && state_quit_remote == false){
 				sprintf(user_help, "> UART disconnected. <");
-				gdispFillArea(80, DISPLAY_CENTER_Y + 20, 160, 10, Red);
+				gdispFillArea(80, DISPLAY_CENTER_Y + 20, 160, 10, Orange);
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
+
+				sprintf(user_help, "Reconnect or press D to quit.");
+				gdispFillArea(80, DISPLAY_CENTER_Y + 30, 160, 10, Orange);
+				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 30, user_help[0], font1, Black);
+
+				if(buttonCount(BUT_D)){
+					xQueueSend(HighScoresQueue, &score, 0);
+					goto start;
+				}
 			}
 
 //			Drawing 2 player ships
-			gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
-			gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
-
-//			Drawing bullets
-//			Local
-			for(incr = 0; incr < number_local_shots; incr++){
-				if(local_shots[incr].status == spawn){
-					gdispFillCircle(local_shots[incr].x, local_shots[incr].y, 3, Green);
+			if(uart_connected == true){
+				gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
+				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
+	//			Drawing bullets
+	//			Local
+				for(incr = 0; incr < number_local_shots; incr++){
+					if(local_shots[incr].status == spawn){
+						gdispFillCircle(local_shots[incr].x, local_shots[incr].y, 3, Green);
+					}
+				}
+	//			Remote
+				for(incr = 0; incr < number_remote_shots; incr++){
+					if(remote_shots[incr].status == spawn){
+						gdispFillCircle(remote_shots[incr].x, remote_shots[incr].y, 3, Red);
+					}
 				}
 			}
-//			Remote
-			for(incr = 0; incr < number_remote_shots; incr++){
-				if(remote_shots[incr].status == spawn){
-					gdispFillCircle(remote_shots[incr].x, remote_shots[incr].y, 3, Red);
-				}
-			}
-
 			to_send_x = local_x / 4 + 1;
 			to_send_y = local_y / 3 + 1;
 			switch(heading_direction){
@@ -567,16 +570,6 @@ void drawTaskMultiplayer (void * params){
 					UART_SendData(to_send_x);
 				}
 				last_sent = !last_sent;
-				if(xTaskGetTickCount() - last_sync == sync_period){
-					if(last_sent){
-						to_send_sync = sync_byte_1;
-					}
-					else if(!last_sent){
-						to_send_sync = sync_byte_2;
-					}
-					UART_SendData(to_send_sync);
-					last_sync = xTaskGetTickCount();
-				}
 			}
 			else if(state_pause_local == true){
 				UART_SendData(pause_byte);
@@ -616,16 +609,20 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 //			Printing number of lives for both players
-			sprintf(user_help, "Lives: %d|", lives[0]);
-			gdispDrawString(260, 10, user_help, font1, White);
-			sprintf(user_help, "          %d", lives[1]);
-			gdispDrawString(260, 10, user_help, font1, Yellow);
+			sprintf(user_help, "Lives: ");
+			gdispDrawString(240, 5, user_help, font1, White);
+			sprintf(user_help, "%d", lives[0]);
+			gdispDrawString(285, 5, user_help, font1, White);
+			sprintf(user_help, "%d", lives[1]);
+			gdispDrawString(285, 15, user_help, font1, Yellow);
 
 //			Printing scores for both players
-			sprintf(user_help, "Score: %d|", score[0]);
-			gdispDrawString(20, 10, user_help, font1, White);
-			sprintf(user_help, "          %d", score[1]);
-			gdispDrawString(20, 10, user_help, font1, Yellow);
+			sprintf(user_help, "Score: ");
+			gdispDrawString(15, 5, user_help, font1, White);
+			sprintf(user_help, "%d", score[0]);
+			gdispDrawString(60, 5, user_help, font1, White);
+			sprintf(user_help, "%d", score[1]);
+			gdispDrawString(60, 15, user_help, font1, Yellow);
 
 //			Resetting received uart byte to guarantee quick detection of connection loss
 			uart_input = 0;

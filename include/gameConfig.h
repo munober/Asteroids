@@ -24,12 +24,12 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      MULTIPLAYER_STATE
+#define STARTING_STATE                      MAIN_MENU_STATE
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
 #define STARTING_LIVES_LEVEL_THREE          9
-#define STARTING_LIVES_MULTIPLAYER			10
+#define STARTING_LIVES_MULTIPLAYER			9999
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3

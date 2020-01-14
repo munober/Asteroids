@@ -25,13 +25,15 @@ void drawTaskStartMenu(void * params) {
 	const unsigned char next_state_signal_highscores = HIGHSCORE_DISPLAY_STATE;
 	const unsigned char next_state_signal_multiplayer = MULTIPLAYER_STATE;
 	unsigned int menu_select = SINGLEPLAYER_SELECT;
+	unsigned int game_mode_local = 0; // 0 is single
 
 	struct joystick_angle_pulse joystick_internal;
 
 	char version [1][30] = { 0 }; // Use this variable to print a custom message on the start menu.
 	sprintf(version, "Build number -- %i", BUILD_NUMBER);
-	char single [1][20] = {"Singleplayer"};
-	char multi [1][20] = {"Multiplayer"};
+	char single [1][20] = {"Start game"};
+	char multi [1][20] = {"Mode: Singleplayer"};
+	char multi_second [1][20] = {"Mode: Multiplayer"};
 	char settings [1][20] = {"About"};
 	char cheats [1][20] = {"Cheats"};
 	char highscores [1][20] = {"High Scores"};
@@ -39,10 +41,25 @@ void drawTaskStartMenu(void * params) {
 	char dash_reverse [1][5] = {"<"};
 	char user_help[1][70];
 	char user_help_content[1][70] = {"Navigate with joystick, select with E."};
+	char user_help_two[1][70];
 	sprintf(user_help[0], " %s", user_help_content);
+	char uart_input = 0;
+	boolean uart_connected = false;
+	boolean is_master = false;
+	boolean remote_is_master = false;
+	boolean send_master = true;
+	const char sync_byte_1 = 253;
+	const char sync_byte_2 = 254;
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
+			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
+			if(uart_input != 0){
+				uart_connected = true;
+			}
+			else if(uart_input == 0){
+				uart_connected = false;
+			}
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 				if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
 					switch(menu_select){
@@ -86,35 +103,73 @@ void drawTaskStartMenu(void * params) {
 			}
 
 			gdispClear(Black);
-			gdispDrawString(TEXT_X(version[0]), 220, version[0],font1, White);
+			gdispDrawString(TEXT_X(version[0]), 230, version[0],font1, White);
 			gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
+
+			if(is_master == true){
+				if(remote_is_master == true){
+					sprintf(user_help_two, "> Is master, other is master. <");
+				}
+				else
+					sprintf(user_help_two, "> Is master, other is slave. <");
+			}
+			else if(is_master == false){
+				if(remote_is_master == true){
+					sprintf(user_help_two, "> Is slave, other is master. <");
+				}
+				else
+					sprintf(user_help_two, "> Is slave, other is slave. <");
+			}
+			gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
 
 			switch (menu_select) {
 			case SINGLEPLAYER_SELECT:
 				gdispDrawString(120, 40, single[0],	font1, Yellow);
-				gdispDrawString(120, 80, multi[0],	font1, White);
+				if(game_mode_local == 1){
+					gdispDrawString(120, 80, multi_second[0],	font1, White);
+				}
+				else if(game_mode_local == 0){
+					gdispDrawString(120, 80, multi[0],	font1, White);
+				}
 				gdispDrawString(120, 120, settings[0],	font1, White);
 				gdispDrawString(120, 160, cheats[0],	font1, White);
 				gdispDrawString(120, 200, highscores[0],	font1, White);
 				gdispDrawString(110, 40, dash[0], font1, Yellow);
 				gdispDrawString(195, 40, dash_reverse[0], font1, Yellow);
-				if (buttonCount(BUT_E))
-					xQueueSend(StateQueue, &next_state_signal_single, 100);
+				if (buttonCount(BUT_E)){
+					if(game_mode_local == 0){
+						xQueueSend(StateQueue, &next_state_signal_single, 100);
+					}
+					else if(game_mode_local == 1){
+						xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
+					}
+				}
 				break;
 			case MULTIPLAYER_SELECT:
 					gdispDrawString(120, 40, single[0],	font1, White);
-					gdispDrawString(120, 80, multi[0],	font1, Yellow);
+					if(game_mode_local == 1){
+						gdispDrawString(120, 80, multi_second[0],	font1, Yellow);
+					}
+					else if(game_mode_local == 0){
+						gdispDrawString(120, 80, multi[0],	font1, Yellow);
+					}
 					gdispDrawString(120, 120, settings[0],	font1, White);
 					gdispDrawString(120, 160, cheats[0],	font1, White);
 					gdispDrawString(120, 200, highscores[0],	font1, White);
 					gdispDrawString(110, 80, dash[0], font1, Yellow);
-					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
-				if(buttonCount(BUT_E))
-					xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
+//					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
+					if(buttonCount(BUT_E)){
+						game_mode_local = !game_mode_local;
+					}
 				break;
 			case SETTINGS_SELECT:
 				gdispDrawString(120, 40, single[0],	font1, White);
-				gdispDrawString(120, 80, multi[0],	font1, White);
+				if(game_mode_local == 1){
+					gdispDrawString(120, 80, multi_second[0],	font1, White);
+				}
+				else if(game_mode_local == 0){
+					gdispDrawString(120, 80, multi[0],	font1, White);
+				}
 				gdispDrawString(120, 120, settings[0],	font1, Yellow);
 				gdispDrawString(120, 160, cheats[0],	font1, White);
 				gdispDrawString(120, 200, highscores[0],	font1, White);
@@ -123,7 +178,12 @@ void drawTaskStartMenu(void * params) {
 				break;
 			case CHEATS_SELECT:
 				gdispDrawString(120, 40, single[0],	font1, White);
-				gdispDrawString(120, 80, multi[0],	font1, White);
+				if(game_mode_local == 1){
+					gdispDrawString(120, 80, multi_second[0],	font1, White);
+				}
+				else if(game_mode_local == 0){
+					gdispDrawString(120, 80, multi[0],	font1, White);
+				}
 				gdispDrawString(120, 120, settings[0],	font1, White);
 				gdispDrawString(120, 160, cheats[0],	font1, Yellow);
 				gdispDrawString(120, 200, highscores[0],	font1, White);
@@ -134,7 +194,12 @@ void drawTaskStartMenu(void * params) {
 				break;
 			case HIGHSCORES_SELECT:
 				gdispDrawString(120, 40, single[0],	font1, White);
-				gdispDrawString(120, 80, multi[0],	font1, White);
+				if(game_mode_local == 1){
+					gdispDrawString(120, 80, multi_second[0],	font1, White);
+				}
+				else if(game_mode_local == 0){
+					gdispDrawString(120, 80, multi[0],	font1, White);
+				}
 				gdispDrawString(120, 120, settings[0],	font1, White);
 				gdispDrawString(120, 160, cheats[0],	font1, White);
 				gdispDrawString(120, 200, highscores[0],	font1, Yellow);
@@ -144,6 +209,7 @@ void drawTaskStartMenu(void * params) {
 					xQueueSend(StateQueue, &next_state_signal_highscores, 100);
 				break;
 			}
+			uart_input = 0;
 		}
 	}
 }
