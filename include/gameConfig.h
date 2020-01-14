@@ -24,11 +24,11 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_2
+#define STARTING_STATE                      MULTIPLAYER_STATE
 
-#define STARTING_LIVES_LEVEL_ONE            300
-#define STARTING_LIVES_LEVEL_TWO            600
-#define STARTING_LIVES_LEVEL_THREE          900
+#define STARTING_LIVES_LEVEL_ONE            3
+#define STARTING_LIVES_LEVEL_TWO            6
+#define STARTING_LIVES_LEVEL_THREE          9
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
@@ -79,7 +79,7 @@
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score
 #define LEVEL_TWO_SCORE_THRESHOLD          8000
-#define LEVEL_THREE_SCORE_THRESHOLD        17000
+#define LEVEL_THREE_SCORE_THRESHOLD        18000
 #define BEAT_GAME_SCORE_THRESHOLD          21000
 
 // UART Configuration

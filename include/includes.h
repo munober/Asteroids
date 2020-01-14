@@ -120,7 +120,7 @@ typedef enum {
 } saucer_shot_direction;
 
 typedef enum {
-	no_Ort = 0,
+	no_ort = 0,
 	N = 1,
 	NE = 2,
 	E = 3,
