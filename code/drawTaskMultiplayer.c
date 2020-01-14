@@ -98,19 +98,25 @@ void drawTaskMultiplayer (void * params){
  * For Pause: 181
  * For Quitting the game session: 182
  */
+	const char pause_byte = 251;
+	const char quit_byte = 252;
+	const char sync_byte_1 = 253; // tells remote sync order is x then y a.k.a next byte will be x
+	const char sync_byte_2 = 254; // tells remote sync order is y then x a.k.a next byte will be y
+	TickType_t last_sync = xTaskGetTickCount();
+	TickType_t sync_period = 200;
+
 	char uart_input = 0;
 	uint8_t to_send_x = ((int) player_local.position.x) / 4 + 1;
 	uint8_t to_send_y = 100 + ((int) player_local.position.y) / 3;
-	const char pause_byte = 251;
-	const char quit_byte = 252;
+	uint8_t to_send_sync = sync_byte_1;
 
 	boolean uart_connected = false;
 	boolean state_pause_local = false;
 	boolean state_pause_remote = false;
 	boolean state_quit_remote = false;
+	boolean no_sync = true;
 	int last_sent = 0;
 	int last_received = 0;
-	int send_bullet = 0;
 
 	int lives[2];
 	lives[0] = STARTING_LIVES_MULTIPLAYER; // local
@@ -163,6 +169,18 @@ void drawTaskMultiplayer (void * params){
 				state_quit_remote = true;
 			}
 
+			if(uart_input == sync_byte_1){
+				last_received = 0;
+				no_sync = false;
+			}
+			else if(uart_input == sync_byte_2){
+				last_received = 1;
+				no_sync = false;
+			}
+			else if(uart_input != sync_byte_1 && uart_input != sync_byte_2){
+				no_sync = true;
+			}
+
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -178,8 +196,9 @@ void drawTaskMultiplayer (void * params){
 					}
 				}
 			}
+
 //			Only runs if UART is connected, game not paused and remote hasn't quit
-			if(uart_connected == true && state_pause_local == false && state_pause_remote == false && state_quit_remote == false){
+			if(no_sync == true && uart_connected == true && state_pause_local == false && state_pause_remote == false && state_quit_remote == false){
 				if(last_received){
 					if(uart_input >= 1 && uart_input <= 80){
 						remote_y = (uart_input - 1) * 3;
@@ -496,8 +515,8 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 
-			uint8_t to_send_x = local_x / 4 + 1;
-			uint8_t to_send_y = local_y / 3 + 1;
+			to_send_x = local_x / 4 + 1;
+			to_send_y = local_y / 3 + 1;
 			switch(heading_direction){
 			case HEADING_ANGLE_NULL:
 				to_send_x += 80;
@@ -548,6 +567,16 @@ void drawTaskMultiplayer (void * params){
 					UART_SendData(to_send_x);
 				}
 				last_sent = !last_sent;
+				if(xTaskGetTickCount() - last_sync == sync_period){
+					if(last_sent){
+						to_send_sync = sync_byte_1;
+					}
+					else if(!last_sent){
+						to_send_sync = sync_byte_2;
+					}
+					UART_SendData(to_send_sync);
+					last_sync = xTaskGetTickCount();
+				}
 			}
 			else if(state_pause_local == true){
 				UART_SendData(pause_byte);
