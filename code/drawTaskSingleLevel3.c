@@ -142,94 +142,160 @@ void drawTaskSingleLevel3 (void * params){
 	int asteroids_to_destroy_medium = TO_DESTROY_LEVEL_3_MEDIUM;
 	int asteroids_to_destroy_large = TO_DESTROY_LEVEL_3_LARGE;
 
-	// Initialize asteroids: max. 10 asteroids are on screen at once
+	// Initialize asteroids: Up to 16 asteroids can be on screen at once
+	// offset: 50px for large (a1-a8); 20px for medium (a9-a16)
 	// asteroid shape is either 0, 1 or 2
 
 	struct asteroid asteroid_1 = { { 0 } };
-	asteroid_1.spawn_position.x = -10;
+	asteroid_1.spawn_position.x = -50;
 	asteroid_1.spawn_position.y = 180;
-	asteroid_1.position.x = -10;
+	asteroid_1.position.x = -50;
 	asteroid_1.position.y = 180;
 	asteroid_1.remain_hits = three;
 	asteroid_1.shape = super_random % 3;
 	asteroid_1.position_locked = false;
+	asteroid_1.orientation = NE;
 	struct asteroid asteroid_2 = { { 0 } };
-	asteroid_2.spawn_position.x = -10;
+	asteroid_2.spawn_position.x = -50;
 	asteroid_2.spawn_position.y = 0;
-	asteroid_2.position.x = -10;
+	asteroid_2.position.x = -50;
 	asteroid_2.position.y = 0;
-	asteroid_2.remain_hits = three;
+	asteroid_2.remain_hits = one;
 	asteroid_2.shape = (super_random + 1) % 3;
 	asteroid_2.position_locked = false;
+	asteroid_2.orientation = SE;
 	struct asteroid asteroid_3 = { { 0 } };
 	asteroid_3.spawn_position.x = 240;
-	asteroid_3.spawn_position.y = -10;
+	asteroid_3.spawn_position.y = -50;
 	asteroid_3.position.x = 240;
-	asteroid_3.position.y = -10;
-	asteroid_3.remain_hits = three;
+	asteroid_3.position.y = -50;
+	asteroid_3.remain_hits = two;
 	asteroid_3.shape = (super_random + 2) % 3;
 	asteroid_3.position_locked = false;
+	asteroid_3.orientation = S;
 	struct asteroid asteroid_4 = { { 0 } };
-	asteroid_4.spawn_position.x = 320;
+	asteroid_4.spawn_position.x = 370;
 	asteroid_4.spawn_position.y = 190;
-	asteroid_4.position.x = 320;
+	asteroid_4.position.x = 370;
 	asteroid_4.position.y = 190;
-	asteroid_4.remain_hits = three;
+	asteroid_4.remain_hits = one;
 	asteroid_4.shape = super_random % 3;
 	asteroid_4.position_locked = false;
+	asteroid_4.orientation = W;
 	struct asteroid asteroid_5 = { { 0 } };
-	asteroid_5.spawn_position.x = 320;
+	asteroid_5.spawn_position.x = 370;
 	asteroid_5.spawn_position.y = 40;
-	asteroid_5.position.x = 320;
+	asteroid_5.position.x = 370;
 	asteroid_5.position.y = 40;
 	asteroid_5.remain_hits = three;
 	asteroid_5.shape = (super_random + 1) % 3;
 	asteroid_5.position_locked = false;
+	asteroid_5.orientation = W;
 	struct asteroid asteroid_6 = { { 0 } };
 	asteroid_6.spawn_position.x = 80;
-	asteroid_6.spawn_position.y = 240;
+	asteroid_6.spawn_position.y = 290;
 	asteroid_6.position.x = 80;
-	asteroid_6.position.y = 240;
-	asteroid_6.remain_hits = two;
+	asteroid_6.position.y = 290;
+	asteroid_6.remain_hits = one;
 	asteroid_6.shape = (super_random + 2) % 3;
 	asteroid_6.position_locked = false;
+	asteroid_6.orientation = NE;
 	struct asteroid asteroid_7 = { { 0 } };
 	asteroid_7.spawn_position.x = 280;
-	asteroid_7.spawn_position.y = 240;
+	asteroid_7.spawn_position.y = 290;
 	asteroid_7.position.x = 280;
-	asteroid_7.position.y = 240;
+	asteroid_7.position.y = 290;
 	asteroid_7.remain_hits = two;
 	asteroid_7.shape = super_random % 3;
 	asteroid_7.position_locked = false;
+	asteroid_7.orientation = NW;
 	struct asteroid asteroid_8 = { { 0 } };
 	asteroid_8.spawn_position.x = 180;
-	asteroid_8.spawn_position.y = -10;
+	asteroid_8.spawn_position.y = -50;
 	asteroid_8.position.x = 180;
-	asteroid_8.position.y = -10;
-	asteroid_8.remain_hits = two;
+	asteroid_8.position.y = -50;
+	asteroid_8.remain_hits = one;
 	asteroid_8.shape = (super_random + 1) % 3;
 	asteroid_8.position_locked = false;
+	asteroid_8.orientation = SW;
 	struct asteroid asteroid_9 = { { 0 } };
 	asteroid_9.spawn_position.x = 70;
-	asteroid_9.spawn_position.y = -10;
+	asteroid_9.spawn_position.y = -20;
 	asteroid_9.position.x = 70;
-	asteroid_9.position.y = -10;
+	asteroid_9.position.y = -20;
 	asteroid_9.remain_hits = two;
 	asteroid_9.shape = (super_random + 2) % 3;
 	asteroid_9.position_locked = false;
+	asteroid_9.orientation = SE;
 	struct asteroid asteroid_10 = { { 0 } };
-	asteroid_10.spawn_position.x = 320;
+	asteroid_10.spawn_position.x = 340;
 	asteroid_10.spawn_position.y = 180;
-	asteroid_10.position.x = 320;
+	asteroid_10.position.x = 340;
 	asteroid_10.position.y = 180;
-	asteroid_10.remain_hits = two;
+	asteroid_10.remain_hits = one;
 	asteroid_10.shape = super_random % 3;
 	asteroid_10.position_locked = false;
+	asteroid_10.orientation = NW;
+	struct asteroid asteroid_11 = { { 0 } };
+	asteroid_11.spawn_position.x = -20;
+	asteroid_11.spawn_position.y = 100;
+	asteroid_11.position.x = -20;
+	asteroid_11.position.y = 100;
+	asteroid_11.remain_hits = two;
+	asteroid_11.shape = super_random % 3;
+	asteroid_11.position_locked = false;
+	asteroid_11.orientation = SE;
+	struct asteroid asteroid_12 = { { 0 } };
+	asteroid_12.spawn_position.x = -20;
+	asteroid_12.spawn_position.y = 220;
+	asteroid_12.position.x = -20;
+	asteroid_12.position.y = 220;
+	asteroid_12.remain_hits = one;
+	asteroid_12.shape = super_random % 3;
+	asteroid_12.position_locked = false;
+	asteroid_12.orientation = NE;
+	struct asteroid asteroid_13 = { { 0 } };
+	asteroid_13.spawn_position.x = 30;
+	asteroid_13.spawn_position.y = 260;
+	asteroid_13.position.x = 30;
+	asteroid_13.position.y = 260;
+	asteroid_13.remain_hits = two;
+	asteroid_13.shape = super_random % 3;
+	asteroid_13.position_locked = false;
+	asteroid_13.orientation = N;
+	struct asteroid asteroid_14 = { { 0 } };
+	asteroid_14.spawn_position.x = 190;
+	asteroid_14.spawn_position.y = 260;
+	asteroid_14.position.x = 190;
+	asteroid_14.position.y = 260;
+	asteroid_14.remain_hits = one;
+	asteroid_14.shape = super_random % 3;
+	asteroid_14.position_locked = false;
+	asteroid_14.orientation = NE;
+	struct asteroid asteroid_15 = { { 0 } };
+	asteroid_15.spawn_position.x = 110;
+	asteroid_15.spawn_position.y = -20;
+	asteroid_15.position.x = 110;
+	asteroid_15.position.y = -20;
+	asteroid_15.remain_hits = two;
+	asteroid_15.shape = super_random % 3;
+	asteroid_15.position_locked = false;
+	asteroid_15.orientation = SW;
+	struct asteroid asteroid_16 = { { 0 } };
+	asteroid_16.spawn_position.x = 340;
+	asteroid_16.spawn_position.y = 120;
+	asteroid_16.position.x = 340;
+	asteroid_16.position.y = 120;
+	asteroid_16.remain_hits = one;
+	asteroid_16.shape = super_random % 3;
+	asteroid_16.position_locked = false;
+	asteroid_16.orientation = NW;
 
 	// Putting all asteroid variables inside a single array
-	struct asteroid* all_asteroids[10] = { &asteroid_1, &asteroid_2, &asteroid_3,
-			&asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7, &asteroid_8,
-			&asteroid_9, &asteroid_10 };
+	struct asteroid* all_asteroids[16] = { &asteroid_1, &asteroid_2,
+			&asteroid_3, &asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7,
+			&asteroid_8, &asteroid_9, &asteroid_10, &asteroid_11, &asteroid_12,
+			&asteroid_13, &asteroid_14, &asteroid_15, &asteroid_16 };
 
 	// Initialize flying saucers
 	struct saucer saucer_1 = { { 0 } };
@@ -620,113 +686,149 @@ void drawTaskSingleLevel3 (void * params){
 
 			/*
 			 * ASTEROIDS
-			 * The following sets the movement of the asteroids. Offset 10 pixel (10 pixel off screen)
+			 * The following sets the movement of the asteroids. There are 8 possible directions.
 			 */
+			for (i = 0; i <= 15; i++) {
+				switch (all_asteroids[i]->orientation) {
+				case N:
+					all_asteroids[i]->position.y = all_asteroids[i]->position.y	- (1 * ASTEROID_SPEED);
+					break;
+				case NE:
+					all_asteroids[i]->position.x = all_asteroids[i]->position.x	+ (1 * ASTEROID_SPEED);
+					all_asteroids[i]->position.y = all_asteroids[i]->position.y	- (1 * ASTEROID_SPEED);
+					break;
+				case E:
+					all_asteroids[i]->position.x = all_asteroids[i]->position.x	+ (1 * ASTEROID_SPEED);
+					break;
+				case SE:
+					all_asteroids[i]->position.x = all_asteroids[i]->position.x	+ (1 * ASTEROID_SPEED);
+					all_asteroids[i]->position.y = all_asteroids[i]->position.y	+ (1 * ASTEROID_SPEED);
+					break;
+				case S:
+					all_asteroids[i]->position.y = all_asteroids[i]->position.y	+ (1 * ASTEROID_SPEED);
+					break;
+				case SW:
+					all_asteroids[i]->position.x = all_asteroids[i]->position.x	- (1 * ASTEROID_SPEED);
+					all_asteroids[i]->position.y = all_asteroids[i]->position.y	+ (1 * ASTEROID_SPEED);
+					break;
+				case W:
+					all_asteroids[i]->position.x = all_asteroids[i]->position.x	- (1 * ASTEROID_SPEED);
+					break;
+				case NW:
+					all_asteroids[i]->position.x = all_asteroids[i]->position.x	- (1 * ASTEROID_SPEED);
+					all_asteroids[i]->position.y = all_asteroids[i]->position.y - (1 * ASTEROID_SPEED);
+					break;
+				}
+			}
+
+			// CATCH off-screen asteroids
 			// North-East movement of asteroid 1
 			// rand() % 231 returns a random number between 0 and 230
-			if (asteroid_1.position_locked == false) {
-				asteroid_1.position.x = asteroid_1.position.x + 1;
-				asteroid_1.position.y = asteroid_1.position.y - 1;
-				if ((asteroid_1.position.x >= 330)
-						|| (asteroid_1.position.y <= -10)) {
-					asteroid_1.position.x = -10;
-					asteroid_1.position.y = rand() % 231;
-				}
+			if ((asteroid_1.position.x >= 370)
+					|| (asteroid_1.position.y <= -50)) {
+				asteroid_1.position.x = -50;
+				asteroid_1.position.y = rand() % 231;
 			}
 
 			// South-East movement of asteroid 2
-			if (asteroid_2.position_locked == false) {
-				asteroid_2.position.x = asteroid_2.position.x + 1;
-				asteroid_2.position.y = asteroid_2.position.y + 1;
-				if ((asteroid_2.position.x >= 330)
-						|| (asteroid_2.position.y >= 250)) {
-					asteroid_2.position.x = -10;
-					asteroid_2.position.y = rand() % 231;
-				}
+			if ((asteroid_2.position.x >= 370)
+					|| (asteroid_2.position.y >= 290)) {
+				asteroid_2.position.x = -50;
+				asteroid_2.position.y = rand() % 231;
 			}
 
 			// South movement of asteroid 3
-			if (asteroid_3.position_locked == false) {
-				asteroid_3.position.y = asteroid_3.position.y + 1;
-				if (asteroid_3.position.y >= 250) {
-					asteroid_3.position.x = rand() % 315;
-					asteroid_3.position.y = -10;
-				}
+			if (asteroid_3.position.y >= 290) {
+				asteroid_3.position.x = rand() % 315;
+				asteroid_3.position.y = -50;
 			}
 
 			// West movement of asteroid 4
-			if (asteroid_4.position_locked == false) {
-				asteroid_4.position.x = asteroid_4.position.x - 1;
-				if (asteroid_4.position.x <= -10) {
-					asteroid_4.position.x = 320;
-					asteroid_4.position.y = rand() % 231;
-				}
+			if (asteroid_4.position.x <= -50) {
+				asteroid_4.position.x = 370;
+				asteroid_4.position.y = rand() % 231;
 			}
 
 			// West-South-West movement of asteroid 5
-			if (asteroid_5.position_locked == false) {
-				asteroid_5.position.x = asteroid_5.position.x - 2;
-				asteroid_5.position.y = asteroid_5.position.y + 1;
-				if ((asteroid_5.position.x <= -10)
-						|| (asteroid_5.position.y >= 250)) {
-					asteroid_5.position.x = 320;
-					asteroid_5.position.y = rand() % 231;
-				}
+			if (asteroid_5.position.x <= -50) {
+				asteroid_5.position.x = 370;
+				asteroid_5.position.y = rand() % 231;
 			}
 
 			// North-East movement of asteroid 6
-			if (asteroid_6.position_locked == false) {
-				asteroid_6.position.x = asteroid_6.position.x + 1;
-				asteroid_6.position.y = asteroid_6.position.y - 1;
-				if ((asteroid_6.position.x >= 330)
-						|| (asteroid_6.position.y <= -10)) {
-					asteroid_6.position.x = rand() % 315;
-					asteroid_6.position.y = 240;
-				}
+			if ((asteroid_6.position.x >= 370)
+					|| (asteroid_6.position.y <= -50)) {
+				asteroid_6.position.x = rand() % 315;
+				asteroid_6.position.y = 290;
 			}
 
 			// North-West movement of asteroid 7
-			if (asteroid_7.position_locked == false) {
-				asteroid_7.position.x = asteroid_7.position.x - 1;
-				asteroid_7.position.y = asteroid_7.position.y - 1;
-				if ((asteroid_7.position.x <= -10)
-						|| (asteroid_7.position.y <= -10)) {
-					asteroid_7.position.x = rand() % 315;
-					asteroid_7.position.y = 240;
-				}
+			if ((asteroid_7.position.x <= -50)
+					|| (asteroid_7.position.y <= -50)) {
+				asteroid_7.position.x = rand() % 315;
+				asteroid_7.position.y = 290;
 			}
 
 			// South-South-West movement of asteroid 8
-			if (asteroid_8.position_locked == false) {
-				asteroid_8.position.x = asteroid_8.position.x - 1;
-				asteroid_8.position.y = asteroid_8.position.y + 2;
-				if ((asteroid_8.position.x <= -10)
-						|| (asteroid_8.position.y >= 250)) {
-					asteroid_8.position.x = 60 + rand() % 241;
-					asteroid_8.position.y = -10;
-				}
+			if ((asteroid_8.position.x <= -50)
+					|| (asteroid_8.position.y >= 290)) {
+				asteroid_8.position.x = 60 + rand() % 241;
+				asteroid_8.position.y = -50;
 			}
 
 			// South-South-East movement of asteroid 9
-			if (asteroid_9.position_locked == false) {
-				asteroid_9.position.x = asteroid_9.position.x + 1;
-				asteroid_9.position.y = asteroid_9.position.y + 2;
-				if ((asteroid_9.position.x >= 330)
-						|| (asteroid_9.position.y >= 250)) {
-					asteroid_9.position.x = rand() % 241;
-					asteroid_9.position.y = -10;	asteroid_1.spawn_position.x = -10;
-				}
+			if ((asteroid_9.position.x >= 340)
+					|| (asteroid_9.position.y >= 260)) {
+				asteroid_9.position.x = rand() % 241;
+				asteroid_9.position.y = -20;
 			}
 
 			// West-North-West movement of asteroid 10
-			if (asteroid_10.position_locked == false) {
-				asteroid_10.position.x = asteroid_10.position.x - 2;
-				asteroid_10.position.y = asteroid_10.position.y - 1;
-				if ((asteroid_10.position.x <= -10)
-						|| (asteroid_10.position.y <= -10)) {
-					asteroid_10.position.x = 320;
-					asteroid_10.position.y = rand() % 241;
-				}
+			if ((asteroid_10.position.x <= -20)
+					|| (asteroid_10.position.y <= -20)) {
+				asteroid_10.position.x = 340;
+				asteroid_10.position.y = rand() % 241;
+			}
+
+			// South-East: asteroid 11
+			if ((asteroid_11.position.x >= 340)
+					|| (asteroid_11.position.y >= 260)) {
+				asteroid_11.position.x = -20;
+				asteroid_11.position.y = rand() % 241;
+			}
+
+			// North-East: asteroid 12
+			if ((asteroid_12.position.x >= 340)
+					|| (asteroid_12.position.y <= -20)) {
+				asteroid_12.position.x = -20;
+				asteroid_12.position.y = rand() % 241;
+			}
+
+			// North: asteroid 13
+			if (asteroid_13.position.y <= -20) {
+				asteroid_10.position.x = 20 + rand() % 280;
+				asteroid_10.position.y = 260;
+			}
+
+			// North-East: asteroid 14
+			if ((asteroid_14.position.x >= 340)
+					|| (asteroid_14.position.y <= -20)) {
+				asteroid_14.position.x = 20 + rand() % 280;
+				asteroid_14.position.y = 260;
+			}
+
+			// South-West: asteroid 15
+			if ((asteroid_15.position.x <= -20)
+					|| (asteroid_15.position.y >= 260)) {
+				asteroid_15.position.x = 20 + rand() % 280;
+				asteroid_15.position.y = -20;
+			}
+
+			// North-West: asteroid 16
+			if ((asteroid_16.position.x <= -20)
+					|| (asteroid_16.position.y <= -20)) {
+				asteroid_16.position.x = 340;
+				asteroid_16.position.y = 20 + rand() % 200;
 			}
 
 			/*
