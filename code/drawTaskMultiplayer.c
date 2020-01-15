@@ -18,6 +18,7 @@ extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
 extern QueueHandle_t HighScoresQueue;
+extern QueueHandle_t LocalMasterQueue;
 
 void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
@@ -140,6 +141,13 @@ void drawTaskMultiplayer (void * params){
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
 			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
+			xQueueReceive(LocalMasterQueue, &is_master, 0);
+			if(is_master == true){
+				remote_is_master = false;
+			}
+			else if(is_master == false){
+				remote_is_master = true;
+			}
 
 			if(uart_input != 0){
 				uart_connected = true;

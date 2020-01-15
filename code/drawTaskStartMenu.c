@@ -9,8 +9,10 @@
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
+extern QueueHandle_t LocalMasterQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
+extern SemaphoreHandle_t LocalMaster;
 
 #define SINGLEPLAYER_SELECT			1
 #define MULTIPLAYER_SELECT			2
@@ -161,6 +163,7 @@ void drawTaskStartMenu(void * params) {
 						xQueueSend(StateQueue, &next_state_signal_single, 100);
 					}
 					if(game_mode_local != game_mode_remote){
+						xQueueSend(LocalMasterQueue, &is_master, 0);
 						xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
 					}
 				}
