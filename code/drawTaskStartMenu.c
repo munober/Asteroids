@@ -52,7 +52,11 @@ void drawTaskStartMenu(void * params) {
 	boolean remote_is_master = false;
 	boolean send_master = true;
 	const char sync_byte_1 = 253; // when sent: tells remote to be slave
-	const char sync_byte_2 = 254; // alive signal, undecided
+	const char sync_byte_2 = 254; // alive signal
+	const char sync_byte_3 = 255; // game start signal
+	TickType_t game_start_timer = 0;
+	TickType_t game_start_delay = 3000;
+	int game_starting = 0;
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
@@ -74,12 +78,22 @@ void drawTaskStartMenu(void * params) {
 				game_mode_remote = 0;
 			}
 
-			if(game_mode_local == 1){
-				UART_SendData(sync_byte_1);
+			if(game_starting == 0){
+				if(game_mode_local == 1){
+					UART_SendData(sync_byte_1);
+				}
+				else if(game_mode_local == 0){
+					UART_SendData(sync_byte_2);
+				}
 			}
-			else if(game_mode_local == 0){
-				UART_SendData(sync_byte_2);
-			}
+//			else if(game_starting == 1){
+//				if(xTaskGetTickCount() - game_start_timer >= game_start_delay){
+//					xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
+//				}
+//			}
+
+
+
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 				if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
 					switch(menu_select){
@@ -123,116 +137,133 @@ void drawTaskStartMenu(void * params) {
 			}
 
 			gdispClear(Black);
-			gdispDrawString(TEXT_X(version[0]), 230, version[0],font1, White);
-			gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
+			if(game_starting == 0){
+				gdispDrawString(TEXT_X(version[0]), 230, version[0],font1, White);
+				gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
 
-			if(is_master == true){
-				if(remote_is_master == true){
-					sprintf(user_help_two, "> Is master, other is master. <");
+				if(is_master == true){
+					if(remote_is_master == true){
+						sprintf(user_help_two, "> Is master, other is master. <");
+					}
+					else if(remote_is_master == false){
+						sprintf(user_help_two, "> Is master, other is slave. <");
+					}
 				}
-				else if(remote_is_master == false){
-					sprintf(user_help_two, "> Is master, other is slave. <");
+				else if(is_master == false){
+					if(remote_is_master == true){
+						sprintf(user_help_two, "> Is slave, other is master. <");
+					}
+					else if(remote_is_master == false){
+						sprintf(user_help_two, "> Is slave, other is slave. <");
+					}
 				}
+				gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
+				switch (menu_select) {
+							case SINGLEPLAYER_SELECT:
+								gdispDrawString(120, 40, single[0],	font1, Yellow);
+								if(game_mode_local == 1 || game_mode_remote == 1){
+									gdispDrawString(120, 80, multi_second[0],	font1, White);
+								}
+								else if(game_mode_local == 0 || game_mode_remote == 0){
+									gdispDrawString(120, 80, multi[0],	font1, White);
+								}
+								gdispDrawString(120, 120, settings[0],	font1, White);
+								gdispDrawString(120, 160, cheats[0],	font1, White);
+								gdispDrawString(120, 200, highscores[0],	font1, White);
+								gdispDrawString(110, 40, dash[0], font1, Yellow);
+								gdispDrawString(195, 40, dash_reverse[0], font1, Yellow);
+								if (buttonCount(BUT_E)){
+									if(game_mode_local == game_mode_remote){
+										xQueueSend(StateQueue, &next_state_signal_single, 100);
+									}
+									if(game_mode_local != game_mode_remote){
+										xQueueSend(LocalMasterQueue, &is_master, 0);
+										xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
+//										game_starting = 1;
+//										game_start_timer = xTaskGetTickCount();
+									}
+								}
+								break;
+							case MULTIPLAYER_SELECT:
+									gdispDrawString(120, 40, single[0],	font1, White);
+									if(game_mode_local == 1 || game_mode_remote == 1){
+										gdispDrawString(120, 80, multi_second[0],	font1, Yellow);
+									}
+									else if(game_mode_local == 0 || game_mode_remote == 0){
+										gdispDrawString(120, 80, multi[0],	font1, Yellow);
+									}
+									gdispDrawString(120, 120, settings[0],	font1, White);
+									gdispDrawString(120, 160, cheats[0],	font1, White);
+									gdispDrawString(120, 200, highscores[0],	font1, White);
+									gdispDrawString(110, 80, dash[0], font1, Yellow);
+				//					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
+									if(buttonCount(BUT_E)){
+										if(game_mode_remote == 0){
+											game_mode_local = !game_mode_local;
+										}
+									}
+								break;
+							case SETTINGS_SELECT:
+								gdispDrawString(120, 40, single[0],	font1, White);
+								if(game_mode_local == 1 || game_mode_remote == 1){
+									gdispDrawString(120, 80, multi_second[0],	font1, White);
+								}
+								else if(game_mode_local == 0 || game_mode_remote == 0){
+									gdispDrawString(120, 80, multi[0],	font1, White);
+								}
+								gdispDrawString(120, 120, settings[0],	font1, Yellow);
+								gdispDrawString(120, 160, cheats[0],	font1, White);
+								gdispDrawString(120, 200, highscores[0],	font1, White);
+								gdispDrawString(110, 120, dash[0], font1, Yellow);
+								gdispDrawString(195, 120, dash_reverse[0], font1, Yellow);
+								break;
+							case CHEATS_SELECT:
+								gdispDrawString(120, 40, single[0],	font1, White);
+								if(game_mode_local == 1 || game_mode_remote == 1){
+									gdispDrawString(120, 80, multi_second[0],	font1, White);
+								}
+								else if(game_mode_local == 0 || game_mode_remote == 0){
+									gdispDrawString(120, 80, multi[0],	font1, White);
+								}
+								gdispDrawString(120, 120, settings[0],	font1, White);
+								gdispDrawString(120, 160, cheats[0],	font1, Yellow);
+								gdispDrawString(120, 200, highscores[0],	font1, White);
+								gdispDrawString(110, 160, dash[0], font1, Yellow);
+								gdispDrawString(195, 160, dash_reverse[0], font1, Yellow);
+								if (buttonCount(BUT_E))
+									xQueueSend(StateQueue, &next_state_signal_cheats, 100);
+								break;
+							case HIGHSCORES_SELECT:
+								gdispDrawString(120, 40, single[0],	font1, White);
+								if(game_mode_local == 1 || game_mode_remote == 1){
+									gdispDrawString(120, 80, multi_second[0],	font1, White);
+								}
+								else if(game_mode_local == 0 || game_mode_remote == 0){
+									gdispDrawString(120, 80, multi[0],	font1, White);
+								}
+								gdispDrawString(120, 120, settings[0],	font1, White);
+								gdispDrawString(120, 160, cheats[0],	font1, White);
+								gdispDrawString(120, 200, highscores[0],	font1, Yellow);
+								gdispDrawString(110, 200, dash[0], font1, Yellow);
+								gdispDrawString(195, 200, dash_reverse[0], font1, Yellow);
+								if (buttonCount(BUT_E))
+									xQueueSend(StateQueue, &next_state_signal_highscores, 100);
+								break;
+							}
 			}
-			else if(is_master == false){
-				if(remote_is_master == true){
-					sprintf(user_help_two, "> Is slave, other is master. <");
+			if(game_starting == 1){
+				if(xTaskGetTickCount() - game_start_timer < 1000){
+					sprintf(user_help_two, "> Game starts in 1. <");
+					gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
 				}
-				else if(remote_is_master == false){
-					sprintf(user_help_two, "> Is slave, other is slave. <");
+				if(xTaskGetTickCount() - game_start_timer < 2000){
+					sprintf(user_help_two, "> Game starts in 2. <");
+					gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
 				}
-			}
-			gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
-
-			switch (menu_select) {
-			case SINGLEPLAYER_SELECT:
-				gdispDrawString(120, 40, single[0],	font1, Yellow);
-				if(game_mode_local == 1 || game_mode_remote == 1){
-					gdispDrawString(120, 80, multi_second[0],	font1, White);
+				if(xTaskGetTickCount() - game_start_timer < 3000){
+					sprintf(user_help_two, "> Game starts in 3. <");
+					gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
 				}
-				else if(game_mode_local == 0 || game_mode_remote == 0){
-					gdispDrawString(120, 80, multi[0],	font1, White);
-				}
-				gdispDrawString(120, 120, settings[0],	font1, White);
-				gdispDrawString(120, 160, cheats[0],	font1, White);
-				gdispDrawString(120, 200, highscores[0],	font1, White);
-				gdispDrawString(110, 40, dash[0], font1, Yellow);
-				gdispDrawString(195, 40, dash_reverse[0], font1, Yellow);
-				if (buttonCount(BUT_E)){
-					if(game_mode_local == game_mode_remote){
-						xQueueSend(StateQueue, &next_state_signal_single, 100);
-					}
-					if(game_mode_local != game_mode_remote){
-						xQueueSend(LocalMasterQueue, &is_master, 0);
-						xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
-					}
-				}
-				break;
-			case MULTIPLAYER_SELECT:
-					gdispDrawString(120, 40, single[0],	font1, White);
-					if(game_mode_local == 1 || game_mode_remote == 1){
-						gdispDrawString(120, 80, multi_second[0],	font1, Yellow);
-					}
-					else if(game_mode_local == 0 || game_mode_remote == 0){
-						gdispDrawString(120, 80, multi[0],	font1, Yellow);
-					}
-					gdispDrawString(120, 120, settings[0],	font1, White);
-					gdispDrawString(120, 160, cheats[0],	font1, White);
-					gdispDrawString(120, 200, highscores[0],	font1, White);
-					gdispDrawString(110, 80, dash[0], font1, Yellow);
-//					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
-					if(buttonCount(BUT_E)){
-						if(game_mode_remote == 0){
-							game_mode_local = !game_mode_local;
-						}
-					}
-				break;
-			case SETTINGS_SELECT:
-				gdispDrawString(120, 40, single[0],	font1, White);
-				if(game_mode_local == 1 || game_mode_remote == 1){
-					gdispDrawString(120, 80, multi_second[0],	font1, White);
-				}
-				else if(game_mode_local == 0 || game_mode_remote == 0){
-					gdispDrawString(120, 80, multi[0],	font1, White);
-				}
-				gdispDrawString(120, 120, settings[0],	font1, Yellow);
-				gdispDrawString(120, 160, cheats[0],	font1, White);
-				gdispDrawString(120, 200, highscores[0],	font1, White);
-				gdispDrawString(110, 120, dash[0], font1, Yellow);
-				gdispDrawString(195, 120, dash_reverse[0], font1, Yellow);
-				break;
-			case CHEATS_SELECT:
-				gdispDrawString(120, 40, single[0],	font1, White);
-				if(game_mode_local == 1 || game_mode_remote == 1){
-					gdispDrawString(120, 80, multi_second[0],	font1, White);
-				}
-				else if(game_mode_local == 0 || game_mode_remote == 0){
-					gdispDrawString(120, 80, multi[0],	font1, White);
-				}
-				gdispDrawString(120, 120, settings[0],	font1, White);
-				gdispDrawString(120, 160, cheats[0],	font1, Yellow);
-				gdispDrawString(120, 200, highscores[0],	font1, White);
-				gdispDrawString(110, 160, dash[0], font1, Yellow);
-				gdispDrawString(195, 160, dash_reverse[0], font1, Yellow);
-				if (buttonCount(BUT_E))
-					xQueueSend(StateQueue, &next_state_signal_cheats, 100);
-				break;
-			case HIGHSCORES_SELECT:
-				gdispDrawString(120, 40, single[0],	font1, White);
-				if(game_mode_local == 1 || game_mode_remote == 1){
-					gdispDrawString(120, 80, multi_second[0],	font1, White);
-				}
-				else if(game_mode_local == 0 || game_mode_remote == 0){
-					gdispDrawString(120, 80, multi[0],	font1, White);
-				}
-				gdispDrawString(120, 120, settings[0],	font1, White);
-				gdispDrawString(120, 160, cheats[0],	font1, White);
-				gdispDrawString(120, 200, highscores[0],	font1, Yellow);
-				gdispDrawString(110, 200, dash[0], font1, Yellow);
-				gdispDrawString(195, 200, dash_reverse[0], font1, Yellow);
-				if (buttonCount(BUT_E))
-					xQueueSend(StateQueue, &next_state_signal_highscores, 100);
-				break;
 			}
 			if(game_mode_local == 1 && game_mode_remote == 0){
 				is_master = true;

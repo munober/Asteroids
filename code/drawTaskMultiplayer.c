@@ -90,10 +90,10 @@ void drawTaskMultiplayer (void * params){
  */
 	const char pause_byte = 251;
 	const char quit_byte = 252;
-	const char sync_byte_1 = 253; // initial byte to send to establish master and slave
-	const char sync_byte_2 = 254; // tells remote to be slave
+	const char sync_byte_1 = 253; // used in main menu for master/slave sync
+	const char sync_byte_2 = 254; // used in main menu for master/slave sync
 	const char sync_byte_3 = 255; // ack to remote to tell is slave
-	TickType_t last_sync = xTaskGetTickCount();
+	TickType_t game_start = xTaskGetTickCount();
 	TickType_t sync_period = 200;
 
 	char uart_input = 0;
@@ -106,6 +106,7 @@ void drawTaskMultiplayer (void * params){
 	boolean state_pause_remote = false;
 	boolean state_quit_remote = false;
 	boolean no_sync = true;
+	boolean ready_to_start = false;
 	int last_sent = 0;
 	int last_received = 0;
 
@@ -166,6 +167,11 @@ void drawTaskMultiplayer (void * params){
 			if(uart_input == quit_byte){
 				state_quit_remote = true;
 			}
+			if(uart_connected == true){
+				if(uart_input != sync_byte_1 && uart_input != sync_byte_2){
+					ready_to_start = true;
+				}
+			}
 
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
@@ -183,9 +189,9 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 
-//			Only runs if UART is connected, game not paused and remote hasn't quit
+//			Only runs if UART is connected and other player is also on this screen, game not paused and remote hasn't quit
 			if(uart_connected == true && state_pause_local == false && state_pause_remote == false &&
-					state_quit_remote == false){
+					state_quit_remote == false && ready_to_start == true){
 				if(last_received){
 					if(uart_input >= 1 && uart_input <= 80){
 						remote_y = (uart_input - 1) * 3;
@@ -492,6 +498,11 @@ void drawTaskMultiplayer (void * params){
 			if(uart_connected == true){
 				sprintf(user_help, "> Connected. <");
 				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
+				if(ready_to_start == false){
+					sprintf(user_help, "> Waiting for the other player. <");
+					gdispFillArea(60, DISPLAY_CENTER_Y + 20, 200, 10, Orange);
+					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
+				}
 			}
 			else if(uart_connected == false && state_quit_remote == false){
 				sprintf(user_help, "> UART disconnected. <");
@@ -509,7 +520,7 @@ void drawTaskMultiplayer (void * params){
 			}
 
 //			Drawing 2 player ships
-			if(uart_connected == true){
+			if(uart_connected == true && ready_to_start == true){
 				gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
 				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 	//			Drawing bullets
