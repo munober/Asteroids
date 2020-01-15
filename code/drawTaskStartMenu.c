@@ -157,10 +157,10 @@ void drawTaskStartMenu(void * params) {
 				gdispDrawString(110, 40, dash[0], font1, Yellow);
 				gdispDrawString(195, 40, dash_reverse[0], font1, Yellow);
 				if (buttonCount(BUT_E)){
-					if(game_mode_local == 0 || game_mode_remote == 0){
+					if(game_mode_local == game_mode_remote){
 						xQueueSend(StateQueue, &next_state_signal_single, 100);
 					}
-					else if(game_mode_local == 1 || game_mode_remote == 1){
+					if(game_mode_local != game_mode_remote){
 						xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
 					}
 				}
@@ -179,7 +179,9 @@ void drawTaskStartMenu(void * params) {
 					gdispDrawString(110, 80, dash[0], font1, Yellow);
 //					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
 					if(buttonCount(BUT_E)){
-						game_mode_local = !game_mode_local;
+						if(game_mode_remote == 0){
+							game_mode_local = !game_mode_local;
+						}
 					}
 				break;
 			case SETTINGS_SELECT:
@@ -229,26 +231,23 @@ void drawTaskStartMenu(void * params) {
 					xQueueSend(StateQueue, &next_state_signal_highscores, 100);
 				break;
 			}
-//			if(uart_connected == true){
-				if(game_mode_local == 1 && game_mode_remote == 0){
-					is_master = true;
-					remote_is_master = false;
-				}
-				else if(game_mode_local == 0 && game_mode_remote == 0){
-					is_master = false;
-					remote_is_master = false;
-				}
-				else if(game_mode_local == 0 && game_mode_remote == 1){
-					is_master = false;
-					remote_is_master = true;
-				}
-//			}
-//			if(uart_connected == false){
-//				is_master = false;
-//				remote_is_master = false;
-//				game_mode_local = 0;
-//				game_mode_remote = 0;
-//			}
+			if(game_mode_local == 1 && game_mode_remote == 0){
+				is_master = true;
+				remote_is_master = false;
+			}
+			else if(game_mode_local == 0 && game_mode_remote == 0){
+				is_master = false;
+				remote_is_master = false;
+			}
+			else if(game_mode_local == 0 && game_mode_remote == 1){
+				is_master = false;
+				remote_is_master = true;
+			}
+			else if(game_mode_local == 1 && game_mode_remote == 1){
+				is_master = false;
+				remote_is_master = false;
+				game_mode_local = 0;
+			}
 			uart_input = 0;
 		}
 	}
