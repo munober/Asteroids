@@ -500,6 +500,7 @@ void drawTaskMultiplayer (void * params){
 				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
 				if(ready_to_start == false){
 					sprintf(user_help, "> Waiting for the other player. <");
+					UART_SendData(sync_byte_3);
 					gdispFillArea(60, DISPLAY_CENTER_Y + 20, 200, 10, Orange);
 					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
 				}
@@ -520,7 +521,7 @@ void drawTaskMultiplayer (void * params){
 			}
 
 //			Drawing 2 player ships
-			if(uart_connected == true && ready_to_start == true){
+			if(uart_connected == true){
 				gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
 				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 	//			Drawing bullets
@@ -539,49 +540,46 @@ void drawTaskMultiplayer (void * params){
 			}
 			to_send_x = local_x / 4 + 1;
 			to_send_y = local_y / 3 + 1;
-			switch(heading_direction){
-			case HEADING_ANGLE_NULL:
+			switch((int) joystick_internal.angle){
+			case JOYSTICK_ANGLE_NULL:
 				to_send_x += 80;
 				to_send_y += 80;
 				break;
-			case HEADING_ANGLE_E:
+			case JOYSTICK_ANGLE_E:
 				to_send_x += 160;
 				to_send_y += 80;
 				break;
-			case HEADING_ANGLE_NE:
+			case JOYSTICK_ANGLE_NE:
 				to_send_x += 160;
 				break;
-			case HEADING_ANGLE_SW:
+			case JOYSTICK_ANGLE_SW:
 				to_send_y += 160;
 				break;
-			case HEADING_ANGLE_S:
+			case JOYSTICK_ANGLE_S:
 				to_send_x += 80;
 				to_send_y += 160;
 				break;
-			case HEADING_ANGLE_SE:
+			case JOYSTICK_ANGLE_SE:
 				to_send_x += 160;
 				to_send_y += 160;
 				break;
-			case HEADING_ANGLE_N:
+			case JOYSTICK_ANGLE_N:
 				to_send_x += 80;
 				break;
-			case HEADING_ANGLE_W:
+			case JOYSTICK_ANGLE_W:
 				to_send_y += 80;
 				break;
 			}
 
 			if(show_debug == true){
 				// Using lowpoly position for local version for debugging for consistency with remote
-				sprintf(user_help, "UART> Local: %d, %d, %d | Remote: %d, %d", to_send_x, to_send_y, last_sent, uart_input, last_received);
-				gdispDrawString(TEXT_X(user_help[0]), 200, user_help[0], font1, White);
-				// Using lowpoly position for local version for debugging for consistency with remote
 				sprintf(user_help, "Position> Local: %d, %d | Remote: %d, %d", local_x_lowpoly, local_y_lowpoly, remote_x, remote_y);
-				gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0], font1, White);
+				gdispDrawString(TEXT_X(user_help[0]), 200, user_help[0], font1, White);
 				// Local and remote bullet heading
-				sprintf(user_help, "Bullet heading> Local: %d | Remote: %d", heading_direction, remote_bullet_dir_total);
-				gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, White);
+				sprintf(user_help, "Bullet heading> Local: %d | Remote: %d", ((int) joystick_internal.angle), remote_bullet_dir_total);
+				gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0], font1, White);
 			}
-			if(state_pause_local == false){
+			if(state_pause_local == false && ready_to_start == true){
 				if(last_sent){
 					UART_SendData(to_send_y);
 				}
@@ -590,7 +588,7 @@ void drawTaskMultiplayer (void * params){
 				}
 				last_sent = !last_sent;
 			}
-			else if(state_pause_local == true){
+			else if(state_pause_local == true && ready_to_start == true){
 				UART_SendData(pause_byte);
 			}
 
