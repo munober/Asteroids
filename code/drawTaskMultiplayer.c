@@ -203,7 +203,7 @@ void drawTaskMultiplayer (void * params){
 					}
 					else if(uart_input >= 161 && uart_input <= 240){
 						remote_y = (uart_input - 161) * 3;
-						remote_bullet_dir_y = HEADING_ANGLE_W;
+						remote_bullet_dir_y = HEADING_ANGLE_S;
 					}
 				}
 				else if(!last_received){
