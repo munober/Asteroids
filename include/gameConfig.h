@@ -29,10 +29,14 @@
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
 #define STARTING_LIVES_LEVEL_THREE          9
-#define STARTING_LIVES_MULTIPLAYER			9999
+#define STARTING_LIVES_MULTIPLAYER	    9999
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
+// Speed of saucer blaster
+#define SAUCER_BLASTER_SPEED					1
+// Speed of asteroids
+#define ASTEROID_SPEED							0.5
 
 // Inertia and movement
 #define SPEED_SCALING_FACTOR					32 // dividing joystick input by this factor
@@ -64,10 +68,11 @@
 
 // Number of asteroids to destroy in each level
 #define TO_DESTROY_LEVEL_1_SMALL            20
-#define TO_DESTROY_LEVEL_2_SMALL            15
+#define TO_DESTROY_LEVEL_2_SMALL            20
 #define TO_DESTROY_LEVEL_2_MEDIUM           5
-#define TO_DESTROY_LEVEL_3_MEDIUM           9000
-#define TO_DESTROY_LEVEL_3_LARGE            9000
+#define TO_DESTROY_LEVEL_3_SMALL			60
+#define TO_DESTROY_LEVEL_3_MEDIUM           30
+#define TO_DESTROY_LEVEL_3_LARGE            10
 
 // Respawn boundaries in each level (will respawn as long as number left is above this)
 #define RESPAWN_SMALL_LEVEL_1               10
@@ -89,10 +94,14 @@
 // MULTIPLAYER
 #define HIT_LIMIT_PLAYER_SHOT_MULTI				8
 
+// Saucers
+#define SAUCER_1_SPAWN_TIME					9999
+#define SAUCER_2_SPAWN_TIME					9999
+
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score
 #define LEVEL_TWO_SCORE_THRESHOLD          8000
-#define LEVEL_THREE_SCORE_THRESHOLD        17000
+#define LEVEL_THREE_SCORE_THRESHOLD        18000
 #define BEAT_GAME_SCORE_THRESHOLD          21000
 
 // UART Configuration

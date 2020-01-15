@@ -202,10 +202,11 @@ void drawTaskSingle(void * params) {
 	// Initializing saucers
 	struct saucer saucer_1 = { { 0 } };
 	saucer_1.route_number = super_random % 6;
-	saucer_1.position.x = -10;
+	saucer_1.position.x = -15;
 	saucer_1.position.y = saucer_routes[saucer_1.route_number][0];
 	saucer_1.turning = false;
 	saucer_1.remain_hits = two;
+	saucer_1.shot_number = 0;
 	for (i = 0; i <= 9; i++) {
 		saucer_1.shot_fired[i] = false;
 		saucer_1.shots[i].x = 0;
@@ -213,10 +214,11 @@ void drawTaskSingle(void * params) {
 	}
 	struct saucer saucer_2 = { { 0 } };
 	saucer_2.route_number = (super_random + 3) % 6;
-	saucer_2.position.x = -10;
+	saucer_2.position.x = -15;
 	saucer_2.position.y = saucer_routes[saucer_2.route_number][0];
 	saucer_2.turning = false;
 	saucer_2.remain_hits = two;
+	saucer_2.shot_number = 0;
 	for (i = 0; i <= 9; i++) {
 		saucer_2.shot_fired[i] = false;
 		saucer_2.shots[i].x = 0;
@@ -233,7 +235,7 @@ void drawTaskSingle(void * params) {
 	unsigned int moved = 0;
 
 	char heading_direction;
-	struct coord_player inertia_speed;
+	struct coord_flt inertia_speed;
 	TickType_t inertia_start;
 	TickType_t inertia_period = 100;
 
@@ -535,7 +537,7 @@ void drawTaskSingle(void * params) {
 					break;
 				case JOYSTICK_ANGLE_SW:
 					shots[incr].position.x -= LASER_BLASTER_SPEED;
-					saucer_2.ratios[saucer_2.shot_number] =	shots[incr].position.y += LASER_BLASTER_SPEED;
+					shots[incr].position.y += LASER_BLASTER_SPEED;
 					break;
 				case JOYSTICK_ANGLE_SE:
 					shots[incr].position.x += LASER_BLASTER_SPEED;
@@ -579,8 +581,8 @@ void drawTaskSingle(void * params) {
 			// North-East movement of asteroid 1
 			// rand() % 231 returns a random number between 0 and 230
 			if (asteroid_1.position_locked == false) {
-				asteroid_1.position.x = asteroid_1.position.x + 1;
-				asteroid_1.position.y = asteroid_1.position.y - 1;
+				asteroid_1.position.x = asteroid_1.position.x + (1*ASTEROID_SPEED);
+				asteroid_1.position.y = asteroid_1.position.y - (1*ASTEROID_SPEED);
 				if ((asteroid_1.position.x >= 330)
 						|| (asteroid_1.position.y <= -10)) {
 					asteroid_1.position.x = -10;
@@ -590,8 +592,8 @@ void drawTaskSingle(void * params) {
 
 			// South-East movement of asteroid 2
 			if (asteroid_2.position_locked == false) {
-				asteroid_2.position.x = asteroid_2.position.x + 1;
-				asteroid_2.position.y = asteroid_2.position.y + 1;
+				asteroid_2.position.x = asteroid_2.position.x + (1*ASTEROID_SPEED);
+				asteroid_2.position.y = asteroid_2.position.y + (1*ASTEROID_SPEED);
 				if ((asteroid_2.position.x >= 330)
 						|| (asteroid_2.position.y >= 250)) {
 					asteroid_2.position.x = -10;
@@ -601,7 +603,7 @@ void drawTaskSingle(void * params) {
 
 			// South movement of asteroid 3
 			if (asteroid_3.position_locked == false) {
-				asteroid_3.position.y = asteroid_3.position.y + 1;
+				asteroid_3.position.y = asteroid_3.position.y + (1*ASTEROID_SPEED);
 				if (asteroid_3.position.y >= 250) {
 					asteroid_3.position.x = rand() % 315;
 					asteroid_3.position.y = -10;
@@ -610,7 +612,7 @@ void drawTaskSingle(void * params) {
 
 			// West movement of asteroid 4
 			if (asteroid_4.position_locked == false) {
-				asteroid_4.position.x = asteroid_4.position.x - 1;
+				asteroid_4.position.x = asteroid_4.position.x - (1*ASTEROID_SPEED);
 				if (asteroid_4.position.x <= -10) {
 					asteroid_4.position.x = 320;
 					asteroid_4.position.y = rand() % 231;
@@ -619,8 +621,8 @@ void drawTaskSingle(void * params) {
 
 			// West-South-West movement of asteroid 5
 			if (asteroid_5.position_locked == false) {
-				asteroid_5.position.x = asteroid_5.position.x - 2;
-				asteroid_5.position.y = asteroid_5.position.y + 1;
+				asteroid_5.position.x = asteroid_5.position.x - (2*ASTEROID_SPEED);
+				asteroid_5.position.y = asteroid_5.position.y + (1*ASTEROID_SPEED);
 				if ((asteroid_5.position.x <= -10)
 						|| (asteroid_5.position.y >= 250)) {
 					asteroid_5.position.x = 320;
@@ -630,8 +632,8 @@ void drawTaskSingle(void * params) {
 
 			// North-East movement of asteroid 6
 			if (asteroid_6.position_locked == false) {
-				asteroid_6.position.x = asteroid_6.position.x + 1;
-				asteroid_6.position.y = asteroid_6.position.y - 1;
+				asteroid_6.position.x = asteroid_6.position.x + (1*ASTEROID_SPEED);
+				asteroid_6.position.y = asteroid_6.position.y - (1*ASTEROID_SPEED);
 				if ((asteroid_6.position.x >= 330)
 						|| (asteroid_6.position.y <= -10)) {
 					asteroid_6.position.x = rand() % 315;
@@ -641,8 +643,8 @@ void drawTaskSingle(void * params) {
 
 			// North-West movement of asteroid 7
 			if (asteroid_7.position_locked == false) {
-				asteroid_7.position.x = asteroid_7.position.x - 1;
-				asteroid_7.position.y = asteroid_7.position.y - 1;
+				asteroid_7.position.x = asteroid_7.position.x - (1*ASTEROID_SPEED);
+				asteroid_7.position.y = asteroid_7.position.y - (1*ASTEROID_SPEED);
 				if ((asteroid_7.position.x <= -10)
 						|| (asteroid_7.position.y <= -10)) {
 					asteroid_7.position.x = rand() % 315;
@@ -652,8 +654,8 @@ void drawTaskSingle(void * params) {
 
 			// South-South-West movement of asteroid 8
 			if (asteroid_8.position_locked == false) {
-				asteroid_8.position.x = asteroid_8.position.x - 1;
-				asteroid_8.position.y = asteroid_8.position.y + 2;
+				asteroid_8.position.x = asteroid_8.position.x - (1*ASTEROID_SPEED);
+				asteroid_8.position.y = asteroid_8.position.y + (2*ASTEROID_SPEED);
 				if ((asteroid_8.position.x <= -10)
 						|| (asteroid_8.position.y >= 250)) {
 					asteroid_8.position.x = 60 + rand() % 241;
@@ -663,8 +665,8 @@ void drawTaskSingle(void * params) {
 
 			// South-South-East movement of asteroid 9
 			if (asteroid_9.position_locked == false) {
-				asteroid_9.position.x = asteroid_9.position.x + 1;
-				asteroid_9.position.y = asteroid_9.position.y + 2;
+				asteroid_9.position.x = asteroid_9.position.x + (1*ASTEROID_SPEED);
+				asteroid_9.position.y = asteroid_9.position.y + (2*ASTEROID_SPEED);
 				if ((asteroid_9.position.x >= 330)
 						|| (asteroid_9.position.y >= 250)) {
 					asteroid_9.position.x = rand() % 241;
@@ -674,8 +676,8 @@ void drawTaskSingle(void * params) {
 
 			// West-North-West movement of asteroid 10
 			if (asteroid_10.position_locked == false) {
-				asteroid_10.position.x = asteroid_10.position.x - 2;
-				asteroid_10.position.y = asteroid_10.position.y - 1;
+				asteroid_10.position.x = asteroid_10.position.x - (2*ASTEROID_SPEED);
+				asteroid_10.position.y = asteroid_10.position.y - (1*ASTEROID_SPEED);
 				if ((asteroid_10.position.x <= -10)
 						|| (asteroid_10.position.y <= -10)) {
 					asteroid_10.position.x = 320;
@@ -708,8 +710,7 @@ void drawTaskSingle(void * params) {
 
 				if (saucer_1.turning == true) {
 					if (saucer_routes[saucer_1.route_number][saucer_1.turn_number]
-							> saucer_routes[saucer_1.route_number][saucer_1.turn_number
-									- 1]) {
+							> saucer_routes[saucer_1.route_number][saucer_1.turn_number - 1]) {
 						saucer_1.position.x++;
 						saucer_1.position.y = saucer_1.position.y + 2;
 					} else {
@@ -727,7 +728,7 @@ void drawTaskSingle(void * params) {
 			// SACUER #1 fire
 			if ((timer_1halfsec == 1) && (time_passed > 20) && (saucer_1.remain_hits != none)) {
 				if ((player.position.y - saucer_1.position.y != 0) && (player.position.x - saucer_1.position.x != 0)) {
-					saucer_1.ratios[saucer_1.shot_number] = (player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y);
+					saucer_1.ratios[saucer_1.shot_number] = abs((player.position.x - saucer_1.position.x) / (player.position.y - saucer_1.position.y));
 				}
 				else {
 					saucer_1.ratios[saucer_1.shot_number] = 1;
@@ -791,7 +792,7 @@ void drawTaskSingle(void * params) {
 			// SACUER #2 fire
 			if ((timer_2sec == 1) && (time_passed > 35) && (saucer_2.remain_hits != none)) {
 				if ((player.position.y - saucer_2.position.y != 0) && (player.position.x - saucer_2.position.x != 0)) {
-					saucer_2.ratios[saucer_2.shot_number] = (player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y);
+					saucer_2.ratios[saucer_2.shot_number] = abs((player.position.x - saucer_2.position.x) / (player.position.y - saucer_2.position.y));
 				}
 				else {
 					saucer_2.ratios[saucer_2.shot_number] = 1;
@@ -816,33 +817,33 @@ void drawTaskSingle(void * params) {
 			}
 
 			// SAUCER #1 and #2 shots movement
-			// ratio is multiplied to x increment only, because ratio = x/y. y increment is always 2.
+			// ratio is multiplied to x increment only, because ratio = x/y.
 			for (i = 0; i <= 1; i++) {
 				if (the_saucers[i]->remain_hits != none) {
 					for (j = 0; j <= 9; j++) {
 						if (the_saucers[i]->shot_fired[j] == true) {
-							if (the_saucers[i]->ratios[the_saucers[i]->shot_number] > 3.0)
-								the_saucers[i]->ratios[the_saucers[i]->shot_number] = 1;
-							switch (the_saucers[i]->shot_direction[i]) {
+							if (the_saucers[i]->ratios[j] > 3.0)
+								the_saucers[i]->ratios[j] = 1;
+							switch (the_saucers[i]->shot_direction[j]) {
 							case up_and_left:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												- the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - 2;
+												- the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - SAUCER_BLASTER_SPEED;
 								break;
 							case up_and_right:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												+ the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - 2;
+												+ the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y - SAUCER_BLASTER_SPEED;
 								break;
 							case down_and_right:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												+ the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + 2;
+												+ the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + SAUCER_BLASTER_SPEED;
 								break;
 							case down_and_left:
 								the_saucers[i]->shots[j].x = the_saucers[i]->shots[j].x
-												- the_saucers[i]->ratios[j] * 2;
-								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + 2;
+												- the_saucers[i]->ratios[j] * SAUCER_BLASTER_SPEED;
+								the_saucers[i]->shots[j].y = the_saucers[i]->shots[j].y + SAUCER_BLASTER_SPEED;
 								break;
 							}
 						}
@@ -873,7 +874,8 @@ void drawTaskSingle(void * params) {
 			 */
 			for (i = 0; i <= 9; i++) {
 				if ((abs(all_asteroids[i]->position.x - player.position.x) <= HIT_LIMIT_SMALL)
-						&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_SMALL)) {
+						&& (abs(all_asteroids[i]->position.y - player.position.y) <= HIT_LIMIT_SMALL)
+						&& (all_asteroids[i]->remain_hits != none)) {
 					player.state = hit;
 					hit_timestamp = xTaskGetTickCount();
 				}

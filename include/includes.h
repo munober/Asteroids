@@ -83,17 +83,17 @@ typedef enum {
 	is_master = 1
 } uart_master_or_slave;
 
+
 struct coord_draw {
 	int16_t x;
 	int16_t y;
 };
-
-struct coord_player{
-	float x;
-	float y;
+struct coord_int {
+	int16_t x;
+	int16_t y;
 };
 
-struct coord_saucer_shots {
+struct coord_flt {
 	float x;
 	float y;
 };
@@ -129,11 +129,30 @@ typedef enum {
 	down_and_left = 3
 } saucer_shot_direction;
 
+typedef enum {
+	no_ort = 0,
+	N = 1,
+	NE = 2,
+	E = 3,
+	SE = 4,
+	S = 5,
+	SW = 6,
+	W = 7,
+	NW = 8
+} compass_orientation;
+
+typedef enum {
+	left = 0,
+	right = 1,
+	up = 2,
+	down = 3
+} sides;
+
 struct players_ship {
-	struct coord_player position;
-	struct coord_player position_old;
-	struct coord_player speed_current;
-	struct coord_player speed_goal;
+	struct coord_flt speed_current;
+	struct coord_flt speed_goal;
+	struct coord_flt position;
+	struct coord_flt position_old;
 	player_status state;
 };
 
@@ -144,21 +163,24 @@ struct player_input{
 };
 
 struct asteroid {
-    struct coord_draw position;
-    struct coord_draw spawn_position;
+    struct coord_flt position;
+    struct coord_int spawn_position;
+    sides spawn_side;
+    compass_orientation initial_orientation;
+    compass_orientation orientation;
     hit_counter remain_hits;
     int16_t shape;
     boolean position_locked;
 };
 
 struct saucer {
-	struct coord_draw position;
+	struct coord_int position;
 	boolean position_locked;
 	int16_t route_number;
 	int16_t turn_number;
 	boolean turning;
     hit_counter remain_hits;
-	struct coord_saucer_shots shots[10];
+	struct coord_flt shots[10];
 	saucer_shot_direction shot_direction[10];
 	boolean shot_fired[10];
 	uint8_t shot_number;
@@ -166,7 +188,7 @@ struct saucer {
 };
 
 struct shot {
-	struct coord_draw position;
+	struct coord_int position;
 	int16_t angle;
 	shot_status status;
 };

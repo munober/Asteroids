@@ -73,8 +73,8 @@ void drawTaskMultiplayer (void * params){
 	float angle_y = 0;
 	unsigned int moved = 0;
 	char heading_direction = HEADING_ANGLE_NULL;
-	struct coord_player inertia_speed;
-	struct coord_player inertia_speed_final;
+	struct coord_flt inertia_speed;
+	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
 
 //	UART
