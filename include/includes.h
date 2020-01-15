@@ -131,6 +131,13 @@ typedef enum {
 	NW = 8
 } compass_orientation;
 
+typedef enum {
+	left = 0,
+	right = 1,
+	up = 2,
+	down = 3
+} sides;
+
 struct players_ship {
 	struct coord_flt position;
 	struct coord_flt position_old;
@@ -146,6 +153,8 @@ struct player_input{
 struct asteroid {
     struct coord_flt position;
     struct coord_int spawn_position;
+    sides spawn_side;
+    compass_orientation initial_orientation;
     compass_orientation orientation;
     hit_counter remain_hits;
     int16_t shape;

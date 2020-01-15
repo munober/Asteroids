@@ -1055,53 +1055,6 @@ void drawTaskSingleLevel2 (void * params){
 				}
 			}
 
-//			for(incr = 0; incr < input.shots_fired; incr++){
-//				for (i = 5; i <= 9; i++) {
-//					if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
-//							&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
-//						if(all_asteroids[i]->remain_hits != none) {
-//							all_asteroids[i]->position.x = 0;
-//							all_asteroids[i]->position.y = 0;
-//							all_asteroids[i]->position_locked = true;
-//							all_asteroids[i]->remain_hits = none;
-//							score += POINTS_ASTEROID_SMALL;
-//							one_asteroid_hit_small = true;
-//							asteroids_to_destroy_small--;
-//						}
-//					}
-//				}
-//			}
-//			for(incr = 0; incr < input.shots_fired; incr++){
-//				for (i = 0; i <= 4; i++) {
-//					if(all_asteroids[i]->remain_hits == two){
-//						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
-//								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)) {
-//							if(all_asteroids[i]->remain_hits != one) {
-//								all_asteroids[i]->remain_hits = one;
-//								score += POINTS_ASTEROID_MEDIUM;
-//								one_asteroid_hit_medium = true;
-//								asteroids_to_destroy_medium--;
-//								hit_timestamp_laser = xTaskGetTickCount();
-//							}
-//						}
-//					}
-//					else if((all_asteroids[i]->remain_hits == one) && ((xTaskGetTickCount() - hit_timestamp_laser) > shot_delay)){
-//						if ((abs(all_asteroids[i]->position.x - shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
-//								&& (abs(all_asteroids[i]->position.y - shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)) {
-//							if(all_asteroids[i]->remain_hits != none) {
-//								all_asteroids[i]->position.x = 0;
-//								all_asteroids[i]->position.y = 0;
-//								all_asteroids[i]->position_locked = true;
-//								all_asteroids[i]->remain_hits = none;
-//								score += POINTS_ASTEROID_SMALL;
-//								one_asteroid_hit_small = true;
-//								asteroids_to_destroy_small--;
-//							}
-//						}
-//					}
-//				}
-//			}
-
 			/* Check if player was hit by saucer fire
 			 * Threshold zone is a square around the players ship center with 6px side length
 			 */

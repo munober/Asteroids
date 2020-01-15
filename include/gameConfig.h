@@ -56,8 +56,9 @@
 #define TO_DESTROY_LEVEL_1_SMALL            20
 #define TO_DESTROY_LEVEL_2_SMALL            20
 #define TO_DESTROY_LEVEL_2_MEDIUM           5
-#define TO_DESTROY_LEVEL_3_MEDIUM           9000
-#define TO_DESTROY_LEVEL_3_LARGE            9000
+#define TO_DESTROY_LEVEL_3_SMALL			60
+#define TO_DESTROY_LEVEL_3_MEDIUM           30
+#define TO_DESTROY_LEVEL_3_LARGE            10
 
 // Respawn boundaries in each level (will respawn as long as number left is above this)
 #define RESPAWN_SMALL_LEVEL_1               10
@@ -75,6 +76,10 @@
 #define HIT_LIMIT_SMALL				        6
 #define HIT_LIMIT_MEDIUM			        8
 #define HIT_LIMIT_LARGE				        12 
+
+// Saucers
+#define SAUCER_1_SPAWN_TIME					9999
+#define SAUCER_2_SPAWN_TIME					9999
 
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score
