@@ -405,15 +405,19 @@ void drawTaskMultiplayer (void * params){
 	//			Make player show up at the other side of the screen when reaching screen border
 				if(player_local.position.x >= DISPLAY_SIZE_X){
 					player_local.position.x = 0;
+					player_local.position.y += 10;
 				}
 				else if(player_local.position.x <= 0){
 					player_local.position.x = DISPLAY_SIZE_X;
+					player_local.position.y += 10;
 				}
 				if(player_local.position.y >= DISPLAY_SIZE_Y){
 					player_local.position.y = 0;
+					player_local.position.x += 10;
 				}
 				else if(player_local.position.y <= 0){
 					player_local.position.y = DISPLAY_SIZE_Y;
+					player_local.position.x += 10;
 				}
 
 	//			Doing actual player ship rotation here
