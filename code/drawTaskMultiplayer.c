@@ -605,9 +605,13 @@ void drawTaskMultiplayer (void * params){
 // 			Quitting multiplayer screen
 			if(state_pause_local == true || state_pause_remote == true){
 				if(state_quit_remote == false){
-					sprintf(user_help, "> GAME PAUSED. D to quit. <");
-					gdispFillArea(75, DISPLAY_CENTER_Y + 20, 160, 10, Yellow);
+					sprintf(user_help, "> GAME PAUSED. E to resume. <");
+					gdispFillArea(75, DISPLAY_CENTER_Y + 20, 175, 10, Yellow);
 					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
+
+					sprintf(user_help, "> D to quit. <");
+					gdispFillArea(75, DISPLAY_CENTER_Y + 30, 175, 10, Yellow);
+					gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 30, user_help[0], font1, Black);
 				}
 				else if(state_quit_remote == true){
 					sprintf(user_help, "Other player quit. D to exit.");
