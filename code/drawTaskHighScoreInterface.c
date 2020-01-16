@@ -36,7 +36,7 @@ void drawTaskHighScoreInterface(void * params) {
 	unsigned int menu_select = NAME_INPUT;
 	unsigned int edit_mode = 0;
 	unsigned int selected_letter = 0;
-	char name[] = "BBYYDA";
+	char name[] = "------";
 
 	char user_help[1][70] = {"HIGH SCORES. Navigate with joystick, select with E."};
 	char done[1][70] = {"Done"};
@@ -78,19 +78,25 @@ void drawTaskHighScoreInterface(void * params) {
 					}
 
 					if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
-						if(name[selected_letter] < 'Z'){
+						if(name[selected_letter] == '-'){
+							name[selected_letter] = 'A';
+						}
+						else if(name[selected_letter] < 'Z'){
 							name[selected_letter]++;
 						}
 						else if(name[selected_letter] == 'Z'){
-							name[selected_letter] = 'A';
+							name[selected_letter] = '-';
 						}
 					}
 					else if(joystick_internal.pulse.y == JOYSTICK_PULSE_UP){
-						if(name[selected_letter] > 'A'){
+						if(name[selected_letter] == '-'){
+							name[selected_letter] = 'Z';
+						}
+						else if(name[selected_letter] > 'A'){
 							name[selected_letter]--;
 						}
 						else if(name[selected_letter] =='A'){
-							name[selected_letter] = 'Z';
+							name[selected_letter] = '-';
 						}
 					}
 

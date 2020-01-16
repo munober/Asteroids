@@ -17,7 +17,7 @@ extern QueueHandle_t LifeCountQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
-extern QueueHandle_t HighScoresQueue;
+extern QueueHandle_t HighScoresQueueMP;
 extern QueueHandle_t LocalMasterQueue;
 
 void drawTaskMultiplayer (void * params){
@@ -519,7 +519,7 @@ void drawTaskMultiplayer (void * params){
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 30, user_help[0], font1, Black);
 
 				if(buttonCount(BUT_D)){
-					xQueueSend(HighScoresQueue, &score, 0);
+					xQueueSend(HighScoresQueueMP, &score, 0);
 					goto start;
 				}
 			}
@@ -615,7 +615,7 @@ void drawTaskMultiplayer (void * params){
 				}
 				if(buttonCount(BUT_D)){
 					UART_SendData(quit_byte);
-					xQueueSend(HighScoresQueue, &score, 0);
+					xQueueSend(HighScoresQueueMP, &score, 0);
 					goto start;
 				}
 			}
@@ -625,7 +625,7 @@ void drawTaskMultiplayer (void * params){
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
 				if(buttonCount(BUT_D)){
 					UART_SendData(quit_byte);
-					xQueueSend(HighScoresQueue, &score, 0);
+					xQueueSend(HighScoresQueueMP, &score, 0);
 					goto start;
 				}
 			}
