@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "drawTaskHighScore.h"
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
@@ -21,18 +22,18 @@ extern QueueHandle_t HighScoresQueueMP;
 extern QueueHandle_t LocalMasterQueue;
 
 void drawTaskMultiplayer (void * params){
-	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
+	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	boolean executed = false;
 	start:
 	if(executed == true){
-		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
+		xQueueSend(StateQueue, &next_state_signal_menu, 100);
 	}
 	executed = true;
 	boolean is_master = false;
 	boolean remote_is_master = false;
-	int score[2];
-	score[0] = 0;
-	score[1] = 0;
+	struct highscore score;
+	score.score = 50;
+	score.score_remote = 50;
 	char user_help[1][70];
 	struct joystick_angle_pulse joystick_internal;
 	boolean show_debug = false;
@@ -640,9 +641,9 @@ void drawTaskMultiplayer (void * params){
 //			Printing scores for both players
 			sprintf(user_help, "Score: ");
 			gdispDrawString(15, 5, user_help, font1, White);
-			sprintf(user_help, "%d", score[0]);
+			sprintf(user_help, "%d", score.score);
 			gdispDrawString(60, 5, user_help, font1, White);
-			sprintf(user_help, "%d", score[1]);
+			sprintf(user_help, "%d", score.score_remote);
 			gdispDrawString(60, 15, user_help, font1, Yellow);
 
 //			Resetting received uart byte to guarantee quick detection of connection loss

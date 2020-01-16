@@ -11,6 +11,7 @@
 
 typedef struct highscore{
 	uint16_t score;
+	uint16_t score_remote;
 	char tag[1][10];
 } highscore_t;
 
