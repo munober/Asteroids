@@ -76,7 +76,7 @@ void drawTaskSingleLevel2 (void * params){
 	}
 
 	boolean state_pause = false;
-	boolean no_extra_life = false;
+	boolean no_extra_life = true;
 	TickType_t new_life_timer = xTaskGetTickCount();
 
 //	Variables to store the number of lives
@@ -1129,7 +1129,7 @@ void drawTaskSingleLevel2 (void * params){
 					gdispDrawString(5, 10, str, font1, White);
 
 					// Life count
-					if(score >= GET_MORE_LIVES_LEVEL_ONE && no_extra_life == true){
+					if(score >= GET_MORE_LIVES_LEVEL_TWO && no_extra_life == true){
 						life_count++;
 						no_extra_life = false;
 						new_life_timer = xTaskGetTickCount();
