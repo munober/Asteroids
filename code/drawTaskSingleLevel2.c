@@ -1115,10 +1115,12 @@ void drawTaskSingleLevel2 (void * params){
 				gdispDrawString(260, 10, str, font1, White);
 
 	//			Debug print line for angle and thrust
-				sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
-				gdispDrawString(0, 230, str, font1, White);
+				if(SHOW_DEBUG_LVL_2){
+					sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
+					gdispDrawString(0, 230, str, font1, White);
+				}
 				sprintf(str2, "Level 2");
-				gdispDrawString(0, 220, str2, font1, White);
+				gdispDrawString(5, 230, str2, font1, Green);
 
 	//			Drawing the fired canon shots
 				for(incr = 0; incr < input.shots_fired; incr++){
@@ -1272,6 +1274,7 @@ void drawTaskSingleLevel2 (void * params){
 				memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
 			}
 			else if(state_pause == true){
+				gdispClear(Black);
 				sprintf(user_help, "> GAME PAUSED. E to resume. <");
 				gdispFillArea(75, DISPLAY_CENTER_Y + 20, 175, 10, Yellow);
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);

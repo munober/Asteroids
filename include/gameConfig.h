@@ -104,7 +104,18 @@
 #define LEVEL_THREE_SCORE_THRESHOLD        18000
 #define BEAT_GAME_SCORE_THRESHOLD          21000
 
+#define GET_MORE_LIVES_LEVEL_ONE			4000
+#define GET_MORE_LIVES_LEVEL_TWO			14000
+#define GET_MORE_LIVES_LEVEL_THREE			20000
+
 // UART Configuration
+
+// Misc
+#define SHOW_DEBUG_LVL_1					0
+#define SHOW_DEBUG_LVL_2					0
+#define SHOW_DEBUG_LVL_3					0
+// This actually not needed thanks to fancy live switch by double pressing BUT_C to show/hide this line
+#define SHOW_DEBUG_MULTI					0
 
 
 #endif /* INCLUDE_GAMECONFIG_H_ */

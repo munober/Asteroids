@@ -57,6 +57,8 @@ void drawTaskSingle(void * params) {
 	if(exeCount != 0){
 		xQueueSend(StateQueue, &next_state_signal_highscoresinterface, 100);
 	}
+	boolean no_extra_life = true;
+	TickType_t new_life_timer = xTaskGetTickCount();
 //	Variables to store the number of lives
 	unsigned int life_count = STARTING_LIVES_LEVEL_ONE;	// For standard game mode
 	unsigned int life_readin = 3;	// Will be filled with queue readin
@@ -947,19 +949,6 @@ void drawTaskSingle(void * params) {
 
 				// Drawing functions
 				gdispClear(Black);
-				// Simple clock at top of screen
-				if (timer_1sec == 1)
-					time_passed++;
-				sprintf(str2, "%d sec", time_passed);
-				gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
-
-				// Score board
-				sprintf(str, "Score: %i", score);
-				gdispDrawString(5, 10, str, font1, White);
-
-				// Life count
-				sprintf(str, "Lives: %d", life_count);
-				gdispDrawString(260, 10, str, font1, White);
 
 				// TRANSITION TO LEVEL 2
 				if (score >= LEVEL_TWO_SCORE_THRESHOLD) {
@@ -972,14 +961,43 @@ void drawTaskSingle(void * params) {
 				}
 
 	//			Debug print line for angle and thrust
-				sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
-				gdispDrawString(0, 230, str, font1, White);
-				sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
-				gdispDrawString(0, 220, str2, font1, White);
+				if(SHOW_DEBUG_LVL_1){
+					sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
+					gdispDrawString(0, 230, str, font1, White);
+					sprintf(str2, "Axis X: %i | Axis Y: %i", joy_direct.x, joy_direct.y);
+					gdispDrawString(0, 220, str2, font1, White);
+				}
 
 
 				// Drawing the player's ship and asteroids
 				if (life_count != 0) {
+					// Simple clock at top of screen
+					if (timer_1sec == 1)
+						time_passed++;
+					sprintf(str2, "%d sec", time_passed);
+					gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
+
+					// Score board
+					sprintf(str, "Score: %i", score);
+					gdispDrawString(5, 10, str, font1, White);
+
+					// Life count
+					if(score >= GET_MORE_LIVES_LEVEL_ONE && no_extra_life == true){
+						life_count++;
+						no_extra_life = false;
+						new_life_timer = xTaskGetTickCount();
+					}
+					if((xTaskGetTickCount() - new_life_timer < 1000) && no_extra_life == false){
+						sprintf(str, "EARNED NEW LIFE!"); // Generate game over message
+						gdispFillArea(TEXT_X(str) - 10, 25, 120, 10, Green); // White border
+						gdispDrawString(TEXT_X(str), 25, str, font1, Black);
+					}
+					sprintf(str, "Lives: %d", life_count);
+					gdispDrawString(260, 10, str, font1, White);
+
+					sprintf(str2, "Level 1");
+					gdispDrawString(5, 230, str2, font1, Green);
+
 					// Player ship
 					if (player.state == fine)
 						gdispFillConvexPoly(player.position.x, player.position.y,
@@ -1085,7 +1103,7 @@ void drawTaskSingle(void * params) {
 
 				// GAME OVER
 				else if (life_count == 0) {
-					gdispFillArea(70, DISPLAY_CENTER_Y - 2, 180, 15, White); // White border
+					gdispFillArea(65, DISPLAY_CENTER_Y - 2, 195, 15, White); // White border
 					sprintf(str, "GAME OVER. Press D to continue."); // Generate game over message
 					gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);
 					if (buttonCount(BUT_D)) { // Move into highscores menu when user presses D
@@ -1103,6 +1121,7 @@ void drawTaskSingle(void * params) {
 				memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord));
 			}
 			else if(state_pause == true){
+				gdispClear(Black);
 				sprintf(user_help, "> GAME PAUSED. E to resume. <");
 				gdispFillArea(75, DISPLAY_CENTER_Y + 20, 175, 10, Yellow);
 				gdispDrawString(TEXT_X(user_help[0]), DISPLAY_CENTER_Y + 20, user_help[0], font1, Black);
