@@ -101,7 +101,7 @@ int main(void){
 
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1000, NULL, 2, &drawTaskSingleHandle);
-	xTaskCreate(drawTaskSingleLevel2, "drawTaskSingleLevel2", 1000, NULL, 3, &drawTaskSingleLevel2Handle);
+	xTaskCreate(drawTaskSingleLevel2, "drawTaskSingleLevel2", 2000, NULL, 3, &drawTaskSingleLevel2Handle);
 	xTaskCreate(drawTaskSingleLevel3, "drawTaskSingleLevel3", 2000, NULL, 3, &drawTaskSingleLevel3Handle);
 	xTaskCreate(drawTaskMultiplayer, "drawTaskMultiplayer", 1000, NULL, 2, &drawTaskMultiplayerHandle);
 	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);

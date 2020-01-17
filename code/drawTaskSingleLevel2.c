@@ -263,13 +263,15 @@ void drawTaskSingleLevel2 (void * params){
 	struct saucer* the_saucers[2] = { &saucer_1, &saucer_2 };
 
 	struct joystick_angle_pulse joystick_internal;
-	float angle_float = 0;
+	float angle_float_current = 0;
+	float angle_float_goal = 0;
 	struct coord joy_direct;
 	struct coord joy_direct_old;
 	unsigned int moved = 0;
 
 	char heading_direction;
 	struct coord_flt inertia_speed;
+	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
 	TickType_t inertia_period = 100;
 
@@ -362,150 +364,342 @@ void drawTaskSingleLevel2 (void * params){
 				if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE) {
 					input.angle = joystick_internal.angle;
 				}
+				//			Joystick input
+							joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+							joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
 
-	//			Read joystick input directly, less delay-prone than using queues from other tasks
-
-				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-				joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
-
-	//			Local Player movement
-				if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
-					moved = 1;
-					inertia_start = xTaskGetTickCount();
-				}
-				else{
-					moved = 0;
-				}
-
-				if(moved){
-					if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
-						player.position.x += (joy_direct.x - 128) / 32;
-						player.position.y += (joy_direct.y - 128) / 32;
-						if((player.position_old.x - player.position.x) > 0){
-							if((player.position_old.y - player.position.y) > 0){
-								heading_direction = HEADING_ANGLE_NW;
-							}
-							else if((player.position_old.y - player.position.y) < 0){
-								heading_direction = HEADING_ANGLE_NE;
+				//			Local Player movement
+							if((joy_direct.x > 132) || (joy_direct.x < 124) || (joy_direct.y > 132) || (joy_direct.y < 124)){
+								moved = 1;
+								inertia_start = xTaskGetTickCount();
 							}
 							else{
-								heading_direction = HEADING_ANGLE_N;
+								moved = 0;
 							}
-						}
-						else if((player.position_old.x - player.position.x) < 0){
-							if((player.position_old.y - player.position.y) > 0){
-								heading_direction = HEADING_ANGLE_SW;
-							}
-							else if((player.position_old.y - player.position.y) < 0){
-								heading_direction = HEADING_ANGLE_SE;
-							}
-							else{
-								heading_direction = HEADING_ANGLE_S;
-							}
-						}
-						else{
-							if((player.position_old.y - player.position.y) > 0){
-								heading_direction = HEADING_ANGLE_W;
-							}
-							else if((player.position_old.y - player.position.y) < 0){
-								heading_direction = HEADING_ANGLE_E;
-							}
-							else{
-								heading_direction = HEADING_ANGLE_NULL;
-							}
-						}
-						player.position_old.x = player.position.x;
-						player.position_old.y = player.position.y;
-					}
-				}
 
-				if(xTaskGetTickCount() == inertia_start){
-					inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
-					inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
-				}
-				if(inertia_speed.x > INERTIA_MIN_SPEED_X){
-					if((xTaskGetTickCount() - inertia_start) % 100 == 0){
-						inertia_speed.x -= INERTIA_DECELERATE_X;
-					}
-				}
-				if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
-					if((xTaskGetTickCount() - inertia_start) % 100 == 0){
-						inertia_speed.y -= INERTIA_DECELERATE_Y;
-					}
-				}
+							if(moved){
+								if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
+									if(abs(joy_direct_old.x - joy_direct.x) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_X){
+										player.speed_goal.x = (joy_direct.x - 128) / SPEED_SCALING_FACTOR;
+									}
+									if(abs(joy_direct_old.y - joy_direct.y) / SPEED_SCALING_FACTOR <= PLAYER_SPEED_MAX_Y){
+										player.speed_goal.y = (joy_direct.y - 128) / SPEED_SCALING_FACTOR;
+									}
+									if(abs(player.speed_current.x - player.speed_goal.x) >= 0.1){
+										if(player.speed_current.x > player.speed_goal.x){
+											player.speed_current.x -= PLAYER_STANDARD_ACCELERATION_X;
+										}
+										if(player.speed_current.x < player.speed_goal.x){
+											player.speed_current.x += PLAYER_STANDARD_ACCELERATION_X;
+										}
+									}
+									if(abs(player.speed_current.y - player.speed_goal.y) >= 0.1){
+										if(player.speed_current.y > player.speed_goal.y){
+											player.speed_current.y -= PLAYER_STANDARD_ACCELERATION_Y;
+										}
+										if(player.speed_current.y < player.speed_goal.y){
+											player.speed_current.y += PLAYER_STANDARD_ACCELERATION_Y;
+										}
+									}
+									player.position.x += player.speed_current.x;
+									player.position.y += player.speed_current.y;
+									if((player.position_old.x - player.position.x) > 0){
+										if((player.position_old.y - player.position.y) > 0){
+											heading_direction = HEADING_ANGLE_NW;
+										}
+										else if((player.position_old.y - player.position.y) < 0){
+											heading_direction = HEADING_ANGLE_NE;
+										}
+										else{
+											heading_direction = HEADING_ANGLE_N;
+										}
+									}
+									else if((player.position_old.x - player.position.x) < 0){
+										if((player.position_old.y - player.position.y) > 0){
+											heading_direction = HEADING_ANGLE_SW;
+										}
+										else if((player.position_old.y - player.position.y) < 0){
+											heading_direction = HEADING_ANGLE_SE;
+										}
+										else{
+											heading_direction = HEADING_ANGLE_S;
+										}
+									}
+									else{
+										if((player.position_old.y - player.position.y) > 0){
+											heading_direction = HEADING_ANGLE_W;
+										}
+										else if((player.position_old.y - player.position.y) < 0){
+											heading_direction = HEADING_ANGLE_E;
+										}
+									}
+									player.position_old.x = player.position.x;
+									player.position_old.y = player.position.y;
+								}
+								inertia_speed.x = abs(player.speed_current.x);
+								inertia_speed.y = abs(player.speed_current.y);
 
-				if(!moved){
-					switch(heading_direction){
-						case HEADING_ANGLE_N:
-							player.position.x -= inertia_speed.x;
-							break;
-						case HEADING_ANGLE_S:
-							player.position.x += inertia_speed.x;
-							break;
-						case HEADING_ANGLE_E:
-							player.position.y += inertia_speed.y;
-							break;
-						case HEADING_ANGLE_W:
-							player.position.y -= inertia_speed.y;
-							break;
-						case HEADING_ANGLE_NE:
-							player.position.y += inertia_speed.y;
-							player.position.x -= inertia_speed.x;
-							break;
-						case HEADING_ANGLE_NW:
-							player.position.y -= inertia_speed.y;
-							player.position.x -= inertia_speed.x;
-							break;
-						case HEADING_ANGLE_SE:
-							player.position.y += inertia_speed.y;
-							player.position.x += inertia_speed.x;
-							break;
-						case HEADING_ANGLE_SW:
-							player.position.y -= inertia_speed.y;
-							player.position.x += inertia_speed.x;
-							break;
-					}
-				}
+								inertia_speed_final.x = INERTIA_MIN_SPEED_X;
+								inertia_speed_final.y = INERTIA_MIN_SPEED_Y;
+								if((abs(joy_direct_old.x - joy_direct.x) / 16) <= INERTIA_MIN_SPEED_X){
+									inertia_speed_final.x += ((abs(joy_direct_old.x - joy_direct.x)) / SPEED_SCALING_FACTOR);
+								}
+								if((abs(joy_direct_old.y - joy_direct.y) / 16) <= INERTIA_MIN_SPEED_Y){
+									inertia_speed_final.y += ((abs(joy_direct_old.y - joy_direct.y)) / SPEED_SCALING_FACTOR);
+								}
 
-	//			Make player show up at the other side of the screen when reaching screen border
+				//				Getting joystick angle
+								angle_x = (float)((int16_t)joy_direct.x-128);
+								angle_y = (float)((int16_t)joy_direct.y-128);
+								angle_float_goal = 0;
+								if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
+									if((angle_x != 0) && (angle_y != 0)){
+										if(angle_y != 128){
+											angle_float_goal = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 270;
+										}
+										else{
+											angle_float_goal = 0;
+										}
+									}
+									else{
+										angle_float_goal = 0;
+									}
+								}
+							}
 
-				if(player.position.x >= DISPLAY_SIZE_X){
-					player.position.x = 0;
-				}
-				else if(player.position.x <= 0){
-					player.position.x = DISPLAY_SIZE_X;
-				}
-				if(player.position.y >= DISPLAY_SIZE_Y){
-					player.position.y = 0;
-				}
-				else if(player.position.y <= 0){
-					player.position.y = DISPLAY_SIZE_Y;
-				}
+							if(!moved){
+								switch(heading_direction){
+									case HEADING_ANGLE_N:
+										player.position.x -= inertia_speed.x;
+										break;
+									case HEADING_ANGLE_S:
+										player.position.x += inertia_speed.x;
+										break;
+									case HEADING_ANGLE_E:
+										player.position.y += inertia_speed.y;
+										break;
+									case HEADING_ANGLE_W:
+										player.position.y -= inertia_speed.y;
+										break;
+									case HEADING_ANGLE_NE:
+										player.position.y += inertia_speed.y;
+										player.position.x -= inertia_speed.x;
+										break;
+									case HEADING_ANGLE_NW:
+										player.position.y -= inertia_speed.y;
+										player.position.x -= inertia_speed.x;
+										break;
+									case HEADING_ANGLE_SE:
+										player.position.y += inertia_speed.y;
+										player.position.x += inertia_speed.x;
+										break;
+									case HEADING_ANGLE_SW:
+										player.position.y -= inertia_speed.y;
+										player.position.x += inertia_speed.x;
+										break;
+								}
+							}
 
-	// 			Player ship rotation
-				angle_x = (float)((int16_t)joy_direct.x-128);
-				angle_y = (float)((int16_t)joy_direct.y-128);
-				angle_float = 0;
-				if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
-					if((angle_x != 0) && (angle_y != 0)){
-						if(angle_y != 128){
-							angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
-						}
-						else{
-							angle_float = 0;
-						}
-					}
-					else{
-						angle_float = 0;
-					}
-				}
-				memcpy(&form, &form_orig, 3 * sizeof(struct point));
-				for(incr = 0; incr < 3; incr++){
-					form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
-										- form_orig[incr].y * sin(angle_float * CONVERT_TO_RAD);
-					form[incr].y = form_orig[incr].x * sin(angle_float * CONVERT_TO_RAD)
-										+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
-				}
+							if(inertia_speed.x > inertia_speed_final.x){
+								if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
+									inertia_speed.x -= INERTIA_DECELERATE_X;
+								}
+							}
+							if(inertia_speed.y > inertia_speed_final.y){
+								if((xTaskGetTickCount() - inertia_start) % INERTIA_TIME_INCREMENT == 0){
+									inertia_speed.y -= INERTIA_DECELERATE_Y;
+								}
+							}
+
+				//			Make player show up at the other side of the screen when reaching screen border
+							if(player.position.x >= DISPLAY_SIZE_X){
+								player.position.x = 0;
+								player.position.y += 10;
+							}
+							else if(player.position.x <= 0){
+								player.position.x = DISPLAY_SIZE_X;
+								player.position.y += 10;
+							}
+							if(player.position.y >= DISPLAY_SIZE_Y){
+								player.position.y = 0;
+								player.position.x += 10;
+							}
+							else if(player.position.y <= 0){
+								player.position.y = DISPLAY_SIZE_Y;
+								player.position.x += 10;
+							}
+
+				//			Doing actual player ship rotation here
+							memcpy(&form, &form_orig, 3 * sizeof(struct point));
+							if(abs(angle_float_current - angle_float_goal) >= 2){
+								if(abs(angle_float_current - angle_float_goal) < 180){
+									if(angle_float_current > angle_float_goal){
+										angle_float_current += ROTATION_SPEED;
+									}
+									if(angle_float_current < angle_float_goal){
+										angle_float_current -= ROTATION_SPEED;
+									}
+								}
+								else if(abs(angle_float_current - angle_float_goal) >= 180){
+									if(angle_float_current > angle_float_goal){
+										angle_float_current -= ROTATION_SPEED;
+									}
+									if(angle_float_current < angle_float_goal){
+										angle_float_current += ROTATION_SPEED;
+									}
+								}
+							}
+							for(incr = 0; incr < 3; incr++){
+								form[incr].x = form_orig[incr].x * cos(angle_float_current * CONVERT_TO_RAD)
+													- form_orig[incr].y * sin(angle_float_current * CONVERT_TO_RAD);
+								form[incr].y = form_orig[incr].x * sin(angle_float_current * CONVERT_TO_RAD)
+													+ form_orig[incr].y * cos(angle_float_current * CONVERT_TO_RAD);
+							}
+							memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord)); // Used for joystick coord difference
+
+//	//			Read joystick input directly, less delay-prone than using queues from other tasks
+//
+//				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
+//				joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
+//
+//	//			Local Player movement
+//				if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
+//					moved = 1;
+//					inertia_start = xTaskGetTickCount();
+//				}
+//				else{
+//					moved = 0;
+//				}
+//
+//				if(moved){
+//					if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
+//						player.position.x += (joy_direct.x - 128) / 32;
+//						player.position.y += (joy_direct.y - 128) / 32;
+//						if((player.position_old.x - player.position.x) > 0){
+//							if((player.position_old.y - player.position.y) > 0){
+//								heading_direction = HEADING_ANGLE_NW;
+//							}
+//							else if((player.position_old.y - player.position.y) < 0){
+//								heading_direction = HEADING_ANGLE_NE;
+//							}
+//							else{
+//								heading_direction = HEADING_ANGLE_N;
+//							}
+//						}
+//						else if((player.position_old.x - player.position.x) < 0){
+//							if((player.position_old.y - player.position.y) > 0){
+//								heading_direction = HEADING_ANGLE_SW;
+//							}
+//							else if((player.position_old.y - player.position.y) < 0){
+//								heading_direction = HEADING_ANGLE_SE;
+//							}
+//							else{
+//								heading_direction = HEADING_ANGLE_S;
+//							}
+//						}
+//						else{
+//							if((player.position_old.y - player.position.y) > 0){
+//								heading_direction = HEADING_ANGLE_W;
+//							}
+//							else if((player.position_old.y - player.position.y) < 0){
+//								heading_direction = HEADING_ANGLE_E;
+//							}
+//							else{
+//								heading_direction = HEADING_ANGLE_NULL;
+//							}
+//						}
+//						player.position_old.x = player.position.x;
+//						player.position_old.y = player.position.y;
+//					}
+//				}
+//
+//				if(xTaskGetTickCount() == inertia_start){
+//					inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
+//					inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
+//				}
+//				if(inertia_speed.x > INERTIA_MIN_SPEED_X){
+//					if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+//						inertia_speed.x -= INERTIA_DECELERATE_X;
+//					}
+//				}
+//				if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
+//					if((xTaskGetTickCount() - inertia_start) % 100 == 0){
+//						inertia_speed.y -= INERTIA_DECELERATE_Y;
+//					}
+//				}
+//
+//				if(!moved){
+//					switch(heading_direction){
+//						case HEADING_ANGLE_N:
+//							player.position.x -= inertia_speed.x;
+//							break;
+//						case HEADING_ANGLE_S:
+//							player.position.x += inertia_speed.x;
+//							break;
+//						case HEADING_ANGLE_E:
+//							player.position.y += inertia_speed.y;
+//							break;
+//						case HEADING_ANGLE_W:
+//							player.position.y -= inertia_speed.y;
+//							break;
+//						case HEADING_ANGLE_NE:
+//							player.position.y += inertia_speed.y;
+//							player.position.x -= inertia_speed.x;
+//							break;
+//						case HEADING_ANGLE_NW:
+//							player.position.y -= inertia_speed.y;
+//							player.position.x -= inertia_speed.x;
+//							break;
+//						case HEADING_ANGLE_SE:
+//							player.position.y += inertia_speed.y;
+//							player.position.x += inertia_speed.x;
+//							break;
+//						case HEADING_ANGLE_SW:
+//							player.position.y -= inertia_speed.y;
+//							player.position.x += inertia_speed.x;
+//							break;
+//					}
+//				}
+//
+//	//			Make player show up at the other side of the screen when reaching screen border
+//
+//				if(player.position.x >= DISPLAY_SIZE_X){
+//					player.position.x = 0;
+//				}
+//				else if(player.position.x <= 0){
+//					player.position.x = DISPLAY_SIZE_X;
+//				}
+//				if(player.position.y >= DISPLAY_SIZE_Y){
+//					player.position.y = 0;
+//				}
+//				else if(player.position.y <= 0){
+//					player.position.y = DISPLAY_SIZE_Y;
+//				}
+//
+//	// 			Player ship rotation
+//				angle_x = (float)((int16_t)joy_direct.x-128);
+//				angle_y = (float)((int16_t)joy_direct.y-128);
+//				angle_float = 0;
+//				if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
+//					if((angle_x != 0) && (angle_y != 0)){
+//						if(angle_y != 128){
+//							angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
+//						}
+//						else{
+//							angle_float = 0;
+//						}
+//					}
+//					else{
+//						angle_float = 0;
+//					}
+//				}
+//				memcpy(&form, &form_orig, 3 * sizeof(struct point));
+//				for(incr = 0; incr < 3; incr++){
+//					form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
+//										- form_orig[incr].y * sin(angle_float * CONVERT_TO_RAD);
+//					form[incr].y = form_orig[incr].x * sin(angle_float * CONVERT_TO_RAD)
+//										+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
+//				}
 	//			Handling cannon shot firing
 	//			Spawning new cannon shots on player input
 				if(buttonCountWithLiftup(BUT_B)){
@@ -1105,7 +1299,7 @@ void drawTaskSingleLevel2 (void * params){
 
 	//			Debug print line for angle and thrust
 				if(SHOW_DEBUG_LVL_2){
-					sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
+					sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float_goal));
 					gdispDrawString(0, 230, str, font1, White);
 				}
 
