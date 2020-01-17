@@ -76,6 +76,8 @@ void drawTaskSingleLevel2 (void * params){
 	}
 
 	boolean state_pause = false;
+	boolean no_extra_life = false;
+	TickType_t new_life_timer = xTaskGetTickCount();
 
 //	Variables to store the number of lives
 	unsigned int life_count = STARTING_LIVES_LEVEL_TWO;	// For standard game mode
@@ -1100,27 +1102,12 @@ void drawTaskSingleLevel2 (void * params){
 
 	// 			Drawing functions
 				gdispClear(Black);
-	// 			Simple clock at top of screen
-				if (timer_1sec == 1)
-					time_passed++;
-				sprintf(str2, "%d sec", time_passed);
-				gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
-
-	//			Score board
-				sprintf(str, "Score: %i", score);
-				gdispDrawString(5, 10, str, font1, White);
-
-	// 			Life count
-				sprintf(str, "Lives: %d", life_count);
-				gdispDrawString(260, 10, str, font1, White);
 
 	//			Debug print line for angle and thrust
 				if(SHOW_DEBUG_LVL_2){
 					sprintf(str, "Angle: %d | Thrust: %d | 360: %d", input.angle, input.thrust, (uint16_t)(angle_float));
 					gdispDrawString(0, 230, str, font1, White);
 				}
-				sprintf(str2, "Level 2");
-				gdispDrawString(5, 230, str2, font1, Green);
 
 	//			Drawing the fired canon shots
 				for(incr = 0; incr < input.shots_fired; incr++){
@@ -1131,6 +1118,33 @@ void drawTaskSingleLevel2 (void * params){
 
 				// Drawing the player's ship and asteroids
 				if (life_count != 0) {
+					// Simple clock at top of screen
+					if (timer_1sec == 1)
+						time_passed++;
+					sprintf(str2, "%d sec", time_passed);
+					gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2, font1, White);
+
+					// Score board
+					sprintf(str, "Score: %i", score);
+					gdispDrawString(5, 10, str, font1, White);
+
+					// Life count
+					if(score >= GET_MORE_LIVES_LEVEL_ONE && no_extra_life == true){
+						life_count++;
+						no_extra_life = false;
+						new_life_timer = xTaskGetTickCount();
+					}
+					if((xTaskGetTickCount() - new_life_timer < 1000) && no_extra_life == false){
+						sprintf(str, "EARNED NEW LIFE!"); // Generate game over message
+						gdispFillArea(TEXT_X(str) - 10, 25, 120, 10, Green); // White border
+						gdispDrawString(TEXT_X(str), 25, str, font1, Black);
+					}
+					sprintf(str, "Lives: %d", life_count);
+					gdispDrawString(260, 10, str, font1, White);
+
+					sprintf(str2, "Level 2");
+					gdispDrawString(5, 230, str2, font1, Green);
+
 					// Player ship
 					if (player.state == fine)
 						gdispFillConvexPoly(player.position.x, player.position.y,
