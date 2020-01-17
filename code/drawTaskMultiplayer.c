@@ -15,6 +15,7 @@
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
+extern QueueHandle_t StartingScoreQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
@@ -32,14 +33,19 @@ void drawTaskMultiplayer (void * params){
 	boolean is_master = false;
 	boolean remote_is_master = false;
 	struct highscore score;
-	score.score = 50;
-	score.score_remote = 50;
+	score.score = 0;
+	score.score_remote = 0;
+	int16_t score_from_main_menu = 0;
+	xQueueReceive(StartingScoreQueue, &score_from_main_menu, 0);
+	score.score = score_from_main_menu;
+	score.score_remote = score_from_main_menu;
 	char user_help[1][70];
 	struct joystick_angle_pulse joystick_internal;
 	boolean show_debug = false;
 	boolean first_check = false;
 	TickType_t double_toggle_delay = 2000;
 	TickType_t check_time = xTaskGetTickCount();
+	char str2 = { {0} };
 
 //	Movement
 	struct coord joy_direct;
@@ -484,6 +490,19 @@ void drawTaskMultiplayer (void * params){
 
 //			Drawing functions
 			gdispClear(Black);
+
+			if(score.score < LEVEL_TWO_SCORE_THRESHOLD && score.score_remote < LEVEL_TWO_SCORE_THRESHOLD){
+				sprintf(str2, "Level 1");
+			}
+
+			else if(score.score >= LEVEL_TWO_SCORE_THRESHOLD && score.score < LEVEL_THREE_SCORE_THRESHOLD && score.score_remote >= LEVEL_TWO_SCORE_THRESHOLD && score.score_remote < LEVEL_THREE_SCORE_THRESHOLD){
+				sprintf(str2, "Level 2");
+			}
+			else if(score.score >= LEVEL_THREE_SCORE_THRESHOLD && score.score < BEAT_GAME_SCORE_THRESHOLD && score.score_remote >= LEVEL_THREE_SCORE_THRESHOLD && score.score_remote < BEAT_GAME_SCORE_THRESHOLD){
+				sprintf(str2, "Level 3");
+			}
+
+			gdispDrawString(5, 230, str2, font1, Green);
 
 			if(is_master == true){
 				if(remote_is_master == true){

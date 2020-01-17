@@ -197,6 +197,7 @@ void drawTaskStartMenu(void * params) {
 
 									}
 									if(game_mode_local != game_mode_remote){
+										xQueueSend(StartingScoreQueue, &starting_score, 0);
 										xQueueSend(LocalMasterQueue, &is_master, 0);
 										xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
 									}
