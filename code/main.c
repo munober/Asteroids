@@ -50,6 +50,7 @@ QueueHandle_t LifeCountQueue2;
 QueueHandle_t LifeCountQueue3;
 QueueHandle_t HighScoresQueue;
 QueueHandle_t HighScoresQueueMP;
+QueueHandle_t StartingScoreQueue;
 QueueHandle_t ESPL_RxQueue;
 QueueHandle_t LocalMasterQueue;
 SemaphoreHandle_t ESPL_DisplayReady;
@@ -87,6 +88,7 @@ int main(void){
 	LifeCountQueue3 = xQueueCreate(10, sizeof(unsigned int));
 	HighScoresQueue = xQueueCreate(10, sizeof(struct highscore));
 	HighScoresQueueMP = xQueueCreate(10, sizeof(struct highscore));
+	StartingScoreQueue = xQueueCreate(10, sizeof(int16_t));
 	LocalMasterQueue = xQueueCreate(5, sizeof(boolean));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();

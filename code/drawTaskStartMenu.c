@@ -10,6 +10,7 @@
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LocalMasterQueue;
+extern QueueHandle_t StartingScoreQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern SemaphoreHandle_t LocalMaster;
@@ -33,7 +34,7 @@ void drawTaskStartMenu(void * params) {
 	unsigned int game_mode_local = 0; // 0 is single
 	unsigned int game_mode_remote = 0; // 0 is single
 	unsigned int starting_level = 1;
-	unsigned int starting_score = 0;
+	int16_t starting_score = 0;
 
 	struct joystick_angle_pulse joystick_internal;
 
@@ -181,6 +182,7 @@ void drawTaskStartMenu(void * params) {
 								gdispDrawString(195, 40, dash_reverse[0], font1, Yellow);
 								if (buttonCount(BUT_E)){
 									if(game_mode_local == game_mode_remote){
+										xQueueSend(StartingScoreQueue, &starting_score, 0);
 										switch(starting_level){
 										case 1:
 											xQueueSend(StateQueue, &next_state_signal_single_one, 100);
@@ -215,14 +217,11 @@ void drawTaskStartMenu(void * params) {
 									gdispDrawString(120, 160, cheats[0],	font1, White);
 									gdispDrawString(120, 200, highscores[0],	font1, White);
 									gdispDrawString(110, 80, dash[0], font1, Yellow);
-				//					gdispDrawString(195, 80, dash_reverse[0], font1, Yellow);
-//									xQueueReceive(JoystickQueue, &joystick_internal, 0);
 									if(buttonCount(BUT_E)){
 										if(game_mode_remote == 0){
 											game_mode_local = !game_mode_local;
 										}
 									}
-//									joystick_internal.pulse.x = JOYSTICK_PULSE_NULL;
 								break;
 							case SETTINGS_SELECT:
 								sprintf(multi_second, "Mode: Multiplayer");
@@ -288,7 +287,6 @@ void drawTaskStartMenu(void * params) {
 								gdispDrawString(120, 160, cheats[0],	font1, Yellow);
 								gdispDrawString(120, 200, highscores[0],	font1, White);
 								gdispDrawString(110, 160, dash[0], font1, Yellow);
-//								gdispDrawString(195, 160, dash_reverse[0], font1, Yellow);
 								if (buttonCount(BUT_E))
 									xQueueSend(StateQueue, &next_state_signal_cheats, 100);
 								break;
