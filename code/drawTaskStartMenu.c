@@ -33,17 +33,22 @@ void drawTaskStartMenu(void * params) {
 	unsigned int game_mode_local = 0; // 0 is single
 	unsigned int game_mode_remote = 0; // 0 is single
 	unsigned int starting_level = 1;
+	unsigned int starting_score = 0;
 
 	struct joystick_angle_pulse joystick_internal;
 
 	char version [1][30] = { 0 }; // Use this variable to print a custom message on the start menu.
 	sprintf(version, "Build number -- %i", BUILD_NUMBER);
 	char single [1][20] = {"Start game"};
-	char multi [1][20] = {"Mode: Singleplayer"};
-	char multi_second [1][20] = {"Mode: Multiplayer"};
-	char settings [1][20] = { {0} };
-	sprintf(settings, "Starting level: %d", starting_level);
-	char cheats [1][20] = {"Lives & Score"};
+	char multi [1][20] = { {0} };
+	char multi_second [1][20] = { {0} };
+	sprintf(multi, "Mode: Singleplayer");
+	sprintf(multi_second, "Mode: Multiplayer");
+	char settings [1][30] = { {0} };
+	sprintf(settings, "Starting score: %i", starting_score);
+	char settings_2 [1][20] = { {0} };
+	sprintf(settings_2, "Starting level: %d", starting_level);
+	char cheats [1][20] = {"Starting lives"};
 	char highscores [1][20] = {"High Scores"};
 	char dash [1][5] = {">"};
 	char dash_reverse [1][5] = {"<"};
@@ -91,13 +96,6 @@ void drawTaskStartMenu(void * params) {
 					UART_SendData(sync_byte_2);
 				}
 			}
-//			else if(game_starting == 1){
-//				if(xTaskGetTickCount() - game_start_timer >= game_start_delay){
-//					xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
-//				}
-//			}
-
-
 
 			if (xQueueReceive(JoystickQueue, &joystick_internal, 0) == pdTRUE){
 				if(joystick_internal.pulse.y == JOYSTICK_PULSE_DOWN){
@@ -143,7 +141,9 @@ void drawTaskStartMenu(void * params) {
 
 			gdispClear(Black);
 			if(game_starting == 0){
-				gdispDrawString(TEXT_X(version[0]), 230, version[0],font1, White);
+				if(SHOW_DEBUG_MAINMENU){
+					gdispDrawString(TEXT_X(version[0]), 230, version[0],font1, White);
+				}
 				gdispDrawString(TEXT_X(user_help[0]), 10, user_help[0],font1, White);
 
 				if(is_master == true){
@@ -165,6 +165,7 @@ void drawTaskStartMenu(void * params) {
 				gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
 				switch (menu_select) {
 							case SINGLEPLAYER_SELECT:
+								sprintf(multi_second, "Mode: Multiplayer");
 								gdispDrawString(120, 40, single[0],	font1, Yellow);
 								if(game_mode_local == 1 || game_mode_remote == 1){
 									gdispDrawString(120, 80, multi_second[0],	font1, White);
@@ -173,6 +174,7 @@ void drawTaskStartMenu(void * params) {
 									gdispDrawString(120, 80, multi[0],	font1, White);
 								}
 								gdispDrawString(120, 120, settings[0],	font1, White);
+								gdispDrawString(120, 130, settings_2[0], font1, White);
 								gdispDrawString(120, 160, cheats[0],	font1, White);
 								gdispDrawString(120, 200, highscores[0],	font1, White);
 								gdispDrawString(110, 40, dash[0], font1, Yellow);
@@ -195,13 +197,12 @@ void drawTaskStartMenu(void * params) {
 									if(game_mode_local != game_mode_remote){
 										xQueueSend(LocalMasterQueue, &is_master, 0);
 										xQueueSend(StateQueue, &next_state_signal_multiplayer, 100);
-//										game_starting = 1;
-//										game_start_timer = xTaskGetTickCount();
 									}
 								}
 
 								break;
 							case MULTIPLAYER_SELECT:
+								sprintf(multi_second, "Mode: Multiplayer");
 									gdispDrawString(120, 40, single[0],	font1, White);
 									if(game_mode_local == 1 || game_mode_remote == 1){
 										gdispDrawString(120, 80, multi_second[0],	font1, Yellow);
@@ -210,6 +211,7 @@ void drawTaskStartMenu(void * params) {
 										gdispDrawString(120, 80, multi[0],	font1, Yellow);
 									}
 									gdispDrawString(120, 120, settings[0],	font1, White);
+									gdispDrawString(120, 130, settings_2[0],	font1, White);
 									gdispDrawString(120, 160, cheats[0],	font1, White);
 									gdispDrawString(120, 200, highscores[0],	font1, White);
 									gdispDrawString(110, 80, dash[0], font1, Yellow);
@@ -223,6 +225,7 @@ void drawTaskStartMenu(void * params) {
 //									joystick_internal.pulse.x = JOYSTICK_PULSE_NULL;
 								break;
 							case SETTINGS_SELECT:
+								sprintf(multi_second, "Mode: Multiplayer");
 								gdispDrawString(120, 40, single[0],	font1, White);
 								if(game_mode_local == 1 || game_mode_remote == 1){
 									gdispDrawString(120, 80, multi_second[0],	font1, White);
@@ -231,33 +234,48 @@ void drawTaskStartMenu(void * params) {
 									gdispDrawString(120, 80, multi[0],	font1, White);
 								}
 								if(buttonCount(BUT_E)){
-									if(starting_level < 3)
-										starting_level++;
-									else if (starting_level == 3)
-										starting_level = 1;
+									if(starting_score < 20000)
+										starting_score += START_MENU_SCORE_INCREMENT;
+									else if (starting_score == 20000)
+										starting_score = 0;
 								}
 								xQueueReceive(JoystickQueue, &joystick_internal, 0);
 								if(joystick_internal.pulse.x == JOYSTICK_PULSE_RIGHT){
-									if(starting_level < 3)
-										starting_level++;
-									else if (starting_level == 3)
-										starting_level = 1;
+									if(starting_score < 20000)
+										starting_score += START_MENU_SCORE_INCREMENT;
+									else if (starting_score == 20000)
+										starting_score = 0;
 								}
 								if(joystick_internal.pulse.x == JOYSTICK_PULSE_LEFT){
-									if(starting_level > 1)
-										starting_level--;
-									else if (starting_level == 1)
-										starting_level = 3;
+									if(starting_score > 0)
+										starting_score -= START_MENU_SCORE_INCREMENT;
+									else if (starting_score == 0)
+										starting_score = 20000;
 								}
 								joystick_internal.pulse.x = JOYSTICK_PULSE_NULL;
-								sprintf(settings, "Starting level: %d", starting_level);
+								sprintf(settings, "Starting score: %i", starting_score);
 								gdispDrawString(120, 120, settings[0],	font1, Yellow);
+
+								if(starting_score < LEVEL_TWO_SCORE_THRESHOLD){
+									starting_level = 1;
+								}
+								else if(starting_score >= LEVEL_TWO_SCORE_THRESHOLD && starting_score < LEVEL_THREE_SCORE_THRESHOLD){
+									starting_level = 2;
+								}
+								else if(starting_score >= LEVEL_THREE_SCORE_THRESHOLD && starting_score < BEAT_GAME_SCORE_THRESHOLD){
+									starting_level = 3;
+								}
+
+								sprintf(settings_2, "Starting level: %d", starting_level);
+								gdispDrawString(120, 130, settings_2[0],	font1, Yellow);
+
 								gdispDrawString(120, 160, cheats[0],	font1, White);
 								gdispDrawString(120, 200, highscores[0],	font1, White);
 								gdispDrawString(110, 120, dash[0], font1, Yellow);
 //								gdispDrawString(195, 120, dash_reverse[0], font1, Yellow);
 								break;
 							case CHEATS_SELECT:
+								sprintf(multi_second, "Mode: Multiplayer");
 								gdispDrawString(120, 40, single[0],	font1, White);
 								if(game_mode_local == 1 || game_mode_remote == 1){
 									gdispDrawString(120, 80, multi_second[0],	font1, White);
@@ -266,6 +284,7 @@ void drawTaskStartMenu(void * params) {
 									gdispDrawString(120, 80, multi[0],	font1, White);
 								}
 								gdispDrawString(120, 120, settings[0],	font1, White);
+								gdispDrawString(120, 130, settings_2[0],	font1, White);
 								gdispDrawString(120, 160, cheats[0],	font1, Yellow);
 								gdispDrawString(120, 200, highscores[0],	font1, White);
 								gdispDrawString(110, 160, dash[0], font1, Yellow);
@@ -274,6 +293,7 @@ void drawTaskStartMenu(void * params) {
 									xQueueSend(StateQueue, &next_state_signal_cheats, 100);
 								break;
 							case HIGHSCORES_SELECT:
+								sprintf(multi_second, "Mode: Multiplayer");
 								gdispDrawString(120, 40, single[0],	font1, White);
 								if(game_mode_local == 1 || game_mode_remote == 1){
 									gdispDrawString(120, 80, multi_second[0],	font1, White);
@@ -282,6 +302,7 @@ void drawTaskStartMenu(void * params) {
 									gdispDrawString(120, 80, multi[0],	font1, White);
 								}
 								gdispDrawString(120, 120, settings[0],	font1, White);
+								gdispDrawString(120, 130, settings_2[0],	font1, White);
 								gdispDrawString(120, 160, cheats[0],	font1, White);
 								gdispDrawString(120, 200, highscores[0],	font1, Yellow);
 								gdispDrawString(110, 200, dash[0], font1, Yellow);
@@ -291,20 +312,7 @@ void drawTaskStartMenu(void * params) {
 								break;
 							}
 			}
-			if(game_starting == 1){
-				if(xTaskGetTickCount() - game_start_timer < 1000){
-					sprintf(user_help_two, "> Game starts in 1. <");
-					gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
-				}
-				if(xTaskGetTickCount() - game_start_timer < 2000){
-					sprintf(user_help_two, "> Game starts in 2. <");
-					gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
-				}
-				if(xTaskGetTickCount() - game_start_timer < 3000){
-					sprintf(user_help_two, "> Game starts in 3. <");
-					gdispDrawString(TEXT_X(user_help_two[0]), 220, user_help_two[0], font1, Green);
-				}
-			}
+
 			if(game_mode_local == 1 && game_mode_remote == 0){
 				is_master = true;
 				remote_is_master = false;
