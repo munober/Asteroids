@@ -72,6 +72,7 @@ void drawTaskMultiplayer (void * params){
 	int remote_bullet_dir_x = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_y = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_total = HEADING_ANGLE_NULL;
+	int remote_bullet_dir_total_old = remote_bullet_dir_total;
 
 	player_local.state = fine;
 	int incr;
@@ -550,7 +551,7 @@ void drawTaskMultiplayer (void * params){
 					remote_shots[number_remote_shots].status = spawn;
 					remote_shots[number_remote_shots].position.x = remote_x;
 					remote_shots[number_remote_shots].position.y = remote_y;
-					remote_shots[number_remote_shots].angle = remote_bullet_dir_total;
+					remote_shots[number_remote_shots].angle = remote_bullet_dir_total_old;
 					number_remote_shots++;
 				}
 
@@ -619,6 +620,10 @@ void drawTaskMultiplayer (void * params){
 						break;
 					case JOYSTICK_ANGLE_NULL:
 						remote_shots[incr].position.y -= LASER_BLASTER_SPEED;
+						break;
+					default:
+						remote_shots[incr].position.x += LASER_BLASTER_SPEED;
+						remote_shots[incr].position.y += LASER_BLASTER_SPEED;
 						break;
 					}
 				}
@@ -847,6 +852,7 @@ void drawTaskMultiplayer (void * params){
 			local_x_lowpoly = local_x_lowpoly * 4;
 			local_y_lowpoly = local_y_old / 3; // Low-res y, used for collisions and score
 			local_y_lowpoly = local_y_lowpoly * 3;
+			remote_bullet_dir_total_old = remote_bullet_dir_total;
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
