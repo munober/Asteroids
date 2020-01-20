@@ -74,6 +74,7 @@ void drawTaskMultiplayer (void * params){
 
 	player_local.state = fine;
 	int incr;
+	int incr2;
 	float angle_float_goal = 0;
 	float angle_float_current = 0;
 	float angle_x = 0;
@@ -123,21 +124,21 @@ void drawTaskMultiplayer (void * params){
 
 //	Bullets
 	int number_local_shots = 0;
-	struct shot_multiplayer local_shots[5];
-	for(int i = 0; i < 4; i++){
+	struct shot local_shots[100];
+	void initialize_single_shot(int i){
+		local_shots[i].position.x = 0;
+		local_shots[i].position.y = 0;
+		local_shots[i].angle = 0;
 		local_shots[i].status = hide;
-		local_shots[i].x = local_x_old;
-		local_shots[i].y = local_y_old;
-		local_shots[i].heading = HEADING_ANGLE_NULL;
 	}
-	int number_remote_shots = 0;
-	struct shot_multiplayer remote_shots[5];
-	for(int i = 0; i < 4; i++){
-		remote_shots[i].status = hide;
-		remote_shots[i].x = local_x_old;
-		remote_shots[i].y = local_y_old;
-		remote_shots[i].heading = HEADING_ANGLE_NULL;
-	}
+//	int number_remote_shots = 0;
+//	struct shot_multiplayer remote_shots[5];
+//	for(int i = 0; i < 4; i++){
+//		remote_shots[i].status = hide;
+//		remote_shots[i].x = local_x_old;
+//		remote_shots[i].y = local_y_old;
+//		remote_shots[i].heading = HEADING_ANGLE_NULL;
+//	}
 
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
@@ -459,32 +460,101 @@ void drawTaskMultiplayer (void * params){
 				local_x = (int) player_local.position.x;
 				local_y = (int) player_local.position.y;
 
-//				Bullet direction
+	//			Handling cannon shot firing
+	//			Spawning new cannon shots on player input
 				if(buttonCountWithLiftup(BUT_B)){
-					if(number_local_shots != 5){
-						local_shots[number_local_shots].x = local_x_old;
-						local_shots[number_local_shots].y = local_y_old;
-						local_shots[number_local_shots].heading = heading_direction;
-						local_shots[number_local_shots].status = spawn;
-						number_local_shots++;
-					}
+					local_shots[number_local_shots].status = spawn;
+					local_shots[number_local_shots].position.x = local_x_lowpoly;
+					local_shots[number_local_shots].position.y = local_y_lowpoly;
+					local_shots[number_local_shots].angle = joystick_internal.angle;
+					number_local_shots++;
 				}
-//				Detecting hits of remote player by local bullet
-				for(int i = 0; i < 4; i++){
-					if((abs(local_x_old - local_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
-							&& (abs(local_y_old - local_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
-//						lives[1]--;
+
+	//			Making fired shots disappear when reaching the screen edge
+				for(incr = 0; incr < number_local_shots; incr++){
+					if(local_shots[incr].position.x >= DISPLAY_SIZE_X){
 						number_local_shots--;
+						for(incr2 = incr; incr2 < number_local_shots; incr2++){
+							memcpy(&local_shots[incr2], &local_shots[incr2 + 1], sizeof(struct shot));
+						}
+						initialize_single_shot(number_local_shots + 1);
+					}
+					else if(local_shots[incr].position.x <= 0){
+						number_local_shots--;
+						for(incr2 = incr; incr2 < number_local_shots; incr2++){
+							memcpy(&local_shots[incr2], &local_shots[incr2 + 1], sizeof(struct shot));
+						}
+						initialize_single_shot(number_local_shots + 1);
+					}
+
+					if(local_shots[incr].position.y >= DISPLAY_SIZE_Y){
+						number_local_shots--;
+						for(incr2 = incr; incr2 < number_local_shots; incr2++){
+							memcpy(&local_shots[incr2], &local_shots[incr2 + 1], sizeof(struct shot));
+						}
+						initialize_single_shot(number_local_shots + 1);
+					}
+					else if(local_shots[incr].position.y <= 0){
+						number_local_shots--;
+						for(incr2 = incr; incr2 < number_local_shots; incr2++){
+							memcpy(&local_shots[incr2], &local_shots[incr2 + 1], sizeof(struct shot));
+						}
+						initialize_single_shot(number_local_shots + 1);
 					}
 				}
-//				Detecting hits of local player by remote bullet
-				for(int i = 0; i < 4; i++){
-					if((abs(remote_x - remote_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
-							&& (abs(remote_y - remote_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
-//						lives[0]--;
-						number_remote_shots--;
+	//			Handling movement of fired shots
+				for(incr = 0; incr < number_local_shots; incr++){
+					switch(local_shots[incr].angle){
+					case JOYSTICK_ANGLE_N:
+						local_shots[incr].position.y -= LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_S:
+						local_shots[incr].position.y += LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_E:
+						local_shots[incr].position.x += LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_W:
+						local_shots[incr].position.x -= LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_NW:
+						local_shots[incr].position.x -= LASER_BLASTER_SPEED;
+						local_shots[incr].position.y -= LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_NE:
+						local_shots[incr].position.x += LASER_BLASTER_SPEED;
+						local_shots[incr].position.y -= LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_SW:
+						local_shots[incr].position.x -= LASER_BLASTER_SPEED;
+						local_shots[incr].position.y += LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_SE:
+						local_shots[incr].position.x += LASER_BLASTER_SPEED;
+						local_shots[incr].position.y += LASER_BLASTER_SPEED;
+						break;
+					case JOYSTICK_ANGLE_NULL:
+						local_shots[incr].position.y -= LASER_BLASTER_SPEED;
+						break;
 					}
 				}
+
+////				Detecting hits of remote player by local bullet
+//				for(int i = 0; i < 4; i++){
+//					if((abs(local_x_old - local_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
+//							&& (abs(local_y_old - local_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
+////						lives[1]--;
+//						number_local_shots--;
+//					}
+//				}
+////				Detecting hits of local player by remote bullet
+//				for(int i = 0; i < 4; i++){
+//					if((abs(remote_x - remote_shots[i].x) < HIT_LIMIT_PLAYER_SHOT_MULTI)
+//							&& (abs(remote_y - remote_shots[i].y) < HIT_LIMIT_PLAYER_SHOT_MULTI)){
+////						lives[0]--;
+//						number_remote_shots--;
+//					}
+//				}
 
 			}
 
@@ -549,18 +619,25 @@ void drawTaskMultiplayer (void * params){
 				gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
 				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 	//			Drawing bullets
+				for(incr = 0; incr < number_local_shots; incr++){
+					if(local_shots[incr].status == spawn){
+						gdispFillCircle(local_shots[incr].position.x, local_shots[incr].position.y, 3, Yellow);
+					}
+				}
+
+
 	//			Local
 				for(incr = 0; incr < number_local_shots; incr++){
 					if(local_shots[incr].status == spawn){
-						gdispFillCircle(local_shots[incr].x, local_shots[incr].y, 3, Green);
+						gdispFillCircle(local_shots[incr].position.x, local_shots[incr].position.y, 3, Green);
 					}
 				}
-	//			Remote
-				for(incr = 0; incr < number_remote_shots; incr++){
-					if(remote_shots[incr].status == spawn){
-						gdispFillCircle(remote_shots[incr].x, remote_shots[incr].y, 3, Red);
-					}
-				}
+//	//			Remote
+//				for(incr = 0; incr < number_remote_shots; incr++){
+//					if(remote_shots[incr].status == spawn){
+//						gdispFillCircle(remote_shots[incr].x, remote_shots[incr].y, 3, Red);
+//					}
+//				}
 			}
 			to_send_x = local_x / 4 + 1;
 			to_send_y = local_y / 3 + 1;
