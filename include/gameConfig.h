@@ -24,7 +24,7 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_3
+#define STARTING_STATE                      MAIN_MENU_STATE
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
@@ -73,6 +73,9 @@
 #define TO_DESTROY_LEVEL_3_SMALL			60
 #define TO_DESTROY_LEVEL_3_MEDIUM           30
 #define TO_DESTROY_LEVEL_3_LARGE            10
+#define TO_DESTROY_MULTI_SMALL				60
+#define TO_DESTROY_MULTI_MEDIUM           	30
+#define TO_DESTROY_MULTI_LARGE            	10
 
 // Respawn boundaries in each level (will respawn as long as number left is above this)
 #define RESPAWN_SMALL_LEVEL_1               10

@@ -22,6 +22,10 @@ extern QueueHandle_t ESPL_RxQueue;
 extern QueueHandle_t HighScoresQueueMP;
 extern QueueHandle_t LocalMasterQueue;
 
+#define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
+#define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
+#define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
+
 void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	boolean executed = false;
@@ -77,6 +81,9 @@ void drawTaskMultiplayer (void * params){
 	player_local.state = fine;
 	int incr;
 	int incr2;
+	int i = 0;
+	int j = 0;
+	int k = 0;
 	float angle_float_goal = 0;
 	float angle_float_current = 0;
 	float angle_x = 0;
@@ -148,6 +155,258 @@ void drawTaskMultiplayer (void * params){
 	const point saucer_shape[] = { { -10, 3 }, { -6, 6 }, { 6, 6 }, { 10, 3 }, { -10, 3 },
 			{ -6, 0 }, { 6, 0 }, { 10, 3 }, { 6, 0 }, { 4, -5 }, { -4, -5 },
 			{ -6, 0 } };
+
+	// ASTEROIDS
+	// Asteroid shapes SMALL
+	const point type_1[] = { { 0, 8 }, { 5, 4 }, { 4, -5 }, { -5, -5 }, { -5, 4 } };
+	const point type_2[] = { { 0, 8 }, { 8, 4 }, { 4, -5 }, { -5, -5 }, { -5, 4 } };
+	const point type_3[] = { { 5, 6 }, { 4, -2 }, { 7, -4 }, { -3, -5 }, { -5, 2 } };
+
+	// Asteroid shapes MEDIUM
+	const point type_4[] = { { 0, 8 }, { 8, 8 }, { 10, 0 }, { 10, -12 },
+			{ 0, -12 }, { -8, -12 }, { -8, 5 } };
+	const point type_5[] = { { 6, 10 }, { 10, 0 }, { 10, -10 }, { 0, -6 },
+			{ -6, -14 }, { -10, -4 }, { -6, 10 } };
+	const point type_6[] = { { 0, 10 }, { 10, 6 }, { 6, -3 }, { 4, -10 },
+			{ -5, -5 }, { -7, 0 }, { -5, 7 } };
+
+	// Asteroid shapes LARGE
+	const point type_7[] = { { 4, 8 }, { 12, 14 }, { 14, 4 }, { 14, -12 },
+			{ 0, -18 }, { -12, -14 }, { -18, -8 }, { -18, 4 }, { -12, 8 }, { -8, 18 } };
+	const point type_8[] = { { 4, 12 }, { 12, 14 }, { 18, 0 }, { 12, -8 },
+			{ 4, -12 }, { 0, -18 }, { -8, -12 }, { -18, -12 }, { -18, 4 }, { -12, 12 } };
+	const point type_9[] = { { 0, 12 }, { 24, 4 }, { 8, 4 }, { 20, -12 },
+			{ 4, 0 }, { 0, -20 }, { -4, 0 }, { -20, -12 }, { -8, 4 }, { -24, 4 } };
+
+	/* This the only random value generated.
+		 * This is used to only need to send 1 variable via UART.
+		 */
+		srand(xTaskGetTickCount());
+		int16_t super_random = rand() % 241;
+		boolean infinite_respawn = true;
+		TickType_t hit_timestamp;
+		boolean one_asteroid_hit_small = false;
+		boolean one_asteroid_hit_medium = false;
+		boolean one_asteroid_hit_large = false;
+		const TickType_t shot_delay = 1000;
+		int time_passed = 0; // Simple clock
+		unsigned char timer_1sec = 0;
+		TickType_t lastTime_1 = xTaskGetTickCount();
+		const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
+		boolean life_count_lock = false;
+		const TickType_t delay_hit = 1000;
+
+		// All asteroid shapes in one array: From this array we later choose which shape to draw
+		const point* shapes_small[3] = {type_1, type_2, type_3};
+		const point* shapes_medium[3] = {type_4, type_5, type_6};
+		const point* shapes_large[3] = {type_7, type_8, type_9};
+		const point** shapes_all[3] = {shapes_small, shapes_medium, shapes_large};
+
+		//	Number of asteroids to be destroyed
+	int asteroids_to_destroy_small = TO_DESTROY_MULTI_SMALL;
+	int asteroids_to_destroy_medium = TO_DESTROY_MULTI_MEDIUM;
+	int asteroids_to_destroy_large = TO_DESTROY_MULTI_LARGE;
+
+	// Initialize asteroids: Up to 16 asteroids can be on screen at once
+	// offset: 50px for large (a1-a8); 20px for medium (a9-a16)
+	// asteroid shape is either 0, 1 or 2
+
+	struct asteroid asteroid_1 = { { 0 } };
+	asteroid_1.spawn_position.x = -50;
+	asteroid_1.spawn_position.y = 180;
+	asteroid_1.spawn_side = left;
+	asteroid_1.position.x = -50;
+	asteroid_1.position.y = 180;
+	asteroid_1.remain_hits = three;
+	asteroid_1.shape = super_random % 3;
+	asteroid_1.position_locked = false;
+	asteroid_1.initial_orientation = NE;
+	asteroid_1.orientation = NE;
+	struct asteroid asteroid_2 = { { 0 } };
+	asteroid_2.spawn_position.x = -50;
+	asteroid_2.spawn_position.y = 0;
+	asteroid_2.spawn_side = left;
+	asteroid_2.position.x = -50;
+	asteroid_2.position.y = 0;
+	asteroid_2.remain_hits = one;
+	asteroid_2.shape = (super_random + 1) % 3;
+	asteroid_2.position_locked = true;
+	asteroid_2.initial_orientation = SE;
+	asteroid_2.orientation = SE;
+	struct asteroid asteroid_3 = { { 0 } };
+	asteroid_3.spawn_position.x = 240;
+	asteroid_3.spawn_position.y = -50;
+	asteroid_3.spawn_side = up;
+	asteroid_3.position.x = 240;
+	asteroid_3.position.y = -50;
+	asteroid_3.remain_hits = two;
+	asteroid_3.shape = (super_random + 2) % 3;
+	asteroid_3.position_locked = true;
+	asteroid_3.initial_orientation = S;
+	asteroid_3.orientation = S;
+	struct asteroid asteroid_4 = { { 0 } };
+	asteroid_4.spawn_position.x = 370;
+	asteroid_4.spawn_position.y = 190;
+	asteroid_4.spawn_side = right;
+	asteroid_4.position.x = 370;
+	asteroid_4.position.y = 190;
+	asteroid_4.remain_hits = one;
+	asteroid_4.shape = super_random % 3;
+	asteroid_4.position_locked = true;
+	asteroid_4.initial_orientation = W;
+	asteroid_4.orientation = W;
+	struct asteroid asteroid_5 = { { 0 } };
+	asteroid_5.spawn_position.x = 370;
+	asteroid_5.spawn_position.y = 40;
+	asteroid_5.spawn_side = right;
+	asteroid_5.position.x = 370;
+	asteroid_5.position.y = 40;
+	asteroid_5.remain_hits = three;
+	asteroid_5.shape = (super_random + 1) % 3;
+	asteroid_5.position_locked = false;
+	asteroid_5.initial_orientation = W;
+	asteroid_5.orientation = W;
+	struct asteroid asteroid_6 = { { 0 } };
+	asteroid_6.spawn_position.x = 80;
+	asteroid_6.spawn_position.y = 290;
+	asteroid_6.spawn_side = down;
+	asteroid_6.position.x = 80;
+	asteroid_6.position.y = 290;
+	asteroid_6.remain_hits = one;
+	asteroid_6.shape = (super_random + 2) % 3;
+	asteroid_6.position_locked = true;
+	asteroid_6.initial_orientation = NE;
+	asteroid_6.orientation = NE;
+	struct asteroid asteroid_7 = { { 0 } };
+	asteroid_7.spawn_position.x = 280;
+	asteroid_7.spawn_position.y = 290;
+	asteroid_7.spawn_side = down;
+	asteroid_7.position.x = 280;
+	asteroid_7.position.y = 290;
+	asteroid_7.remain_hits = two;
+	asteroid_7.shape = super_random % 3;
+	asteroid_7.position_locked = true;
+	asteroid_7.initial_orientation = NW;
+	asteroid_7.orientation = NW;
+	struct asteroid asteroid_8 = { { 0 } };
+	asteroid_8.spawn_position.x = 180;
+	asteroid_8.spawn_position.y = -50;
+	asteroid_8.spawn_side = up;
+	asteroid_8.position.x = 180;
+	asteroid_8.position.y = -50;
+	asteroid_8.remain_hits = one;
+	asteroid_8.shape = (super_random + 1) % 3;
+	asteroid_8.position_locked = true;
+	asteroid_8.initial_orientation = SW;
+	asteroid_8.orientation = SW;
+	struct asteroid asteroid_9 = { { 0 } };
+	asteroid_9.spawn_position.x = 70;
+	asteroid_9.spawn_position.y = -20;
+	asteroid_9.spawn_side = up;
+	asteroid_9.position.x = 70;
+	asteroid_9.position.y = -20;
+	asteroid_9.remain_hits = two;
+	asteroid_9.shape = (super_random + 2) % 3;
+	asteroid_9.position_locked = false;
+	asteroid_9.initial_orientation = SE;
+	asteroid_9.orientation = SE;
+	struct asteroid asteroid_10 = { { 0 } };
+	asteroid_10.spawn_position.x = 340;
+	asteroid_10.spawn_position.y = 180;
+	asteroid_10.spawn_side = right;
+	asteroid_10.position.x = 340;
+	asteroid_10.position.y = 180;
+	asteroid_10.remain_hits = one;
+	asteroid_10.shape = super_random % 3;
+	asteroid_10.position_locked = true;
+	asteroid_10.initial_orientation = NW;
+	asteroid_10.orientation = NW;
+	struct asteroid asteroid_11 = { { 0 } };
+	asteroid_11.spawn_position.x = -20;
+	asteroid_11.spawn_position.y = 100;
+	asteroid_11.spawn_side = left;
+	asteroid_11.position.x = -20;
+	asteroid_11.position.y = 100;
+	asteroid_11.remain_hits = two;
+	asteroid_11.shape = super_random % 3;
+	asteroid_11.position_locked = false;
+	asteroid_11.initial_orientation = SE;
+	asteroid_11.orientation = SE;
+	struct asteroid asteroid_12 = { { 0 } };
+	asteroid_12.spawn_position.x = -20;
+	asteroid_12.spawn_position.y = 220;
+	asteroid_12.spawn_side = left;
+	asteroid_12.position.x = -20;
+	asteroid_12.position.y = 220;
+	asteroid_12.remain_hits = one;
+	asteroid_12.shape = super_random % 3;
+	asteroid_12.position_locked = true;
+	asteroid_12.initial_orientation = NE;
+	asteroid_12.orientation = NE;
+	struct asteroid asteroid_13 = { { 0 } };
+	asteroid_13.spawn_position.x = 30;
+	asteroid_13.spawn_position.y = 260;
+	asteroid_13.spawn_side = down;
+	asteroid_13.position.x = 30;
+	asteroid_13.position.y = 260;
+	asteroid_13.remain_hits = two;
+	asteroid_13.shape = super_random % 3;
+	asteroid_13.position_locked = false;
+	asteroid_13.initial_orientation = N;
+	asteroid_13.orientation = N;
+	struct asteroid asteroid_14 = { { 0 } };
+	asteroid_14.spawn_position.x = 190;
+	asteroid_14.spawn_position.y = 260;
+	asteroid_14.spawn_side = down;
+	asteroid_14.position.x = 190;
+	asteroid_14.position.y = 260;
+	asteroid_14.remain_hits = one;
+	asteroid_14.shape = super_random % 3;
+	asteroid_14.position_locked = true;
+	asteroid_14.initial_orientation = NE;
+	asteroid_14.orientation = NE;
+	struct asteroid asteroid_15 = { { 0 } };
+	asteroid_15.spawn_position.x = 110;
+	asteroid_15.spawn_position.y = -20;
+	asteroid_15.spawn_side = up;
+	asteroid_15.position.x = 110;
+	asteroid_15.position.y = -20;
+	asteroid_15.remain_hits = two;
+	asteroid_15.shape = super_random % 3;
+	asteroid_15.position_locked = false;
+	asteroid_15.initial_orientation = SW;
+	asteroid_15.orientation = SW;
+	struct asteroid asteroid_16 = { { 0 } };
+	asteroid_16.spawn_position.x = 340;
+	asteroid_16.spawn_position.y = 120;
+	asteroid_16.spawn_side = right;
+	asteroid_16.position.x = 340;
+	asteroid_16.position.y = 120;
+	asteroid_16.remain_hits = one;
+	asteroid_16.shape = super_random % 3;
+	asteroid_16.position_locked = true;
+	asteroid_16.initial_orientation = NW;
+	asteroid_16.orientation = NW;
+
+	// Putting them asteroid variables inside a single array
+	struct asteroid* all_asteroids[16] = { &asteroid_1, &asteroid_2,
+			&asteroid_3, &asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7,
+			&asteroid_8, &asteroid_9, &asteroid_10, &asteroid_11, &asteroid_12,
+			&asteroid_13, &asteroid_14, &asteroid_15, &asteroid_16 };
+
+	// Function to set the asteroids spawn position based on its spawn side
+	void setSpawnPosition(sides spawn_side, int i, uint32_t random) {
+		switch (spawn_side) {
+		case left: 	all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
+					all_asteroids[i]->position.y = 80 + random % 140; break;
+		case right:	all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
+					all_asteroids[i]->position.y = 20 + random % 200; break;
+		case up:	all_asteroids[i]->position.x = 20 + random % 280;
+					all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y; break;
+		case down:	all_asteroids[i]->position.x = 20 + random % 280;
+					all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y; break;
+		}
+	}
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
@@ -482,7 +741,7 @@ void drawTaskMultiplayer (void * params){
 						number_local_shots--;
 						for(incr2 = incr; incr2 < number_local_shots; incr2++){
 							memcpy(&local_shots[incr2], &local_shots[incr2 + 1], sizeof(struct shot));
-						}
+						}TickType_t lastTime_1 = xTaskGetTickCount();
 						initialize_single_shot(number_local_shots + 1);
 					}
 					else if(local_shots[incr].position.x <= 0){
@@ -645,7 +904,356 @@ void drawTaskMultiplayer (void * params){
 //					}
 //				}
 
-			}
+			// ASTEROIDS
+				//Re-spawning asteroids
+					if (one_asteroid_hit_small == true) {
+						for (i = 0; i <= 15; i+=2) {
+							// Only the following i we re-spawn
+							if (i == 0 || i == 4 || i == 8 || i == 10 || i == 12 || i == 14) {
+								if (all_asteroids[i]->remain_hits == none)
+									break;
+							}
+						}
+							if ((i == 0 || i == 4) && asteroids_to_destroy_large > 0) {
+							all_asteroids[i]->remain_hits = three;
+							all_asteroids[i]->shape = rand() % 3;
+							all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
+							all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
+							all_asteroids[i]->position_locked = false;
+						}
+							if ((i == 8 || i == 10 || i == 12 || i == 14) && asteroids_to_destroy_medium > 0) {
+							all_asteroids[i]->remain_hits = two;
+							all_asteroids[i]->shape = rand() % 3;
+							all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
+							all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
+							all_asteroids[i]->position_locked = false;
+						}
+						one_asteroid_hit_small = false;
+					}
+						// Re-spawn infinitively if infinite_respawn == true
+					if (infinite_respawn == true && (asteroids_to_destroy_large < 2 || asteroids_to_destroy_medium < 2)) {
+						asteroids_to_destroy_medium = 99;
+						asteroids_to_destroy_large = 99;
+					}
+
+
+					// Timer logic
+					if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
+						timer_1sec = 1;
+						lastTime_1 = xTaskGetTickCount();
+					}
+					else
+								timer_1sec = 0;
+					if (timer_1sec == 1)
+						time_passed++;
+					// This creates the seed for all the following rand-Functions
+					srand((uint32_t)time_passed);
+
+					/*
+					* The following sets the movement of the asteroids. There are 8 possible directions.
+					*/
+					for (i = 0; i <= 15; i++) {
+						if (all_asteroids[i]->position_locked == false) {
+							switch (all_asteroids[i]->orientation) {
+							case N:
+								all_asteroids[i]->position.y = all_asteroids[i]->position.y	- (1 * ASTEROID_SPEED);
+								break;
+							case NE:
+								all_asteroids[i]->position.x = all_asteroids[i]->position.x	+ (1 * ASTEROID_SPEED);
+								all_asteroids[i]->position.y = all_asteroids[i]->position.y	- (1 * ASTEROID_SPEED);
+								break;
+							case E:
+								all_asteroids[i]->position.x = all_asteroids[i]->position.x	+ (1 * ASTEROID_SPEED);
+								break;
+							case SE:
+								all_asteroids[i]->position.x = all_asteroids[i]->position.x	+ (1 * ASTEROID_SPEED);
+								all_asteroids[i]->position.y = all_asteroids[i]->position.y	+ (1 * ASTEROID_SPEED);
+								break;
+							case S:
+								all_asteroids[i]->position.y = all_asteroids[i]->position.y	+ (1 * ASTEROID_SPEED);
+								break;
+							case SW:
+								all_asteroids[i]->position.x = all_asteroids[i]->position.x	- (1 * ASTEROID_SPEED);
+								all_asteroids[i]->position.y = all_asteroids[i]->position.y	+ (1 * ASTEROID_SPEED);
+								break;
+							case W:
+								all_asteroids[i]->position.x = all_asteroids[i]->position.x	- (1 * ASTEROID_SPEED);
+								break;
+							case NW:
+								all_asteroids[i]->position.x = all_asteroids[i]->position.x	- (1 * ASTEROID_SPEED);
+								all_asteroids[i]->position.y = all_asteroids[i]->position.y - (1 * ASTEROID_SPEED);
+								break;
+							case no_ort: break;
+							}
+						}
+					}
+
+					// CATCH off-screen asteroids
+					for (i = 0; i <= 15; i++) {
+						switch (all_asteroids[i]->orientation) {
+						case no_ort: break;
+						case N:	if (all_asteroids[i]->position.y <= -50) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case NE: if ((all_asteroids[i]->position.x >= 370)
+										|| (all_asteroids[i]->position.y <= -50)) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case E: if (all_asteroids[i]->position.x >= 370) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case SE: if ((all_asteroids[i]->position.x >= 370)
+										|| (all_asteroids[i]->position.y >= 290)) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case S: if (all_asteroids[i]->position.y >= 290) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case SW: if ((all_asteroids[i]->position.x <= -50)
+										|| (all_asteroids[i]->position.y >= 290)) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case W: if (all_asteroids[i]->position.x <= -50) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						case NW:if ((all_asteroids[i]->position.x <= -50)
+										|| (all_asteroids[i]->position.y <= -50)) {
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
+									} break;
+						}
+					}
+
+					/* Check if the player's ship was hit by asteroid */
+					for (i = 0; i <= 15; i++) {
+						if(all_asteroids[i]->remain_hits == one){
+							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_SMALL)
+							&& (abs(all_asteroids[i]->position.y - player_local.position.y) <= HIT_LIMIT_SMALL)) {
+								player_local.state = hit;
+								hit_timestamp = xTaskGetTickCount();
+							}
+						}
+						if(all_asteroids[i]->remain_hits == two){
+							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_MEDIUM)
+							&& (abs(all_asteroids[i]->position.y - player_local.position.y) <= HIT_LIMIT_MEDIUM)) {
+								player_local.state = hit;
+								hit_timestamp = xTaskGetTickCount();
+							}
+						}
+						if(all_asteroids[i]->remain_hits == three){
+							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_LARGE)
+							&& (abs(all_asteroids[i]->position.y - player_local.position.y) <= HIT_LIMIT_LARGE)) {
+								player_local.state = hit;
+								hit_timestamp = xTaskGetTickCount();
+							}
+						}
+					}
+
+					/* Check if asteroids were hit by shot cannon blaster laser thigs
+					* Threshold zone is a square around the asteroid center.
+					* Square side length: small: 6px; medium: 8px; large: 12px
+					*/
+					// asteroid_2, _4, _6, _8, _10, _12, _14 and asteroid_16 can only be small
+					for(incr = 0; incr < number_local_shots; incr++){
+						for (i = 1; i <= 15; i+=2){
+							if ((abs(all_asteroids[i]->position.x - local_shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+								&& (abs(all_asteroids[i]->position.y - local_shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)
+								&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)
+								&& (all_asteroids[i]->remain_hits == one)) {
+									all_asteroids[i]->position.x = -50;
+									all_asteroids[i]->position.y = -50;
+									all_asteroids[i]->position_locked = true;
+									all_asteroids[i]->remain_hits = none;
+									score.score += POINTS_ASTEROID_SMALL;
+									asteroids_to_destroy_small--;
+									one_asteroid_hit_small = true;
+							}
+						}
+					}
+
+					// asteroid_3, asteroid_7, asteroid_9, asteroid_11, asteroid_13 and asteroid_15 can be medium or small
+					for(incr = 0; incr < number_local_shots; incr++) {
+						for (i = 2; i <= 15; i+=2) {
+							if (i != 4) {
+								if ((abs(all_asteroids[i]->position.x - local_shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
+										&& (abs(all_asteroids[i]->position.y - local_shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)
+										&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)
+										&& (all_asteroids[i]->remain_hits == two)) {
+									asteroids_to_destroy_medium--;
+									score.score += POINTS_ASTEROID_MEDIUM;
+									one_asteroid_hit_medium = true;
+									all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
+									all_asteroids[i+1]->hit_timestamp = xTaskGetTickCount();
+
+									switch (i) {
+									case 0: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = NW;
+											all_asteroids[i+1]->orientation = SE; break;
+									case 2: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = W;
+											all_asteroids[i+1]->orientation = E; break;
+									case 4: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = N;
+											all_asteroids[i+1]->orientation = S; break;
+									case 6: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = NE;
+											all_asteroids[i+1]->orientation = SW; break;
+									case 8: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = E;
+											all_asteroids[i+1]->orientation = W; break;
+									case 10: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = NE;
+											all_asteroids[i+1]->orientation = SW; break;
+									case 12: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = W;
+											all_asteroids[i+1]->orientation = E; break;
+									case 14: all_asteroids[i]->remain_hits = one;
+											all_asteroids[i+1]->remain_hits = one;
+											all_asteroids[i+1]->position_locked = false;
+											all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+											all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+											all_asteroids[i]->orientation = NW;
+											all_asteroids[i+1]->orientation = SE; break;
+									}
+							}
+							else if ((abs(all_asteroids[i]->position.x - local_shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+									&& (abs(all_asteroids[i]->position.y - local_shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)
+									&& (all_asteroids[i]->remain_hits == one)
+									&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
+								all_asteroids[i]->position.x = -50;
+								all_asteroids[i]->position.y = -50;
+								all_asteroids[i]->position_locked = true;
+								all_asteroids[i]->remain_hits = none;
+								score.score += POINTS_ASTEROID_SMALL;
+								asteroids_to_destroy_small--;
+								one_asteroid_hit_small = true;
+							}
+						}
+					}
+				}
+
+				// asteroid_1 and asteroid_5 can be all sizes: S, M and L
+				for(incr = 0; incr < number_local_shots; incr++) {
+					for (i = 0; i <= 7; i+=4) {
+						if ((abs(all_asteroids[i]->position.x - local_shots[incr].position.x) <= HIT_LIMIT_SHOT_LARGE)
+								&& (abs(all_asteroids[i]->position.y - local_shots[incr].position.y) <= HIT_LIMIT_SHOT_LARGE)
+								&& (all_asteroids[i]->remain_hits == three)) {
+							asteroids_to_destroy_large--;
+							score.score += POINTS_ASTEROID_LARGE;
+							one_asteroid_hit_large = true;
+							all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
+							all_asteroids[i+2]->hit_timestamp = xTaskGetTickCount();
+
+							switch (i) {
+							case 0: all_asteroids[i]->remain_hits = two;
+									all_asteroids[i+2]->remain_hits = two;
+									all_asteroids[i+2]->position_locked = false;
+									all_asteroids[i+2]->position.x = all_asteroids[i]->position.x;
+									all_asteroids[i+2]->position.y = all_asteroids[i]->position.y;
+									all_asteroids[i]->orientation = NW;
+									all_asteroids[i+2]->orientation = SE; break;
+							case 4: all_asteroids[i]->remain_hits = two;
+									all_asteroids[i+2]->remain_hits = two;
+									all_asteroids[i+2]->position_locked = false;
+									all_asteroids[i+2]->position.x = all_asteroids[i]->position.x;
+									all_asteroids[i+2]->position.y = all_asteroids[i]->position.y;
+									all_asteroids[i]->orientation = N;
+									all_asteroids[i+2]->orientation = S; break;
+							}
+						}
+						else if ((abs(all_asteroids[i]->position.x - local_shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
+									&& (abs(all_asteroids[i]->position.y - local_shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)
+									&& (all_asteroids[i]->remain_hits == two)
+									&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
+								asteroids_to_destroy_medium--;
+								score.score += POINTS_ASTEROID_MEDIUM;
+								one_asteroid_hit_medium = true;
+								all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
+								all_asteroids[i+1]->hit_timestamp = xTaskGetTickCount();
+
+								switch (i) {
+								case 0: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = NW;
+										all_asteroids[i+1]->orientation = SE; break;
+								case 2: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = W;
+										all_asteroids[i+1]->orientation = E; break;
+								case 4: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = N;
+										all_asteroids[i+1]->orientation = S; break;
+								case 6: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = NE;
+										all_asteroids[i+1]->orientation = SW; break;
+								}
+						}
+						else if ((abs(all_asteroids[i]->position.x - local_shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+									&& (abs(all_asteroids[i]->position.y - local_shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)
+									&& (all_asteroids[i]->remain_hits == one)
+									&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
+								all_asteroids[i]->position.x = -50;
+								all_asteroids[i]->position.y = -50;
+								all_asteroids[i]->position_locked = true;
+								all_asteroids[i]->remain_hits = none;
+								score.score += POINTS_ASTEROID_SMALL;
+								asteroids_to_destroy_small--;
+								one_asteroid_hit_small = true;
+						}
+					}
+				}
+
+
+			}//Only runs if UART is connected and other player is also on this screen
 
 //			Drawing functions
 			gdispClear(Black);
@@ -705,29 +1313,42 @@ void drawTaskMultiplayer (void * params){
 
 //			Drawing 2 player ships
 			if(uart_connected == true){
-				gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
+				// Local Player
+				if (player_local.state == fine) {
+					gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
+
+					// Local players bullets
+					for(incr = 0; incr < number_local_shots; incr++){
+						if(local_shots[incr].status == spawn){
+							gdispFillCircle(local_shots[incr].position.x, local_shots[incr].position.y, 3, Green);
+						}
+					}
+				}
+				else if (player_local.state == hit) {
+					if (life_count_lock == false) {
+						lives[0]--;
+						life_count_lock = true;
+					}
+					if (xTaskGetTickCount() - hit_timestamp > delay_hit) {
+						player_local.state = fine; // Reset the players ship if not yet game over
+						life_count_lock = false; // Unlock the life counter
+						player_local.position.x = DISPLAY_CENTER_X; // Reset player coordinates
+						player_local.position.y = DISPLAY_CENTER_Y; // Reset player coordinates
+						moved = 0; // Stop inertia until joystick input
+					}
+				}
+
+				// Remote player
 				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
-	//			Drawing bullets
-				for(incr = 0; incr < number_local_shots; incr++){
-					if(local_shots[incr].status == spawn){
-						gdispFillCircle(local_shots[incr].position.x, local_shots[incr].position.y, 3, Yellow);
-					}
-				}
 
-
-	//			Local
-				for(incr = 0; incr < number_local_shots; incr++){
-					if(local_shots[incr].status == spawn){
-						gdispFillCircle(local_shots[incr].position.x, local_shots[incr].position.y, 3, Green);
-					}
-				}
-	//			Remote
+				// Remote players bullets
 				for(incr = 0; incr < number_remote_shots; incr++){
 					if(remote_shots[incr].status == spawn){
 						gdispFillCircle(remote_shots[incr].position.x, remote_shots[incr].position.y, 3, Red);
 					}
 				}
 			}
+
 			to_send_x = local_x / 4 + 1;
 			to_send_y = local_y / 3 + 1;
 
@@ -767,6 +1388,119 @@ void drawTaskMultiplayer (void * params){
 					break;
 				}
 				fired_bullet_this_frame = false;
+			}
+
+			// ASTEROIDS
+			if(uart_connected == true){
+				// Asteroid 1
+				if (asteroid_1.remain_hits == three)
+					gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
+						shapes_large[asteroid_1.shape], NUM_POINTS_LARGE, White);
+				else if (asteroid_1.remain_hits == two)
+					gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
+						shapes_medium[asteroid_1.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_1.remain_hits == one)
+					gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
+						shapes_small[asteroid_1.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 2
+				if (asteroid_2.remain_hits == one)
+					gdispDrawPoly(asteroid_2.position.x, asteroid_2.position.y,
+							shapes_small[asteroid_2.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 3
+				if (asteroid_3.remain_hits == two)
+					gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
+						shapes_medium[asteroid_3.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_3.remain_hits == one)
+					gdispDrawPoly(asteroid_3.position.x, asteroid_3.position.y,
+						shapes_small[asteroid_3.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 4
+				if (asteroid_4.remain_hits == one)
+					gdispDrawPoly(asteroid_4.position.x, asteroid_4.position.y,
+						shapes_small[asteroid_4.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 5
+				if (asteroid_5.remain_hits == three)
+					gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
+						shapes_large[asteroid_5.shape], NUM_POINTS_LARGE, White);
+				else if (asteroid_5.remain_hits == two)
+					gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
+						shapes_medium[asteroid_5.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_5.remain_hits == one)
+					gdispDrawPoly(asteroid_5.position.x, asteroid_5.position.y,
+						shapes_small[asteroid_5.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 6
+				if (asteroid_6.remain_hits == one)
+					gdispDrawPoly(asteroid_6.position.x, asteroid_6.position.y,
+						shapes_small[asteroid_6.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 7
+				if (asteroid_7.remain_hits == two)
+					gdispDrawPoly(asteroid_7.position.x, asteroid_7.position.y,
+						shapes_medium[asteroid_7.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_7.remain_hits == one)
+					gdispDrawPoly(asteroid_7.position.x, asteroid_7.position.y,
+						shapes_small[asteroid_7.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 8
+				if (asteroid_8.remain_hits == one)
+					gdispDrawPoly(asteroid_8.position.x, asteroid_8.position.y,
+						shapes_small[asteroid_8.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 9
+				if (asteroid_9.remain_hits == two)
+					gdispDrawPoly(asteroid_9.position.x, asteroid_9.position.y,
+						shapes_medium[asteroid_9.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_9.remain_hits == one)
+					gdispDrawPoly(asteroid_9.position.x, asteroid_9.position.y,
+						shapes_small[asteroid_9.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 10
+				if (asteroid_10.remain_hits == one)
+					gdispDrawPoly(asteroid_10.position.x, asteroid_10.position.y,
+						shapes_small[asteroid_10.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 11
+				if (asteroid_11.remain_hits == two)
+					gdispDrawPoly(asteroid_11.position.x, asteroid_11.position.y,
+						shapes_medium[asteroid_11.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_11.remain_hits == one)
+					gdispDrawPoly(asteroid_11.position.x, asteroid_11.position.y,
+						shapes_small[asteroid_11.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 12
+				if (asteroid_12.remain_hits == one)
+					gdispDrawPoly(asteroid_12.position.x, asteroid_12.position.y,
+							shapes_small[asteroid_12.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 13
+				if (asteroid_13.remain_hits == two)
+					gdispDrawPoly(asteroid_13.position.x, asteroid_13.position.y,
+						shapes_medium[asteroid_13.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_13.remain_hits == one)
+					gdispDrawPoly(asteroid_13.position.x, asteroid_13.position.y,
+						shapes_small[asteroid_13.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 14
+				if (asteroid_14.remain_hits == one)
+					gdispDrawPoly(asteroid_14.position.x, asteroid_14.position.y,
+						shapes_small[asteroid_14.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 15
+				if (asteroid_15.remain_hits == two)
+					gdispDrawPoly(asteroid_15.position.x, asteroid_15.position.y,
+						shapes_medium[asteroid_15.shape], NUM_POINTS_MEDIUM, White);
+				else if (asteroid_15.remain_hits == one)
+					gdispDrawPoly(asteroid_15.position.x, asteroid_15.position.y,
+						shapes_small[asteroid_15.shape], NUM_POINTS_SMALL, White);
+
+				// Asteroid 16
+				if (asteroid_16.remain_hits == one)
+					gdispDrawPoly(asteroid_16.position.x, asteroid_16.position.y,
+						shapes_small[asteroid_16.shape], NUM_POINTS_SMALL, White);
 			}
 
 			if(show_debug == true){
