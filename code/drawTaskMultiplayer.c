@@ -725,69 +725,44 @@ void drawTaskMultiplayer (void * params){
 			}
 			to_send_x = local_x / 4 + 1;
 			to_send_y = local_y / 3 + 1;
-			switch((int) joystick_internal.angle){
-			case JOYSTICK_ANGLE_NULL:
+
+			if(fired_bullet_this_frame == false){
 				to_send_x += 80;
 				to_send_y += 80;
-				break;
-			case JOYSTICK_ANGLE_E:
-				to_send_x += 160;
-				to_send_y += 80;
-				break;
-			case JOYSTICK_ANGLE_NE:
-				to_send_x += 160;
-				break;
-			case JOYSTICK_ANGLE_SW:
-				to_send_y += 160;
-				break;
-			case JOYSTICK_ANGLE_S:
-				to_send_x += 80;
-				to_send_y += 160;
-				break;
-			case JOYSTICK_ANGLE_SE:
-				to_send_x += 160;
-				to_send_y += 160;
-				break;
-			case JOYSTICK_ANGLE_N:
-				to_send_x += 80;
-				break;
-			case JOYSTICK_ANGLE_W:
-				to_send_y += 80;
-				break;
 			}
-//			if(fired_bullet_this_frame == false){
-//				to_send_x += 80;
-//				to_send_y += 80;
-//			}
-//			else if(fired_bullet_this_frame == true){
-//				switch((int) joystick_internal.angle){
-//				case JOYSTICK_ANGLE_E:
-//					to_send_x += 160;
-//					to_send_y += 80;
-//					break;
-//				case JOYSTICK_ANGLE_NE:
-//					to_send_x += 160;
-//					break;
-//				case JOYSTICK_ANGLE_SW:
-//					to_send_y += 160;
-//					break;
-//				case JOYSTICK_ANGLE_S:
-//					to_send_x += 80;
-//					to_send_y += 160;
-//					break;
-//				case JOYSTICK_ANGLE_SE:
-//					to_send_x += 160;
-//					to_send_y += 160;
-//					break;
-//				case JOYSTICK_ANGLE_N:
-//					to_send_x += 80;
-//					break;
-//				case JOYSTICK_ANGLE_W:
-//					to_send_y += 80;
-//					break;
-//				}
-//				fired_bullet_this_frame = false;
-//			}
+			else if(fired_bullet_this_frame == true){
+				switch((int) joystick_internal.angle){
+				case JOYSTICK_ANGLE_NULL:
+					to_send_x += 80;
+					to_send_y += 80;
+					break;
+				case JOYSTICK_ANGLE_E:
+					to_send_x += 160;
+					to_send_y += 80;
+					break;
+				case JOYSTICK_ANGLE_NE:
+					to_send_x += 160;
+					break;
+				case JOYSTICK_ANGLE_SW:
+					to_send_y += 160;
+					break;
+				case JOYSTICK_ANGLE_S:
+					to_send_x += 80;
+					to_send_y += 160;
+					break;
+				case JOYSTICK_ANGLE_SE:
+					to_send_x += 160;
+					to_send_y += 160;
+					break;
+				case JOYSTICK_ANGLE_N:
+					to_send_x += 80;
+					break;
+				case JOYSTICK_ANGLE_W:
+					to_send_y += 80;
+					break;
+				}
+				fired_bullet_this_frame = false;
+			}
 
 			if(show_debug == true){
 				// Using lowpoly position for local version for debugging for consistency with remote
