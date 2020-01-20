@@ -24,12 +24,12 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      MAIN_MENU_STATE
+#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_3
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
 #define STARTING_LIVES_LEVEL_THREE          9
-#define STARTING_LIVES_MULTIPLAYER	    	9999
+#define STARTING_LIVES_MULTIPLAYER	    9999
 
 // Speed of laser blaster shots
 #define LASER_BLASTER_SPEED		   	            3
@@ -95,14 +95,14 @@
 #define HIT_LIMIT_PLAYER_SHOT_MULTI				8
 
 // Saucers
-#define SAUCER_1_SPAWN_TIME					9999
-#define SAUCER_2_SPAWN_TIME					9999
+#define SAUCER_1_SPAWN_TIME					20
+#define SAUCER_2_SPAWN_TIME					35
 
 // Score thresholds for going on to the next levels.
 // After beating game, will be spawning asteroids to let player go on to reach a new high score
 #define LEVEL_TWO_SCORE_THRESHOLD          8000
 #define LEVEL_THREE_SCORE_THRESHOLD        18000
-#define BEAT_GAME_SCORE_THRESHOLD          21000
+#define BEAT_GAME_SCORE_THRESHOLD          29000
 
 #define START_MENU_SCORE_INCREMENT			2000
 

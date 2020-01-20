@@ -169,6 +169,7 @@ struct asteroid {
     compass_orientation initial_orientation;
     compass_orientation orientation;
     hit_counter remain_hits;
+    TickType_t hit_timestamp;
     int16_t shape;
     boolean position_locked;
 };
