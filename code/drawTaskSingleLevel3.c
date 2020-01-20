@@ -82,7 +82,7 @@ void drawTaskSingleLevel3 (void * params){
 	unsigned int restart_lives = 3;	// Lives to be had when game is restarted
 	boolean life_count_lock = false;	// Used for delays when player is hit
 	int time_passed = 0; // Simple clock at top of screen
-	boolean infinite_respawn = false;
+	boolean infinite_respawn = true;
 
 	boolean one_asteroid_hit_small = false;
 	boolean one_asteroid_hit_medium = false;
@@ -729,40 +729,6 @@ void drawTaskSingleLevel3 (void * params){
 					asteroids_to_destroy_medium = 99;
 					asteroids_to_destroy_large = 99;
 				}
-
-	//			if (((one_asteroid_hit_small == true) && (asteroids_to_destroy_medium >= RESPAWN_MEDIUM_LEVEL_3))
-	//					|| ((one_asteroid_hit_small == true) && (infinite_respawn == true))) {
-	//				// Detect which medium asteroid was destroyed
-	//				for (i = 5; i <= 9; i++) { // For medium asteroid hits
-	//					if (all_asteroids[i]->remain_hits == none)
-	//						break;
-	//				}
-	//
-	//				// Re-spawn the asteroid_i
-	//				all_asteroids[i]->remain_hits = two;
-	//				all_asteroids[i]->shape = rand() % 3;
-	//				all_asteroids[i]->position_locked = false;
-	//				all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
-	//				all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
-	//				one_asteroid_hit_small = false;
-	//			}
-	//
-	//			if (((one_asteroid_hit_small == true) && (asteroids_to_destroy_large >= RESPAWN_LARGE_LEVEL_3))
-	//					|| ((one_asteroid_hit_small == true) && (infinite_respawn == true))) {
-	//				// Detect which large asteroid was destroyed
-	//				for (i = 0; i <= 4; i++) { // For large asteroid hits
-	//					if (all_asteroids[i]->remain_hits == none)
-	//						break;
-	//				}
-	//
-	//				// Re-spawn the asteroid_i
-	//				all_asteroids[i]->remain_hits = three;
-	//				all_asteroids[i]->shape = rand() % 3;
-	//				all_asteroids[i]->position_locked = false;
-	//				all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
-	//				all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y;
-	//				one_asteroid_hit_small = false;
-	//			}
 
 				// This creates the seed for all the following rand-Functions
 				srand((uint32_t)time_passed);
