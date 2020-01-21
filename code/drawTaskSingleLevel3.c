@@ -328,7 +328,7 @@ void drawTaskSingleLevel3 (void * params){
 	asteroid_16.initial_orientation = NW;
 	asteroid_16.orientation = NW;
 
-	// Putting all asteroid variables inside a single array
+	// Putting them asteroid variables inside a single array
 	struct asteroid* all_asteroids[16] = { &asteroid_1, &asteroid_2,
 			&asteroid_3, &asteroid_4, &asteroid_5, &asteroid_6, &asteroid_7,
 			&asteroid_8, &asteroid_9, &asteroid_10, &asteroid_11, &asteroid_12,
@@ -374,7 +374,7 @@ void drawTaskSingleLevel3 (void * params){
 		saucer_2.shots[i].y = 0;
 	}
 
-	// Put the saucers inside an array
+	// Putting them saucy saucers inside an array
 	struct saucer* the_saucers[2] = { &saucer_1, &saucer_2 };
 
 	struct joystick_angle_pulse joystick_internal;
@@ -836,150 +836,41 @@ void drawTaskSingleLevel3 (void * params){
 					case N:	if (all_asteroids[i]->position.y <= -50) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case NE: if ((all_asteroids[i]->position.x >= 370)
 									|| (all_asteroids[i]->position.y <= -50)) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case E: if (all_asteroids[i]->position.x >= 370) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case SE: if ((all_asteroids[i]->position.x >= 370)
 									|| (all_asteroids[i]->position.y >= 290)) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case S: if (all_asteroids[i]->position.y >= 290) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case SW: if ((all_asteroids[i]->position.x <= -50)
 									|| (all_asteroids[i]->position.y >= 290)) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case W: if (all_asteroids[i]->position.x <= -50) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					case NW:if ((all_asteroids[i]->position.x <= -50)
 									|| (all_asteroids[i]->position.y <= -50)) {
 								setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
 								all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
-							} break;
+								} break;
 					}
 				}
-
-	//			// North-East movement of asteroid 1
-	//			// rand() % 231 returns a random number between 0 and 230
-	//			if ((asteroid_1.position.x >= 370)
-	//					|| (asteroid_1.position.y <= -50)) {
-	//				asteroid_1.position.x = -50;
-	//				asteroid_1.position.y = rand() % 231;
-	//			}
-	//
-	//			// South-East movement of asteroid 2
-	//			if ((asteroid_2.position.x >= 370)
-	//					|| (asteroid_2.position.y >= 290)) {
-	//				asteroid_2.position.x = -50;
-	//				asteroid_2.position.y = rand() % 231;
-	//			}
-	//
-	//			// South movement of asteroid 3
-	//			if (asteroid_3.position.y >= 290) {
-	//				asteroid_3.position.x = rand() % 315;
-	//				asteroid_3.position.y = -50;
-	//			}
-	//
-	//			// West movement of asteroid 4
-	//			if (asteroid_4.position.x <= -50) {
-	//				asteroid_4.position.x = 370;
-	//				asteroid_4.position.y = rand() % 231;
-	//			}
-	//
-	//			// West-South-West movement of asteroid 5
-	//			if (asteroid_5.position.x <= -50) {
-	//				asteroid_5.position.x = 370;
-	//				asteroid_5.position.y = rand() % 231;
-	//			}
-	//
-	//			// North-East movement of asteroid 6
-	//			if ((asteroid_6.position.x >= 370)
-	//					|| (asteroid_6.position.y <= -50)) {
-	//				asteroid_6.position.x = rand() % 315;
-	//				asteroid_6.position.y = 290;
-	//			}
-	//
-	//			// North-West movement of asteroid 7
-	//			if ((asteroid_7.position.x <= -50)
-	//					|| (asteroid_7.position.y <= -50)) {
-	//				asteroid_7.position.x = rand() % 315;
-	//				asteroid_7.position.y = 290;
-	//			}
-	//
-	//			// South-South-West movement of asteroid 8
-	//			if ((asteroid_8.position.x <= -50)
-	//					|| (asteroid_8.position.y >= 290)) {
-	//				asteroid_8.position.x = 60 + rand() % 241;
-	//				asteroid_8.position.y = -50;
-	//			}
-	//
-	//			// South-South-East movement of asteroid 9
-	//			if ((asteroid_9.position.x >= 340)
-	//					|| (asteroid_9.position.y >= 260)) {
-	//				asteroid_9.position.x = rand() % 241;
-	//				asteroid_9.position.y = -20;
-	//			}
-	//
-	//			// West-North-West movement of asteroid 10
-	//			if ((asteroid_10.position.x <= -20)
-	//					|| (asteroid_10.position.y <= -20)) {
-	//				asteroid_10.position.x = 340;
-	//				asteroid_10.position.y = rand() % 241;
-	//			}
-	//
-	//			// South-East: asteroid 11
-	//			if ((asteroid_11.position.x >= 340)
-	//					|| (asteroid_11.position.y >= 260)) {
-	//				asteroid_11.position.x = -20;
-	//				asteroid_11.position.y = rand() % 241;
-	//			}
-	//
-	//			// North-East: asteroid 12
-	//			if ((asteroid_12.position.x >= 340)
-	//					|| (asteroid_12.position.y <= -20)) {
-	//				asteroid_12.position.x = -20;
-	//				asteroid_12.position.y = rand() % 241;
-	//			}
-	//
-	//			// North: asteroid 13
-	//			if (asteroid_13.position.y <= -20) {
-	//				asteroid_13.position.x = 20 + rand() % 280;
-	//				asteroid_13.position.y = 260;
-	//			}
-	//
-	//			// North-East: asteroid 14
-	//			if ((asteroid_14.position.x >= 340)
-	//					|| (asteroid_14.position.y <= -20)) {
-	//				asteroid_14.position.x = 20 + rand() % 280;
-	//				asteroid_14.position.y = 260;
-	//			}
-	//
-	//			// South-West: asteroid 15
-	//			if ((asteroid_15.position.x <= -20)
-	//					|| (asteroid_15.position.y >= 260)) {
-	//				asteroid_15.position.x = 20 + rand() % 280;
-	//				asteroid_15.position.y = -20;
-	//			}
-	//
-	//			// North-West: asteroid 16
-	//			if ((asteroid_16.position.x <= -20)
-	//					|| (asteroid_16.position.y <= -20)) {
-	//				asteroid_16.position.x = 340;
-	//				asteroid_16.position.y = 20 + rand() % 200;
-	//			}
 
 				/*
 				 * SAUCERS
@@ -1498,7 +1389,6 @@ void drawTaskSingleLevel3 (void * params){
 					else if (asteroid_1.remain_hits == one)
 						gdispDrawPoly(asteroid_1.position.x, asteroid_1.position.y,
 							shapes_small[asteroid_1.shape], NUM_POINTS_SMALL, White);
-
 
 					// Asteroid 2
 					if (asteroid_2.remain_hits == one)

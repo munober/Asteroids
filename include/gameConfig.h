@@ -73,6 +73,9 @@
 #define TO_DESTROY_LEVEL_3_SMALL			60
 #define TO_DESTROY_LEVEL_3_MEDIUM           30
 #define TO_DESTROY_LEVEL_3_LARGE            10
+#define TO_DESTROY_MULTI_SMALL				60
+#define TO_DESTROY_MULTI_MEDIUM           	30
+#define TO_DESTROY_MULTI_LARGE            	10
 
 // Respawn boundaries in each level (will respawn as long as number left is above this)
 #define RESPAWN_SMALL_LEVEL_1               10
