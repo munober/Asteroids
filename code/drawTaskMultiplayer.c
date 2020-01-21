@@ -26,6 +26,11 @@ extern QueueHandle_t LocalMasterQueue;
 #define NUM_POINTS_MEDIUM (sizeof(type_4)/sizeof(type_4[0]))
 #define NUM_POINTS_LARGE (sizeof(type_7)/sizeof(type_7[0]))
 
+#define max(a,b) \
+  ({ __typeof__ (a) _a = (a); \
+      __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b; })
+
 void drawTaskMultiplayer (void * params){
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
 	boolean executed = false;
@@ -76,6 +81,7 @@ void drawTaskMultiplayer (void * params){
 	int remote_bullet_dir_x = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_y = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_total = HEADING_ANGLE_NULL;
+	player_status remote_player_state = fine;
 
 	player_local.state = fine;
 	int incr;
@@ -184,6 +190,7 @@ void drawTaskMultiplayer (void * params){
 		int16_t super_random = rand() % 241;
 		boolean infinite_respawn = true;
 		TickType_t hit_timestamp;
+		TickType_t hit_timestamp_2;
 		boolean one_asteroid_hit_small = false;
 		boolean one_asteroid_hit_medium = false;
 		boolean one_asteroid_hit_large = false;
@@ -193,6 +200,7 @@ void drawTaskMultiplayer (void * params){
 		TickType_t lastTime_1 = xTaskGetTickCount();
 		const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
 		boolean life_count_lock = false;
+		boolean life_count_lock_2 = false;
 		const TickType_t delay_hit = 1000;
 
 		// All asteroid shapes in one array: From this array we later choose which shape to draw
@@ -902,6 +910,19 @@ void drawTaskMultiplayer (void * params){
 //					}
 //				}
 
+//				/* Check if player was hit by saucer fire
+//				 * Threshold zone is a square around the players ship center with 6px side length
+//				 */
+//				for (i = 0; i <= 1; i++) {
+//					for (j = 0; j <= 9; j++) {
+//						if ((abs(the_saucers[i]->shots[j].x - player.position.x) <= HIT_LIMIT_SHOT_SMALL)
+//								&& (abs(the_saucers[i]->shots[j].y - player.position.y) <= HIT_LIMIT_SHOT_SMALL)) {
+//							player.state = hit;
+//							hit_timestamp = xTaskGetTickCount();
+//						}
+//					}
+//				}
+
 			// ASTEROIDS
 				//Re-spawning asteroids
 					if (one_asteroid_hit_small == true) {
@@ -1029,7 +1050,8 @@ void drawTaskMultiplayer (void * params){
 						}
 					}
 
-					/* Check if the player's ship was hit by asteroid */
+					/* LOCAL PLAYER
+					 * Check if the player's ship was hit by asteroid */
 					for (i = 0; i <= 15; i++) {
 						if(all_asteroids[i]->remain_hits == one){
 							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_SMALL)
@@ -1054,7 +1076,34 @@ void drawTaskMultiplayer (void * params){
 						}
 					}
 
-					/* Check if asteroids were hit by shot cannon blaster laser thigs
+					/* REMOTE PLAYER
+					 * Check if the player's ship was hit by asteroid */
+					for (i = 0; i <= 15; i++) {
+						if(all_asteroids[i]->remain_hits == one){
+							if ((abs(all_asteroids[i]->position.x - remote_x) <= HIT_LIMIT_SMALL)
+							&& (abs(all_asteroids[i]->position.y - remote_y) <= HIT_LIMIT_SMALL)) {
+								remote_player_state = hit;
+								hit_timestamp_2 = xTaskGetTickCount();
+							}
+						}
+						if(all_asteroids[i]->remain_hits == two){
+							if ((abs(all_asteroids[i]->position.x - remote_x) <= HIT_LIMIT_MEDIUM)
+							&& (abs(all_asteroids[i]->position.y - remote_y) <= HIT_LIMIT_MEDIUM)) {
+								remote_player_state = hit;
+								hit_timestamp_2 = xTaskGetTickCount();
+							}
+						}
+						if(all_asteroids[i]->remain_hits == three){
+							if ((abs(all_asteroids[i]->position.x - remote_x) <= HIT_LIMIT_LARGE)
+							&& (abs(all_asteroids[i]->position.y - remote_y) <= HIT_LIMIT_LARGE)) {
+								remote_player_state = hit;
+								hit_timestamp_2 = xTaskGetTickCount();
+							}
+						}
+					}
+
+					/* LOCAL PLAYER
+					 * Check if asteroids were hit by shot cannon blaster laser thigs
 					* Threshold zone is a square around the asteroid center.
 					* Square side length: small: 6px; medium: 8px; large: 12px
 					*/
@@ -1250,6 +1299,202 @@ void drawTaskMultiplayer (void * params){
 					}
 				}
 
+				/* REMOTE PLAYER
+				* Check if asteroids were hit by shot cannon blaster laser thigs
+				* Threshold zone is a square around the asteroid center.
+				* Square side length: small: 6px; medium: 8px; large: 12px
+				*/
+				// asteroid_2, _4, _6, _8, _10, _12, _14 and asteroid_16 can only be small
+				for(incr = 0; incr < number_remote_shots; incr++){
+					for (i = 1; i <= 15; i+=2){
+						if ((abs(all_asteroids[i]->position.x - remote_shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+							&& (abs(all_asteroids[i]->position.y - remote_shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)
+							&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)
+							&& (all_asteroids[i]->remain_hits == one)) {
+								all_asteroids[i]->position.x = -50;
+								all_asteroids[i]->position.y = -50;
+								all_asteroids[i]->position_locked = true;
+								all_asteroids[i]->remain_hits = none;
+								score.score_remote += POINTS_ASTEROID_SMALL;
+								asteroids_to_destroy_small--;
+								one_asteroid_hit_small = true;
+						}
+					}
+				}
+
+				// asteroid_3, asteroid_7, asteroid_9, asteroid_11, asteroid_13 and asteroid_15 can be medium or small
+				for(incr = 0; incr < number_remote_shots; incr++) {
+					for (i = 2; i <= 15; i+=2) {
+						if (i != 4) {
+							if ((abs(all_asteroids[i]->position.x - remote_shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
+									&& (abs(all_asteroids[i]->position.y - remote_shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)
+									&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)
+									&& (all_asteroids[i]->remain_hits == two)) {
+								asteroids_to_destroy_medium--;
+								score.score_remote += POINTS_ASTEROID_MEDIUM;
+								one_asteroid_hit_medium = true;
+								all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
+								all_asteroids[i+1]->hit_timestamp = xTaskGetTickCount();
+
+								switch (i) {
+								case 0: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = NW;
+										all_asteroids[i+1]->orientation = SE; break;
+								case 2: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = W;
+										all_asteroids[i+1]->orientation = E; break;
+								case 4: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = N;
+										all_asteroids[i+1]->orientation = S; break;
+								case 6: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = NE;
+										all_asteroids[i+1]->orientation = SW; break;
+								case 8: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = E;
+										all_asteroids[i+1]->orientation = W; break;
+								case 10: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = NE;
+										all_asteroids[i+1]->orientation = SW; break;
+								case 12: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = W;
+										all_asteroids[i+1]->orientation = E; break;
+								case 14: all_asteroids[i]->remain_hits = one;
+										all_asteroids[i+1]->remain_hits = one;
+										all_asteroids[i+1]->position_locked = false;
+										all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+										all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+										all_asteroids[i]->orientation = NW;
+										all_asteroids[i+1]->orientation = SE; break;
+								}
+						}
+						else if ((abs(all_asteroids[i]->position.x - remote_shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+								&& (abs(all_asteroids[i]->position.y - remote_shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)
+								&& (all_asteroids[i]->remain_hits == one)
+								&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
+							all_asteroids[i]->position.x = -50;
+							all_asteroids[i]->position.y = -50;
+							all_asteroids[i]->position_locked = true;
+							all_asteroids[i]->remain_hits = none;
+							score.score_remote += POINTS_ASTEROID_SMALL;
+							asteroids_to_destroy_small--;
+							one_asteroid_hit_small = true;
+						}
+					}
+				}
+			}
+
+			// asteroid_1 and asteroid_5 can be all sizes: S, M and L
+			for(incr = 0; incr < number_remote_shots; incr++) {
+				for (i = 0; i <= 7; i+=4) {
+					if ((abs(all_asteroids[i]->position.x - remote_shots[incr].position.x) <= HIT_LIMIT_SHOT_LARGE)
+							&& (abs(all_asteroids[i]->position.y - remote_shots[incr].position.y) <= HIT_LIMIT_SHOT_LARGE)
+							&& (all_asteroids[i]->remain_hits == three)) {
+						asteroids_to_destroy_large--;
+						score.score_remote += POINTS_ASTEROID_LARGE;
+						one_asteroid_hit_large = true;
+						all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
+						all_asteroids[i+2]->hit_timestamp = xTaskGetTickCount();
+
+						switch (i) {
+						case 0: all_asteroids[i]->remain_hits = two;
+								all_asteroids[i+2]->remain_hits = two;
+								all_asteroids[i+2]->position_locked = false;
+								all_asteroids[i+2]->position.x = all_asteroids[i]->position.x;
+								all_asteroids[i+2]->position.y = all_asteroids[i]->position.y;
+								all_asteroids[i]->orientation = NW;
+								all_asteroids[i+2]->orientation = SE; break;
+						case 4: all_asteroids[i]->remain_hits = two;
+								all_asteroids[i+2]->remain_hits = two;
+								all_asteroids[i+2]->position_locked = false;
+								all_asteroids[i+2]->position.x = all_asteroids[i]->position.x;
+								all_asteroids[i+2]->position.y = all_asteroids[i]->position.y;
+								all_asteroids[i]->orientation = N;
+								all_asteroids[i+2]->orientation = S; break;
+						}
+					}
+					else if ((abs(all_asteroids[i]->position.x - remote_shots[incr].position.x) <= HIT_LIMIT_SHOT_MEDIUM)
+								&& (abs(all_asteroids[i]->position.y - remote_shots[incr].position.y) <= HIT_LIMIT_SHOT_MEDIUM)
+								&& (all_asteroids[i]->remain_hits == two)
+								&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
+							asteroids_to_destroy_medium--;
+							score.score_remote += POINTS_ASTEROID_MEDIUM;
+							one_asteroid_hit_medium = true;
+							all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
+							all_asteroids[i+1]->hit_timestamp = xTaskGetTickCount();
+
+							switch (i) {
+							case 0: all_asteroids[i]->remain_hits = one;
+									all_asteroids[i+1]->remain_hits = one;
+									all_asteroids[i+1]->position_locked = false;
+									all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+									all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+									all_asteroids[i]->orientation = NW;
+									all_asteroids[i+1]->orientation = SE; break;
+							case 2: all_asteroids[i]->remain_hits = one;
+									all_asteroids[i+1]->remain_hits = one;
+									all_asteroids[i+1]->position_locked = false;
+									all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+									all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+									all_asteroids[i]->orientation = W;
+									all_asteroids[i+1]->orientation = E; break;
+							case 4: all_asteroids[i]->remain_hits = one;
+									all_asteroids[i+1]->remain_hits = one;
+									all_asteroids[i+1]->position_locked = false;
+									all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+									all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+									all_asteroids[i]->orientation = N;
+									all_asteroids[i+1]->orientation = S; break;
+							case 6: all_asteroids[i]->remain_hits = one;
+									all_asteroids[i+1]->remain_hits = one;
+									all_asteroids[i+1]->position_locked = false;
+									all_asteroids[i+1]->position.x = all_asteroids[i]->position.x;
+									all_asteroids[i+1]->position.y = all_asteroids[i]->position.y;
+									all_asteroids[i]->orientation = NE;
+									all_asteroids[i+1]->orientation = SW; break;
+							}
+					}
+					else if ((abs(all_asteroids[i]->position.x - remote_shots[incr].position.x) <= HIT_LIMIT_SHOT_SMALL)
+								&& (abs(all_asteroids[i]->position.y - remote_shots[incr].position.y) <= HIT_LIMIT_SHOT_SMALL)
+												&& (all_asteroids[i]->remain_hits == one)
+								&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
+							all_asteroids[i]->position.x = -50;
+							all_asteroids[i]->position.y = -50;
+							all_asteroids[i]->position_locked = true;
+							all_asteroids[i]->remain_hits = none;
+							score.score_remote += POINTS_ASTEROID_SMALL;
+							asteroids_to_destroy_small--;
+							one_asteroid_hit_small = true;
+					}
+				}
+			}
 
 			}//Only runs if UART is connected and other player is also on this screen
 
@@ -1338,12 +1583,26 @@ void drawTaskMultiplayer (void * params){
 				}
 
 				// Remote player
+				if (remote_player_state == fine) {
 				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
 
-				// Remote players bullets
-				for(incr = 0; incr < number_remote_shots; incr++){
-					if(remote_shots[incr].status == spawn){
-						gdispFillCircle(remote_shots[incr].position.x, remote_shots[incr].position.y, 3, Red);
+					// Remote players bullets
+					for(incr = 0; incr < number_remote_shots; incr++){
+						if(remote_shots[incr].status == spawn){
+							gdispFillCircle(remote_shots[incr].position.x, remote_shots[incr].position.y, 3, Red);
+						}
+					}
+				}
+				else if (remote_player_state == hit) {
+					if (life_count_lock_2 == false) {
+						lives[1]--;
+						life_count_lock_2 = true;
+					}
+					if (xTaskGetTickCount() - hit_timestamp_2 > delay_hit) {
+						remote_player_state = fine; // Reset the players ship if not yet game over
+						life_count_lock_2 = false; // Unlock the life counter
+						remote_x = DISPLAY_CENTER_X; // Reset player coordinates
+						remote_y = DISPLAY_CENTER_Y; // Reset player coordinates
 					}
 				}
 			}
