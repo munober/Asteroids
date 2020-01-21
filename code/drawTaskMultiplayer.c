@@ -55,7 +55,7 @@ void drawTaskMultiplayer (void * params){
 	boolean first_check = false;
 	TickType_t double_toggle_delay = 2000;
 	TickType_t check_time = xTaskGetTickCount();
-	char str2 = { {0} };
+	char str2[1][30] = { {0} };
 	boolean fired_bullet_this_frame = false;
 
 //	Movement
@@ -822,9 +822,6 @@ void drawTaskMultiplayer (void * params){
 						local_shots[incr].position.x += LASER_BLASTER_SPEED;
 						local_shots[incr].position.y += LASER_BLASTER_SPEED;
 						break;
-					case JOYSTICK_ANGLE_NULL:
-						local_shots[incr].position.y -= LASER_BLASTER_SPEED;
-						break;
 					}
 				}
 
@@ -834,7 +831,7 @@ void drawTaskMultiplayer (void * params){
 					remote_shots[number_remote_shots].status = spawn;
 					remote_shots[number_remote_shots].position.x = remote_x;
 					remote_shots[number_remote_shots].position.y = remote_y;
-					remote_shots[number_remote_shots].angle = remote_bullet_dir_total_old;
+					remote_shots[number_remote_shots].angle = remote_bullet_dir_total;
 					number_remote_shots++;
 				}
 
@@ -1531,23 +1528,25 @@ void drawTaskMultiplayer (void * params){
 				sprintf(str2, "Level 3");
 			}
 
-			gdispDrawString(5, 230, str2, font1, Green);
+			gdispDrawString(5, 230, str2[0], font1, Green);
+			if(SHOW_DEBUG_MULTI){
+				if(is_master == true){
+					if(remote_is_master == true){
+						sprintf(user_help, "> Is master, other is master. <");
+					}
+					else
+						sprintf(user_help, "> Is master, other is slave. <");
+				}
+				else if(is_master == false){
+					if(remote_is_master == true){
+						sprintf(user_help, "> Is slave, other is master. <");
+					}
+					else
+						sprintf(user_help, "> Is slave, other is slave. <");
+				}
+				gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, Green);
+			}
 
-			if(is_master == true){
-				if(remote_is_master == true){
-					sprintf(user_help, "> Is master, other is master. <");
-				}
-				else
-					sprintf(user_help, "> Is master, other is slave. <");
-			}
-			else if(is_master == false){
-				if(remote_is_master == true){
-					sprintf(user_help, "> Is slave, other is master. <");
-				}
-				else
-					sprintf(user_help, "> Is slave, other is slave. <");
-			}
-			gdispDrawString(TEXT_X(user_help[0]), 220, user_help[0], font1, Green);
 			if(uart_connected == true){
 				sprintf(user_help, "> Connected. <");
 				gdispDrawString(TEXT_X(user_help[0]), 230, user_help[0], font1, Green);
@@ -1575,6 +1574,8 @@ void drawTaskMultiplayer (void * params){
 
 //			Drawing 2 player ships
 			if(uart_connected == true){
+				sprintf(str2, "%d sec", time_passed);
+				gdispDrawString(DISPLAY_CENTER_X - 5, 10, str2[0], font1, White);
 
 				// Local Player
 				if (player_local.state == fine) {
@@ -1662,6 +1663,8 @@ void drawTaskMultiplayer (void * params){
 					break;
 				case JOYSTICK_ANGLE_W:
 					to_send_y += 80;
+					break;
+				case JOYSTICK_ANGLE_NW:
 					break;
 				}
 				fired_bullet_this_frame = false;
