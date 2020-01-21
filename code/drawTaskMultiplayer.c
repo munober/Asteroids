@@ -826,6 +826,11 @@ void drawTaskMultiplayer (void * params){
 						local_shots[incr].position.x += LASER_BLASTER_SPEED;
 						local_shots[incr].position.y += LASER_BLASTER_SPEED;
 						break;
+					default:
+						local_shots[incr].position.x = 0;
+						local_shots[incr].position.y = 0;
+						local_shots[incr].status = hide;
+						break;
 					}
 				}
 
@@ -902,9 +907,9 @@ void drawTaskMultiplayer (void * params){
 						remote_shots[incr].position.x += LASER_BLASTER_SPEED;
 						remote_shots[incr].position.y += LASER_BLASTER_SPEED;
 						break;
-					case JOYSTICK_ANGLE_NULL:
-						remote_shots[incr].position.y -= LASER_BLASTER_SPEED;
-						break;
+					// case JOYSTICK_ANGLE_NULL:
+					// 	remote_shots[incr].position.y -= LASER_BLASTER_SPEED;
+					// 	break;
 					default:
 						remote_shots[incr].position.x = 0;
 						remote_shots[incr].position.y = 0;
@@ -1074,22 +1079,22 @@ void drawTaskMultiplayer (void * params){
 					 * Check if the player's ship was hit by asteroid */
 					for (i = 0; i <= 15; i++) {
 						if(all_asteroids[i]->remain_hits == one){
-							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_SMALL)
-							&& (abs(all_asteroids[i]->position.y - player_local.position.y) <= HIT_LIMIT_SMALL)) {
+							if ((abs(all_asteroids[i]->position.x - local_x_lowpoly) <= HIT_LIMIT_SMALL)
+							&& (abs(all_asteroids[i]->position.y - local_y_lowpoly) <= HIT_LIMIT_SMALL)) {
 								player_local.state = hit;
 								hit_timestamp = xTaskGetTickCount();
 							}
 						}
 						if(all_asteroids[i]->remain_hits == two){
-							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_MEDIUM)
-							&& (abs(all_asteroids[i]->position.y - player_local.position.y) <= HIT_LIMIT_MEDIUM)) {
+							if ((abs(all_asteroids[i]->position.x - local_x_lowpoly) <= HIT_LIMIT_MEDIUM)
+							&& (abs(all_asteroids[i]->position.y - local_y_lowpoly) <= HIT_LIMIT_MEDIUM)) {
 								player_local.state = hit;
 								hit_timestamp = xTaskGetTickCount();
 							}
 						}
 						if(all_asteroids[i]->remain_hits == three){
-							if ((abs(all_asteroids[i]->position.x - player_local.position.x) <= HIT_LIMIT_LARGE)
-							&& (abs(all_asteroids[i]->position.y - player_local.position.y) <= HIT_LIMIT_LARGE)) {
+							if ((abs(all_asteroids[i]->position.x - local_x_lowpoly) <= HIT_LIMIT_LARGE)
+							&& (abs(all_asteroids[i]->position.y - local_y_lowpoly) <= HIT_LIMIT_LARGE)) {
 								player_local.state = hit;
 								hit_timestamp = xTaskGetTickCount();
 							}
