@@ -20,6 +20,7 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue3;
 extern QueueHandle_t HighScoresQueue;
 extern QueueHandle_t StartingScoreQueue;
+extern QueueHandle_t FPSQueue;
 
 #define NUM_POINTS_SAUCER (sizeof(saucer_shape)/sizeof(saucer_shape[0]))
 #define NUM_POINTS_SMALL (sizeof(type_1)/sizeof(type_1[0]))
@@ -421,6 +422,7 @@ void drawTaskSingleLevel3 (void * params){
 	unsigned char timer_1sec = 0;
 	unsigned char timer_1halfsec = 0;
 	unsigned char timer_2sec = 0;
+	uint8_t fps_num;
 
 	while (1) {
 // 		Reading desired life count from cheats menu
@@ -428,6 +430,7 @@ void drawTaskSingleLevel3 (void * params){
 		if(xQueueReceive(LifeCountQueue3, &life_readin, 0) == pdTRUE){
 			life_count += life_readin;
 		}
+		xQueueReceive(FPSQueue, &fps_num, 0);
 
 // 		Timer logic
 		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
@@ -1564,6 +1567,8 @@ void drawTaskSingleLevel3 (void * params){
 					goto gamestart3;
 				}
 			}
+			sprintf(str2, "FPS: %d", fps_num);
+			gdispDrawString(270, 230, str2[0], font1, White);
 		} // Block until screen is ready
 	} // While-loop
 } // Task

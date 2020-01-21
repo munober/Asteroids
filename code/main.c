@@ -53,6 +53,7 @@ QueueHandle_t HighScoresQueueMP;
 QueueHandle_t StartingScoreQueue;
 QueueHandle_t ESPL_RxQueue;
 QueueHandle_t LocalMasterQueue;
+QueueHandle_t FPSQueue;
 SemaphoreHandle_t ESPL_DisplayReady;
 
 SemaphoreHandle_t DrawReady;
@@ -90,6 +91,7 @@ int main(void){
 	HighScoresQueueMP = xQueueCreate(10, sizeof(struct highscore));
 	StartingScoreQueue = xQueueCreate(10, sizeof(int16_t));
 	LocalMasterQueue = xQueueCreate(5, sizeof(boolean));
+	FPSQueue = xQueueCreate(10, sizeof(uint8_t));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
@@ -138,6 +140,7 @@ int main(void){
 void frameSwapTask(void * params) {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
+	TickType_t xOldWakeTime = 0;
 	const TickType_t frameratePeriod = 20;
 
 	while (1){
@@ -147,7 +150,12 @@ void frameSwapTask(void * params) {
 		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
 		// Swap buffers
 		ESPL_DrawLayer();
+		xOldWakeTime = xLastWakeTime;
 		vTaskDelayUntil(&xLastWakeTime, frameratePeriod);
+		TickType_t xDifference;
+		xDifference = xLastWakeTime - xOldWakeTime;
+		uint8_t xFPS = 1000 / xDifference;
+		xQueueSend(FPSQueue, &xFPS, 0);
 	}
 }
 

@@ -17,6 +17,7 @@ extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t StartingScoreQueue;
 extern QueueHandle_t LifeCountQueue1;
+extern QueueHandle_t FPSQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
@@ -420,14 +421,17 @@ void drawTaskMultiplayer (void * params){
 		}
 	}
 	boolean executed_once = false;
+	uint8_t fps_num;
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
-//			if(xQueueReceive(LifeCountQueue1, &life_readin, 0) ==pdTRUE){
-//				// adding this as extra lives
-//				lives[0] += life_readin;
-//				lives[1] += life_readin;
-//			}
+			if(xQueueReceive(LifeCountQueue1, &life_readin, 0) ==pdTRUE){
+				// adding this as extra lives
+				lives[0] += life_readin;
+				lives[1] += life_readin;
+			}
+			xQueueReceive(FPSQueue, &fps_num, 0);
+
 
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
 			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
@@ -1868,6 +1872,8 @@ void drawTaskMultiplayer (void * params){
 			local_y_lowpoly = local_y_lowpoly * 3;
 
 			remote_bullet_dir_total_old = remote_bullet_dir_total;
+			sprintf(str2, "FPS: %d", fps_num);
+			gdispDrawString(270, 230, str2[0], font1, White);
 
 		} // Block screen until ready to draw
 	} // while(1) loop
