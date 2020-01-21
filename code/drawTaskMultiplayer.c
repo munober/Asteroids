@@ -395,15 +395,15 @@ void drawTaskMultiplayer (void * params){
 			&asteroid_13, &asteroid_14, &asteroid_15, &asteroid_16 };
 
 	// Function to set the asteroids spawn position based on its spawn side
-	void setSpawnPosition(sides spawn_side, int i, uint32_t random) {
+	void setSpawnPosition(sides spawn_side, int i, uint8_t neun_und_sechzig) {
 		switch (spawn_side) {
 		case left: 	all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
-					all_asteroids[i]->position.y = 80 + random % 140; break;
+					all_asteroids[i]->position.y = ((int)(all_asteroids[i]->position.y + neun_und_sechzig) % 200) + 20; break;
 		case right:	all_asteroids[i]->position.x = all_asteroids[i]->spawn_position.x;
-					all_asteroids[i]->position.y = 20 + random % 200; break;
-		case up:	all_asteroids[i]->position.x = 20 + random % 280;
+					all_asteroids[i]->position.y = ((int)(all_asteroids[i]->position.y + neun_und_sechzig) % 200) + 20; break;
+		case up:	all_asteroids[i]->position.x = ((int)(all_asteroids[i]->position.x + neun_und_sechzig) % 280) + 20;
 					all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y; break;
-		case down:	all_asteroids[i]->position.x = 20 + random % 280;
+		case down:	all_asteroids[i]->position.x = ((int)(all_asteroids[i]->position.x + neun_und_sechzig) % 280) + 20;
 					all_asteroids[i]->position.y = all_asteroids[i]->spawn_position.y; break;
 		}
 	}
@@ -627,7 +627,6 @@ void drawTaskMultiplayer (void * params){
 						}
 					}
 				}
-
 				if(!moved){
 					switch(heading_direction){
 						case HEADING_ANGLE_N:
@@ -993,39 +992,39 @@ void drawTaskMultiplayer (void * params){
 						switch (all_asteroids[i]->orientation) {
 						case no_ort: break;
 						case N:	if (all_asteroids[i]->position.y <= -50) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case NE: if ((all_asteroids[i]->position.x >= 370)
 										|| (all_asteroids[i]->position.y <= -50)) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case E: if (all_asteroids[i]->position.x >= 370) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case SE: if ((all_asteroids[i]->position.x >= 370)
 										|| (all_asteroids[i]->position.y >= 290)) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case S: if (all_asteroids[i]->position.y >= 290) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case SW: if ((all_asteroids[i]->position.x <= -50)
 										|| (all_asteroids[i]->position.y >= 290)) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case W: if (all_asteroids[i]->position.x <= -50) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						case NW:if ((all_asteroids[i]->position.x <= -50)
 										|| (all_asteroids[i]->position.y <= -50)) {
-									setSpawnPosition(all_asteroids[i]->spawn_side, i, rand());
+									setSpawnPosition(all_asteroids[i]->spawn_side, i, 69);
 									all_asteroids[i]->orientation = all_asteroids[i]->initial_orientation;
 									} break;
 						}
