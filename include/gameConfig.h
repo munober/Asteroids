@@ -24,7 +24,7 @@
 #define SINGLE_PLAYER_LEVEL_3		        9
 #define PAUSE_MENU_LEVEL_2					10
 #define PAUSE_MENU_LEVEL_3					11
-#define STARTING_STATE                      SINGLE_PLAYER_LEVEL_3
+#define STARTING_STATE                      MAIN_MENU_STATE
 
 #define STARTING_LIVES_LEVEL_ONE            3
 #define STARTING_LIVES_LEVEL_TWO            6
@@ -47,7 +47,7 @@
 #define INERTIA_MIN_SPEED_X                     0.4 // minimum movement speed on x axis
 #define INERTIA_MIN_SPEED_Y                     0.3 // minimum movement speed on y axis
 #define INERTIA_TIME_INCREMENT					100 // period at which the object will decelerate with above rates
-#define ROTATION_SPEED							2 // in degrees per frame
+#define ROTATION_SPEED							8 // in degrees per frame
 #define	PLAYER_SPEED_MAX_X						5 // maximum reachable speed on x axis
 #define	PLAYER_SPEED_MAX_Y						5 // maximum reachable speed on y axis
 #define PLAYER_STANDARD_ACCELERATION_X			0.1 // rate of acceleration on joystick input on x axis

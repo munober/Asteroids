@@ -513,22 +513,22 @@ void drawTaskSingleLevel2 (void * params){
 								}
 							}
 
-				//			Make player show up at the other side of the screen when reaching screen border
+				//			Make player show up at the other side of the screen when reaching screen border, at a random position
 							if(player.position.x >= DISPLAY_SIZE_X){
 								player.position.x = 0;
-								player.position.y += 10;
+								player.position.y = rand() % 241;
 							}
 							else if(player.position.x <= 0){
 								player.position.x = DISPLAY_SIZE_X;
-								player.position.y += 10;
+								player.position.y = rand() % 241;
 							}
 							if(player.position.y >= DISPLAY_SIZE_Y){
 								player.position.y = 0;
-								player.position.x += 10;
+								player.position.x = rand() % 321;
 							}
 							else if(player.position.y <= 0){
 								player.position.y = DISPLAY_SIZE_Y;
-								player.position.x += 10;
+								player.position.x = rand() % 321;
 							}
 
 				//			Doing actual player ship rotation here
@@ -1474,6 +1474,7 @@ void drawTaskSingleLevel2 (void * params){
 
 				// TRANSITION TO LEVEL 3 when user presses D
 				if (score >= LEVEL_THREE_SCORE_THRESHOLD) {
+					gdispClear(Black);
 					gdispFillArea(55, DISPLAY_CENTER_Y - 2, 205, 15, White); // White border
 					sprintf(str, "LEVEL 2 DONE. Press D for LEVEL 3."); // Generate game over message
 					gdispDrawString(TEXT_X(str), DISPLAY_CENTER_Y, str, font1, Black);

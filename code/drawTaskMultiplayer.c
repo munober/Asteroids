@@ -72,7 +72,6 @@ void drawTaskMultiplayer (void * params){
 	int remote_bullet_dir_x = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_y = HEADING_ANGLE_NULL;
 	int remote_bullet_dir_total = HEADING_ANGLE_NULL;
-	int remote_bullet_dir_total_old = remote_bullet_dir_total;
 
 	player_local.state = fine;
 	int incr;
@@ -467,7 +466,7 @@ void drawTaskMultiplayer (void * params){
 
 //				Local Player bullets
 	//			Spawning new cannon shots on player input
-				if(buttonCountWithLiftup(BUT_B)){
+				if(buttonCountWithLiftup(BUT_B) && joystick_internal.angle != JOYSTICK_ANGLE_NULL){
 					local_shots[number_local_shots].status = spawn;
 					local_shots[number_local_shots].position.x = local_x_lowpoly;
 					local_shots[number_local_shots].position.y = local_y_lowpoly;
@@ -551,7 +550,7 @@ void drawTaskMultiplayer (void * params){
 					remote_shots[number_remote_shots].status = spawn;
 					remote_shots[number_remote_shots].position.x = remote_x;
 					remote_shots[number_remote_shots].position.y = remote_y;
-					remote_shots[number_remote_shots].angle = remote_bullet_dir_total_old;
+					remote_shots[number_remote_shots].angle = remote_bullet_dir_total;
 					number_remote_shots++;
 				}
 
@@ -621,10 +620,10 @@ void drawTaskMultiplayer (void * params){
 					case JOYSTICK_ANGLE_NULL:
 						remote_shots[incr].position.y -= LASER_BLASTER_SPEED;
 						break;
-					default:
-						remote_shots[incr].position.x += LASER_BLASTER_SPEED;
-						remote_shots[incr].position.y += LASER_BLASTER_SPEED;
-						break;
+//					default:
+//						remote_shots[incr].position.x += LASER_BLASTER_SPEED;
+//						remote_shots[incr].position.y += LASER_BLASTER_SPEED;
+//						break;
 					}
 				}
 
@@ -707,13 +706,6 @@ void drawTaskMultiplayer (void * params){
 			if(uart_connected == true){
 				gdispFillConvexPoly(local_x_old, local_y_old, form, (sizeof(form)/sizeof(form[0])), White);
 				gdispFillConvexPoly(remote_x, remote_y, saucer_shape, (sizeof(saucer_shape)/sizeof(saucer_shape[0])), Yellow);
-	//			Drawing bullets
-				for(incr = 0; incr < number_local_shots; incr++){
-					if(local_shots[incr].status == spawn){
-						gdispFillCircle(local_shots[incr].position.x, local_shots[incr].position.y, 3, Yellow);
-					}
-				}
-
 
 	//			Local
 				for(incr = 0; incr < number_local_shots; incr++){
@@ -852,7 +844,7 @@ void drawTaskMultiplayer (void * params){
 			local_x_lowpoly = local_x_lowpoly * 4;
 			local_y_lowpoly = local_y_old / 3; // Low-res y, used for collisions and score
 			local_y_lowpoly = local_y_lowpoly * 3;
-			remote_bullet_dir_total_old = remote_bullet_dir_total;
+
 		} // Block screen until ready to draw
 	} // while(1) loop
 } // Actual task code
