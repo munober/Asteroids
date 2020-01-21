@@ -16,6 +16,7 @@ extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
 extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t StartingScoreQueue;
+extern QueueHandle_t LifeCountQueue1;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
 extern QueueHandle_t ESPL_RxQueue;
@@ -69,10 +70,10 @@ void drawTaskMultiplayer (void * params){
 
 	int remote_x = DISPLAY_CENTER_X;
 	int remote_y = DISPLAY_CENTER_Y;
-	int remote_bullet_dir_x = HEADING_ANGLE_NULL;
-	int remote_bullet_dir_y = HEADING_ANGLE_NULL;
-	int remote_bullet_dir_total = HEADING_ANGLE_NULL;
-
+	int remote_bullet_dir_x = JOYSTICK_ANGLE_NULL;
+	int remote_bullet_dir_y = JOYSTICK_ANGLE_NULL;
+	int remote_bullet_dir_total = JOYSTICK_ANGLE_NULL;
+	int remote_bullet_dir_total_old = JOYSTICK_ANGLE_NULL;
 	player_local.state = fine;
 	int incr;
 	int incr2;
@@ -85,6 +86,8 @@ void drawTaskMultiplayer (void * params){
 	struct coord_flt inertia_speed;
 	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
+	TickType_t score_position_toggle;
+	TickType_t score_position_toggle_2;
 
 //	UART
 /*
@@ -97,6 +100,16 @@ void drawTaskMultiplayer (void * params){
  * For one side quitting the game session: 252
  * Syncing bytes (253 and 254) are explained below.
  */
+	const char score_zero = 241;
+	const char score_4000 = 242;
+	const char score_8000 = 243;
+	const char score_12000 = 244;
+	const char score_16000 = 245;
+	const char score_20000 = 246;
+	const char score_24000 = 247;
+	const char score_28000 = 248;
+	const char score_32000 = 249;
+	const char score_36000 = 250;
 	const char pause_byte = 251;
 	const char quit_byte = 252;
 	const char sync_byte_1 = 253; // used in main menu for master/slave sync
@@ -116,12 +129,12 @@ void drawTaskMultiplayer (void * params){
 	boolean state_quit_remote = false;
 	boolean no_sync = true;
 	boolean ready_to_start = false;
-	int last_sent = 0;
 	int last_received = 0;
 
 	int lives[2];
 	lives[0] = STARTING_LIVES_MULTIPLAYER; // local
 	lives[1] = STARTING_LIVES_MULTIPLAYER; // remote
+	unsigned int life_readin = STARTING_LIVES_MULTIPLAYER;	// Will be filled with queue readin if received
 
 //	Bullets
 	int number_local_shots = 0;
@@ -129,7 +142,7 @@ void drawTaskMultiplayer (void * params){
 	void initialize_single_shot(int i){
 		local_shots[i].position.x = 0;
 		local_shots[i].position.y = 0;
-		local_shots[i].angle = 0;
+		local_shots[i].angle =  JOYSTICK_ANGLE_NULL;
 		local_shots[i].status = hide;
 	}
 
@@ -138,7 +151,7 @@ void drawTaskMultiplayer (void * params){
 	void initialize_remote_shot(int i){
 		remote_shots[i].position.x = 0;
 		remote_shots[i].position.y = 0;
-		remote_shots[i].angle = 0;
+		remote_shots[i].angle =  JOYSTICK_ANGLE_NULL;
 		remote_shots[i].status = hide;
 	}
 
@@ -150,6 +163,12 @@ void drawTaskMultiplayer (void * params){
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
+//			if(xQueueReceive(LifeCountQueue1, &life_readin, 0) ==pdTRUE){
+//				// adding this as extra lives
+//				lives[0] += life_readin;
+//				lives[1] += life_readin;
+//			}
+
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
 			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
 			xQueueReceive(LocalMasterQueue, &is_master, 0);
@@ -183,6 +202,44 @@ void drawTaskMultiplayer (void * params){
 				}
 			}
 
+
+			if(uart_input > 240 && uart_input < 251){
+				switch((int) uart_input){
+				case 241:
+					score.score_remote = 0;
+					break;
+				case 242:
+					score.score_remote = 4000;
+					break;
+				case 243:
+					score.score_remote = 8000;
+					break;
+				case 244:
+					score.score_remote = 12000;
+					break;
+				case 245:
+					score.score_remote = 16000;
+					break;
+				case 246:
+					score.score_remote = 20000;
+					break;
+				case 247:
+					score.score_remote = 24000;
+					break;
+				case 248:
+					score.score_remote = 28000;
+					break;
+				case 249:
+					if(is_slave == true)
+						last_received = 1;
+					break;
+				case 250:
+					if(is_slave == true)
+						last_received = 0;
+					break;
+				}
+			}
+
 // 			Toggle to show debug content and UART Input
 			if(first_check == false){
 				if(buttonCount(BUT_C)){
@@ -205,65 +262,66 @@ void drawTaskMultiplayer (void * params){
 				if(last_received){
 					if(uart_input >= 1 && uart_input <= 80){
 						remote_y = (uart_input - 1) * 3;
-						remote_bullet_dir_y = HEADING_ANGLE_N;
+						remote_bullet_dir_y = JOYSTICK_ANGLE_N;
 					}
 					else if(uart_input >= 81 && uart_input <= 160){
 						remote_y = (uart_input - 81) * 3;
-						remote_bullet_dir_y = HEADING_ANGLE_NULL;
+						remote_bullet_dir_y =  JOYSTICK_ANGLE_NULL;
 					}
 					else if(uart_input >= 161 && uart_input <= 240){
 						remote_y = (uart_input - 161) * 3;
-						remote_bullet_dir_y = HEADING_ANGLE_S;
+						remote_bullet_dir_y =  JOYSTICK_ANGLE_S;
 					}
 				}
 				else if(!last_received){
 					if(uart_input >= 1 && uart_input <= 80){
 						remote_x = (uart_input - 1) * 4;
-						remote_bullet_dir_x = HEADING_ANGLE_W;
+						remote_bullet_dir_x =  JOYSTICK_ANGLE_W;
 					}
 					else if(uart_input >= 81 && uart_input <= 160){
 						remote_x = (uart_input - 81) * 4;
-						remote_bullet_dir_x = HEADING_ANGLE_NULL;
+						remote_bullet_dir_x = JOYSTICK_ANGLE_NULL;
 					}
 					else if(uart_input >= 161 && uart_input <= 240){
 						remote_x = (uart_input - 161) * 4;
-						remote_bullet_dir_x = HEADING_ANGLE_E;
-					}
-				}
-				if(remote_bullet_dir_x == HEADING_ANGLE_NULL){
-					if(remote_bullet_dir_y == HEADING_ANGLE_N){
-						remote_bullet_dir_total = HEADING_ANGLE_N;
-					}
-					else if(remote_bullet_dir_y == HEADING_ANGLE_NULL){
-						remote_bullet_dir_total = HEADING_ANGLE_NULL;
-					}
-					else if(remote_bullet_dir_y == HEADING_ANGLE_S){
-						remote_bullet_dir_total = HEADING_ANGLE_S;
-					}
-				}
-				else if(remote_bullet_dir_x == HEADING_ANGLE_W){
-					if(remote_bullet_dir_y == HEADING_ANGLE_N){
-						remote_bullet_dir_total = HEADING_ANGLE_NW;
-					}
-					else if(remote_bullet_dir_y == HEADING_ANGLE_NULL){
-						remote_bullet_dir_total = HEADING_ANGLE_W;
-					}
-					else if(remote_bullet_dir_y == HEADING_ANGLE_S){
-						remote_bullet_dir_total = HEADING_ANGLE_SW;
-					}
-				}
-				else if(remote_bullet_dir_x == HEADING_ANGLE_E){
-					if(remote_bullet_dir_y == HEADING_ANGLE_N){
-						remote_bullet_dir_total = HEADING_ANGLE_NE;
-					}
-					else if(remote_bullet_dir_y == HEADING_ANGLE_NULL){
-						remote_bullet_dir_total = HEADING_ANGLE_E;
-					}
-					else if(remote_bullet_dir_y == HEADING_ANGLE_S){
-						remote_bullet_dir_total = HEADING_ANGLE_SE;
+						remote_bullet_dir_x = JOYSTICK_ANGLE_E;
 					}
 				}
 				last_received = !last_received;
+				if(remote_bullet_dir_x == JOYSTICK_ANGLE_NULL){
+					if(remote_bullet_dir_y == JOYSTICK_ANGLE_N){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_N;
+					}
+					else if(remote_bullet_dir_y == JOYSTICK_ANGLE_NULL){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_NULL;
+					}
+					else if(remote_bullet_dir_y == JOYSTICK_ANGLE_S){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_S;
+					}
+				}
+				else if(remote_bullet_dir_x == JOYSTICK_ANGLE_W){
+					if(remote_bullet_dir_y == JOYSTICK_ANGLE_N){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_NW;
+					}
+					else if(remote_bullet_dir_y == JOYSTICK_ANGLE_NULL){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_W;
+					}
+					else if(remote_bullet_dir_y == JOYSTICK_ANGLE_S){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_SW;
+					}
+				}
+				else if(remote_bullet_dir_x == JOYSTICK_ANGLE_E){
+					if(remote_bullet_dir_y == JOYSTICK_ANGLE_N){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_NE;
+					}
+					else if(remote_bullet_dir_y == JOYSTICK_ANGLE_NULL){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_E;
+					}
+					else if(remote_bullet_dir_y == JOYSTICK_ANGLE_S){
+						remote_bullet_dir_total = JOYSTICK_ANGLE_SE;
+					}
+				}
+
 
 	//			Joystick input
 				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
@@ -415,19 +473,19 @@ void drawTaskMultiplayer (void * params){
 	//			Make player show up at the other side of the screen when reaching screen border
 				if(player_local.position.x >= DISPLAY_SIZE_X){
 					player_local.position.x = 0;
-					player_local.position.y += 10;
+					player_local.position.y = rand() % 241;
 				}
 				else if(player_local.position.x <= 0){
 					player_local.position.x = DISPLAY_SIZE_X;
-					player_local.position.y += 10;
+					player_local.position.y = rand() % 241;
 				}
 				if(player_local.position.y >= DISPLAY_SIZE_Y){
 					player_local.position.y = 0;
-					player_local.position.x += 10;
+					player_local.position.x = rand() % 321;
 				}
 				else if(player_local.position.y <= 0){
 					player_local.position.y = DISPLAY_SIZE_Y;
-					player_local.position.x += 10;
+					player_local.position.x = rand() % 321;
 				}
 
 	//			Doing actual player ship rotation here
@@ -546,11 +604,11 @@ void drawTaskMultiplayer (void * params){
 
 //				Remote Player bullets
 	//			Spawning new cannon shots on player input
-				if(remote_bullet_dir_total != HEADING_ANGLE_NULL){
+				if(remote_bullet_dir_total != JOYSTICK_ANGLE_NULL){
 					remote_shots[number_remote_shots].status = spawn;
 					remote_shots[number_remote_shots].position.x = remote_x;
 					remote_shots[number_remote_shots].position.y = remote_y;
-					remote_shots[number_remote_shots].angle = remote_bullet_dir_total;
+					remote_shots[number_remote_shots].angle = remote_bullet_dir_total_old;
 					number_remote_shots++;
 				}
 
@@ -586,7 +644,7 @@ void drawTaskMultiplayer (void * params){
 						initialize_remote_shot(number_remote_shots + 1);
 					}
 				}
-	//			Handling movement of fired shots
+	//			Handling movement of remote fired shots
 				for(incr = 0; incr < number_remote_shots; incr++){
 					switch(remote_shots[incr].angle){
 					case JOYSTICK_ANGLE_N:
@@ -620,10 +678,11 @@ void drawTaskMultiplayer (void * params){
 					case JOYSTICK_ANGLE_NULL:
 						remote_shots[incr].position.y -= LASER_BLASTER_SPEED;
 						break;
-//					default:
-//						remote_shots[incr].position.x += LASER_BLASTER_SPEED;
-//						remote_shots[incr].position.y += LASER_BLASTER_SPEED;
-//						break;
+					default:
+						remote_shots[incr].position.x = 0;
+						remote_shots[incr].position.y = 0;
+						remote_shots[incr].status = hide;
+						break;
 					}
 				}
 
@@ -770,13 +829,54 @@ void drawTaskMultiplayer (void * params){
 				gdispDrawString(TEXT_X(user_help[0]), 210, user_help[0], font1, White);
 			}
 			if(state_pause_local == false && ready_to_start == true){
-				if(last_sent){
-					UART_SendData(to_send_y);
+				if(xTaskGetTickCount() - score_position_toggle < 1000){
+					if(last_received){
+						UART_SendData(to_send_y);
+					}
+					else if(!last_received){
+						UART_SendData(to_send_x);
+					}
 				}
-				else if(!last_sent){
-					UART_SendData(to_send_x);
+				else if(xTaskGetTickCount() - score_position_toggle > 1000){
+					if(is_master == true){
+						if(last_received){
+							UART_SendData(score_32000);
+						}
+						else if(!last_received){
+							UART_SendData(score_36000);
+						}
+					}
+					score_position_toggle = xTaskGetTickCount();
 				}
-				last_sent = !last_sent;
+//				else if(xTaskGetTickCount() - score_position_toggle_2 > 2000){
+//					switch((int) score.score){
+//					case 0:
+//						UART_SendData(score_zero);
+//						break;
+//					case 4000:
+//						UART_SendData(score_4000);
+//						break;
+//					case 8000:
+//						UART_SendData(score_8000);
+//						break;
+//					case 12000:
+//						UART_SendData(score_12000);
+//						break;
+//					case 16000:
+//						UART_SendData(score_16000);
+//						break;
+//					case 20000:
+//						UART_SendData(score_20000);
+//						break;
+//					case 24000:
+//						UART_SendData(score_24000);
+//						break;
+//					case 28000:
+//						UART_SendData(score_28000);
+//						break;
+//					}
+//					score_position_toggle_2 = xTaskGetTickCount();
+//				}
 			}
 			else if(state_pause_local == true && ready_to_start == true){
 				UART_SendData(pause_byte);
@@ -844,6 +944,8 @@ void drawTaskMultiplayer (void * params){
 			local_x_lowpoly = local_x_lowpoly * 4;
 			local_y_lowpoly = local_y_old / 3; // Low-res y, used for collisions and score
 			local_y_lowpoly = local_y_lowpoly * 3;
+
+			remote_bullet_dir_total_old = remote_bullet_dir_total;
 
 		} // Block screen until ready to draw
 	} // while(1) loop
