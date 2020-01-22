@@ -309,8 +309,8 @@ void drawTaskSingleLevel2 (void * params){
 	unsigned char timer_1sec = 0;
 	unsigned char timer_1halfsec = 0;
 	unsigned char timer_2sec = 0;
-	uint8_t fps_num;
-
+	uint16_t fps_num;
+	char fps_print[1][50];
 	while (1) {
 // 		Reading desired life count from cheats menu
 
@@ -318,6 +318,7 @@ void drawTaskSingleLevel2 (void * params){
 			life_count += life_readin;
 		}
 		xQueueReceive(FPSQueue, &fps_num, 0);
+		sprintf(fps_print, "FPS: %i", fps_num);
 
 // 		Timer logic
 		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
@@ -562,149 +563,6 @@ void drawTaskSingleLevel2 (void * params){
 							}
 							memcpy(&joy_direct_old, &joy_direct, sizeof(struct coord)); // Used for joystick coord difference
 
-//	//			Read joystick input directly, less delay-prone than using queues from other tasks
-//
-//				joy_direct.x = (int16_t)(ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
-//				joy_direct.y = (int16_t)(255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4));
-//
-//	//			Local Player movement
-//				if((joy_direct.x > 136) || (joy_direct.x < 120) || (joy_direct.y > 136) || (joy_direct.y < 120)){
-//					moved = 1;
-//					inertia_start = xTaskGetTickCount();
-//				}
-//				else{
-//					moved = 0;
-//				}
-//
-//				if(moved){
-//					if(player.position.x <= DISPLAY_SIZE_X && player.position.y <= DISPLAY_SIZE_Y){
-//						player.position.x += (joy_direct.x - 128) / 32;
-//						player.position.y += (joy_direct.y - 128) / 32;
-//						if((player.position_old.x - player.position.x) > 0){
-//							if((player.position_old.y - player.position.y) > 0){
-//								heading_direction = HEADING_ANGLE_NW;
-//							}
-//							else if((player.position_old.y - player.position.y) < 0){
-//								heading_direction = HEADING_ANGLE_NE;
-//							}
-//							else{
-//								heading_direction = HEADING_ANGLE_N;
-//							}
-//						}
-//						else if((player.position_old.x - player.position.x) < 0){
-//							if((player.position_old.y - player.position.y) > 0){
-//								heading_direction = HEADING_ANGLE_SW;
-//							}
-//							else if((player.position_old.y - player.position.y) < 0){
-//								heading_direction = HEADING_ANGLE_SE;
-//							}
-//							else{
-//								heading_direction = HEADING_ANGLE_S;
-//							}
-//						}
-//						else{
-//							if((player.position_old.y - player.position.y) > 0){
-//								heading_direction = HEADING_ANGLE_W;
-//							}
-//							else if((player.position_old.y - player.position.y) < 0){
-//								heading_direction = HEADING_ANGLE_E;
-//							}
-//							else{
-//								heading_direction = HEADING_ANGLE_NULL;
-//							}
-//						}
-//						player.position_old.x = player.position.x;
-//						player.position_old.y = player.position.y;
-//					}
-//				}
-//
-//				if(xTaskGetTickCount() == inertia_start){
-//					inertia_speed.x = INERTIA_SPEED_INITIAL_X + ((abs(joy_direct_old.x - joy_direct.x)) / 32);
-//					inertia_speed.y = INERTIA_SPEED_INITIAL_Y + ((abs(joy_direct_old.y - joy_direct.y)) / 32);
-//				}
-//				if(inertia_speed.x > INERTIA_MIN_SPEED_X){
-//					if((xTaskGetTickCount() - inertia_start) % 100 == 0){
-//						inertia_speed.x -= INERTIA_DECELERATE_X;
-//					}
-//				}
-//				if(inertia_speed.y > INERTIA_MIN_SPEED_Y){
-//					if((xTaskGetTickCount() - inertia_start) % 100 == 0){
-//						inertia_speed.y -= INERTIA_DECELERATE_Y;
-//					}
-//				}
-//
-//				if(!moved){
-//					switch(heading_direction){
-//						case HEADING_ANGLE_N:
-//							player.position.x -= inertia_speed.x;
-//							break;
-//						case HEADING_ANGLE_S:
-//							player.position.x += inertia_speed.x;
-//							break;
-//						case HEADING_ANGLE_E:
-//							player.position.y += inertia_speed.y;
-//							break;
-//						case HEADING_ANGLE_W:
-//							player.position.y -= inertia_speed.y;
-//							break;
-//						case HEADING_ANGLE_NE:
-//							player.position.y += inertia_speed.y;
-//							player.position.x -= inertia_speed.x;
-//							break;
-//						case HEADING_ANGLE_NW:
-//							player.position.y -= inertia_speed.y;
-//							player.position.x -= inertia_speed.x;
-//							break;
-//						case HEADING_ANGLE_SE:
-//							player.position.y += inertia_speed.y;
-//							player.position.x += inertia_speed.x;
-//							break;
-//						case HEADING_ANGLE_SW:
-//							player.position.y -= inertia_speed.y;
-//							player.position.x += inertia_speed.x;
-//							break;
-//					}
-//				}
-//
-//	//			Make player show up at the other side of the screen when reaching screen border
-//
-//				if(player.position.x >= DISPLAY_SIZE_X){
-//					player.position.x = 0;
-//				}
-//				else if(player.position.x <= 0){
-//					player.position.x = DISPLAY_SIZE_X;
-//				}
-//				if(player.position.y >= DISPLAY_SIZE_Y){
-//					player.position.y = 0;
-//				}
-//				else if(player.position.y <= 0){
-//					player.position.y = DISPLAY_SIZE_Y;
-//				}
-//
-//	// 			Player ship rotation
-//				angle_x = (float)((int16_t)joy_direct.x-128);
-//				angle_y = (float)((int16_t)joy_direct.y-128);
-//				angle_float = 0;
-//				if (abs(joy_direct.x - 128) > 5 || abs(joy_direct.y - 128) > 5){
-//					if((angle_x != 0) && (angle_y != 0)){
-//						if(angle_y != 128){
-//							angle_float = (CONVERT_TO_DEG * atan2f(angle_y, angle_x)) + 90;
-//						}
-//						else{
-//							angle_float = 0;
-//						}
-//					}
-//					else{
-//						angle_float = 0;
-//					}
-//				}
-//				memcpy(&form, &form_orig, 3 * sizeof(struct point));
-//				for(incr = 0; incr < 3; incr++){
-//					form[incr].x = form_orig[incr].x * cos(angle_float * CONVERT_TO_RAD)
-//										- form_orig[incr].y * sin(angle_float * CONVERT_TO_RAD);
-//					form[incr].y = form_orig[incr].x * sin(angle_float * CONVERT_TO_RAD)
-//										+ form_orig[incr].y * cos(angle_float * CONVERT_TO_RAD);
-//				}
 	//			Handling cannon shot firing
 	//			Spawning new cannon shots on player input
 				if(buttonCountWithLiftup(BUT_B)){
@@ -1503,7 +1361,7 @@ void drawTaskSingleLevel2 (void * params){
 				}
 			}
 			sprintf(str2, "FPS: %d", fps_num);
-			gdispDrawString(270, 230, str2[0], font1, White);
+			gdispDrawString(270, 230, fps_print[0], font1, White);
 		} // Block until screen is ready
 	} // While-loop
 } // Task

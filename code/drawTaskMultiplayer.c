@@ -421,7 +421,8 @@ void drawTaskMultiplayer (void * params){
 		}
 	}
 	boolean executed_once = false;
-	uint8_t fps_num;
+	uint16_t fps_num;
+	char fps_print[1][50];
 
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) { // Block drawing until screen is ready
@@ -431,7 +432,7 @@ void drawTaskMultiplayer (void * params){
 				lives[1] += life_readin;
 			}
 			xQueueReceive(FPSQueue, &fps_num, 0);
-
+			sprintf(fps_print, "FPS: %i", fps_num);
 
 			xQueueReceive(JoystickQueue, &joystick_internal, 0);
 			xQueueReceive(ESPL_RxQueue, &uart_input, 0);
@@ -1877,8 +1878,7 @@ void drawTaskMultiplayer (void * params){
 			local_y_lowpoly = local_y_lowpoly * 3;
 
 			remote_bullet_dir_total_old = remote_bullet_dir_total;
-			sprintf(str2, "FPS: %d", fps_num);
-			gdispDrawString(270, 230, str2[0], font1, White);
+			gdispDrawString(270, 230, fps_print[0], font1, White);
 
 		} // Block screen until ready to draw
 	} // while(1) loop

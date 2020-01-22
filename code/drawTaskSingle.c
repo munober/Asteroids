@@ -280,9 +280,13 @@ void drawTaskSingle(void * params) {
 	unsigned char timer_2sec = 0;
 
 	boolean state_pause = false;
-	uint8_t fps_num;
+	uint16_t fps_num;
+	char fps_print[1][50];
 
 	while (1) {
+//		Reading FPS Queue
+		xQueueReceive(FPSQueue, &fps_num, 0);
+		sprintf(fps_print, "FPS: %i", fps_num);
 // 		Reading desired life count from cheats menu
 
 		if(xQueueReceive(LifeCountQueue1, &life_readin, 0) == pdTRUE){
@@ -1192,8 +1196,7 @@ void drawTaskSingle(void * params) {
 					xQueueSend(StateQueue, &next_state_signal_level2, 100);
 				}
 			}
-			sprintf(str2, "FPS: %d", fps_num);
-			gdispDrawString(270, 230, str2[0], font1, White);
+			gdispDrawString(270, 230, fps_print[0], font1, White);
 		} // Block until screen is ready
 	} // While-loop
 } // Task

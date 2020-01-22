@@ -11,6 +11,9 @@
 // This number should have 6 digits. It will be displayed on the start menu.
 #define BUILD_NUMBER                        221133
 
+#define FRAMTERATE							50
+#define FPS_PERIOD							1000 / FRAMTERATE
+
 // Configuration of the state machine
 #define STATE_COUNT					        11
 #define MAIN_MENU_STATE  		 	        1

@@ -91,7 +91,7 @@ int main(void){
 	HighScoresQueueMP = xQueueCreate(10, sizeof(struct highscore));
 	StartingScoreQueue = xQueueCreate(10, sizeof(int16_t));
 	LocalMasterQueue = xQueueCreate(5, sizeof(boolean));
-	FPSQueue = xQueueCreate(10, sizeof(uint8_t));
+	FPSQueue = xQueueCreate(10, sizeof(uint16_t));
 
 	ESPL_DisplayReady = xSemaphoreCreateBinary();
 	DrawReady = xSemaphoreCreateBinary();
@@ -141,7 +141,8 @@ void frameSwapTask(void * params) {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
 	TickType_t xOldWakeTime = 0;
-	const TickType_t frameratePeriod = 20;
+	const TickType_t frameratePeriod = FPS_PERIOD;
+	uint16_t xFPS = 0;
 
 	while (1){
 		// Draw next frame
@@ -152,9 +153,7 @@ void frameSwapTask(void * params) {
 		ESPL_DrawLayer();
 		xOldWakeTime = xLastWakeTime;
 		vTaskDelayUntil(&xLastWakeTime, frameratePeriod);
-		TickType_t xDifference;
-		xDifference = xLastWakeTime - xOldWakeTime;
-		uint8_t xFPS = 1000 / xDifference;
+		xFPS = 1000 / ((int) (xLastWakeTime - xOldWakeTime));
 		xQueueSend(FPSQueue, &xFPS, 0);
 	}
 }

@@ -422,7 +422,8 @@ void drawTaskSingleLevel3 (void * params){
 	unsigned char timer_1sec = 0;
 	unsigned char timer_1halfsec = 0;
 	unsigned char timer_2sec = 0;
-	uint8_t fps_num;
+	uint16_t fps_num;
+	char fps_print[1][50];
 
 	while (1) {
 // 		Reading desired life count from cheats menu
@@ -430,7 +431,9 @@ void drawTaskSingleLevel3 (void * params){
 		if(xQueueReceive(LifeCountQueue3, &life_readin, 0) == pdTRUE){
 			life_count += life_readin;
 		}
+
 		xQueueReceive(FPSQueue, &fps_num, 0);
+		sprintf(fps_print, "FPS: %i", fps_num);
 
 // 		Timer logic
 		if ((xTaskGetTickCount() - lastTime_1) >= one_second) {
@@ -1567,8 +1570,7 @@ void drawTaskSingleLevel3 (void * params){
 					goto gamestart3;
 				}
 			}
-			sprintf(str2, "FPS: %d", fps_num);
-			gdispDrawString(270, 230, str2[0], font1, White);
+			gdispDrawString(270, 230, fps_print[0], font1, White);
 		} // Block until screen is ready
 	} // While-loop
 } // Task
