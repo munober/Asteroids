@@ -1,4 +1,3 @@
 # asteroids
-This repository hosts a STM32 implementation of the classic Atari game Asteroids. 
-It has been written in the C programming language for the Embedded Systems Programming Laboratory in the Winter-term of 2019/2020 at the department of Electrical Engineering of the Technical University of Munich. 
-More details about the project can be found at gitlab.lrz.de/ESPL.
+This repository hosts a modern implementation of the classic Atari arcade game Asteroids I've written with a friend for a lab project.
+It has been written in C with FreeRTOS and ugfx and will run on STM32F4 boards -- in this specific case, a Discovery model with a jumper-connected cheapo joystick module/shield were used. It also features a multiplayer mode, in which 2 boards can be connected and synced via UART, allowing 2 players to control different spacecraft while playing on the same screen. The code is pretty self-explanatory.
