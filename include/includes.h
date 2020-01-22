@@ -2,6 +2,7 @@
  * Main include file.
  *
  * @author: Jonathan Müller-Boruttau, Nadja Peters nadja.peters@tum.de (RCS, TUM)
+ * 			Teodor Fratiloiu, Frederik Zumegen
  *
  **/
 #include "stdio.h"

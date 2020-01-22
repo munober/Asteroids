@@ -2,7 +2,7 @@
  * drawTaskCheats.c
  *
  *  Created on: Dec 5, 2019
- *      Author: lab_espl_stud04
+ *      Author: Teodor Fratiloiu
  */
 
 #include "includes.h"
@@ -33,7 +33,7 @@ void drawTaskCheats(void * params) {
 	char multi [1][20] = {"9000 lives"};
 	char settings [1][20] = {"Granaular: "};
 	char cheats [1][20] = {"Back"};
-	char user_help[1][70] = {"CHEATS MENU. Navigate with joystick, select with E."};
+	char user_help[1][70] = {"Navigate with joystick, select with E."};
 	char lives_display[1][20];
 	char dash [1][5] = {">"};
 	char dash_reverse [1][5] = {"<"};

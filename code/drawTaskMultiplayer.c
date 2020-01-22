@@ -3,10 +3,10 @@
  *
  *  Created on: Dec 18, 2019
  *      Author: Teodor Fratiloiu
+ *      		Frederik Zumegen
  */
 #include "includes.h"
 #include "drawTaskMultiplayer.h"
-#include "uartTask.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

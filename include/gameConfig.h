@@ -3,30 +3,29 @@
  *
  *  Created on: Dec 18, 2019
  *      Author: Teodor Fratiloiu
+ *      		Frederik Zumegen
  */
 
 #ifndef INCLUDE_GAMECONFIG_H_
 #define INCLUDE_GAMECONFIG_H_
 
 // This number should have 6 digits. It will be displayed on the start menu.
-#define BUILD_NUMBER                        221133
+#define BUILD_NUMBER                        696969
 
 #define FRAMTERATE							50
 #define FPS_PERIOD							1000 / FRAMTERATE
 
 // Configuration of the state machine
-#define STATE_COUNT					        11
+#define STATE_COUNT					        8
 #define MAIN_MENU_STATE  		 	        1
 #define SINGLE_PLAYER_STATE			        2
-#define PAUSE_MENU_STATE  			        3
-#define CHEATS_MENU_STATE			        4
-#define HIGHSCORE_DISPLAY_STATE		        5
-#define HIGHSCORE_INTERFACE_STATE	        6
-#define MULTIPLAYER_STATE			        7
-#define SINGLE_PLAYER_LEVEL_2		        8
-#define SINGLE_PLAYER_LEVEL_3		        9
-#define PAUSE_MENU_LEVEL_2					10
-#define PAUSE_MENU_LEVEL_3					11
+#define CHEATS_MENU_STATE			        3
+#define HIGHSCORE_DISPLAY_STATE		        4
+#define HIGHSCORE_INTERFACE_STATE	        5
+#define MULTIPLAYER_STATE			        6
+#define SINGLE_PLAYER_LEVEL_2		        7
+#define SINGLE_PLAYER_LEVEL_3		        8
+
 #define STARTING_STATE                      MAIN_MENU_STATE
 
 #define STARTING_LIVES_LEVEL_ONE            3

@@ -2,8 +2,12 @@
  * buttons.c
  *
  *  Created on: Nov 14, 2019
- *      Author: lab_espl_stud04
+ *      Author: Teodor Fratiloiu
  */
+
+//This file has some useful mutexes, but since
+//the queues have worked so nicely, we decided to give up
+//on the mutexes.
 
 #include "FreeRTOS.h"
 #include "semphr.h"

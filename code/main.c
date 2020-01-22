@@ -1,3 +1,17 @@
+/*
+ * main.c
+ *
+ *  Created on: Nov 25, 2019
+ *      Authors: Teodor Fratiloiu
+ * 				 Frederik Zumegen
+ *
+ *
+ * 	This is the starting point of the project.
+ * 	All the tasks, queues, semaphores are defined here.
+ * 	The task that handles the actual displaying is also housed here.
+ * 	All the other tasks, as well as the state machine, have their respective own files.
+ */
+
 #include "includes.h"
 #include <math.h>
 #include <stdlib.h>
@@ -7,14 +21,12 @@
 #include <unistd.h>
 #include "drawTaskStartMenu.h"
 #include "drawTaskSingle.h"
-#include "drawTaskPause.h"
 #include "drawTaskCheats.h"
 #include "stateMachineTask.h"
 #include "checkJoystickTask.h"
 #include "drawTaskHighScore.h"
 #include "drawTaskHighScoreInterface.h"
 #include "drawTaskMultiplayer.h"
-#include "uartTask.h"
 
 #define STATE_QUEUE_LENGTH 		 1
 #define BUTTON_QUEUE_LENGTH		20
@@ -29,16 +41,12 @@ void stateMachineTask(void * params);
 void drawTaskStartMenu(void * params);
 void drawTaskSingle (void * params);
 void drawTaskMultiplayer (void * params);
-void drawTaskPause (void * params);
 void drawTaskCheats(void * params);
 void drawTaskHighScore (void * params);
 void drawTaskHighScoreInterface (void * params);
 void checkJoystickTask (void * params);
-void uartTask (void * params);
 void drawTaskSingleLevel2 (void * params);
 void drawTaskSingleLevel3 (void * params);
-void drawTaskPauseLevel2 (void * params);
-void drawTaskPauseLevel3 (void * params);
 
 //QueueHandle_t ButtonQueue;
 QueueHandle_t StateQueue;
@@ -62,16 +70,12 @@ TaskHandle_t stateMachineTaskHandle;
 TaskHandle_t drawTaskStartMenuHandle;
 TaskHandle_t drawTaskSingleHandle;
 TaskHandle_t drawTaskMultiplayerHandle;
-TaskHandle_t drawTaskPauseHandle;
 TaskHandle_t drawTaskCheatsHandle;
 TaskHandle_t checkJoystickTaskHandle;
 TaskHandle_t drawTaskHighScoreHandle;
 TaskHandle_t drawTaskHighScoreInterfaceHandle;
-TaskHandle_t uartTaskHandle;
 TaskHandle_t drawTaskSingleLevel2Handle;
 TaskHandle_t drawTaskSingleLevel3Handle;
-TaskHandle_t drawTaskPauseLevel2Handle;
-TaskHandle_t drawTaskPauseLevel3Handle;
 
 int main(void){
 
@@ -105,17 +109,13 @@ int main(void){
 
 	xTaskCreate(drawTaskStartMenu, "drawTaskStartMenu", 1000, NULL, 2, &drawTaskStartMenuHandle);
 	xTaskCreate(drawTaskSingle, "drawTaskSingle", 1500, NULL, 2, &drawTaskSingleHandle);
-	xTaskCreate(drawTaskSingleLevel2, "drawTaskSingleLevel2", 2000, NULL, 3, &drawTaskSingleLevel2Handle);
+	xTaskCreate(drawTaskSingleLevel2, "drawTaskSingleLevel2", 1500, NULL, 3, &drawTaskSingleLevel2Handle);
 	xTaskCreate(drawTaskSingleLevel3, "drawTaskSingleLevel3", 2000, NULL, 3, &drawTaskSingleLevel3Handle);
 	xTaskCreate(drawTaskMultiplayer, "drawTaskMultiplayer", 1000, NULL, 2, &drawTaskMultiplayerHandle);
-	xTaskCreate(drawTaskPause, "drawTaskPause", 1000, NULL, 2, &drawTaskPauseHandle);
 	xTaskCreate(drawTaskCheats, "drawTaskCheats", 1000, NULL, 2, &drawTaskCheatsHandle);
 	xTaskCreate(drawTaskHighScore, "drawTaskHighScore", 1000, NULL, 4, &drawTaskHighScoreHandle);
 	xTaskCreate(drawTaskHighScoreInterface, "drawTaskHighScoreInterface", 1000, NULL, 2, &drawTaskHighScoreInterfaceHandle);
 	xTaskCreate(checkJoystickTask, "checkJoystickTask", 1000, NULL, 4, &checkJoystickTaskHandle);
-	xTaskCreate(uartTask, "uartTask", 1000, NULL, 3, &uartTaskHandle);
-	xTaskCreate(drawTaskPauseLevel2, "drawTaskPauseLevel2", 1000, NULL, 2, &drawTaskPauseLevel2Handle);
-	xTaskCreate(drawTaskPauseLevel3, "drawTaskPauseLevel3", 1000, NULL, 2, &drawTaskPauseLevel3Handle);
 
 //	Suspending ALL tasks that draw to the screen, will be handled by state machine.
 
@@ -124,13 +124,9 @@ int main(void){
     vTaskSuspend(drawTaskSingleLevel2Handle);
     vTaskSuspend(drawTaskSingleLevel3Handle);
     vTaskSuspend(drawTaskMultiplayerHandle);
-    vTaskSuspend(drawTaskPauseHandle);
     vTaskSuspend(drawTaskCheatsHandle);
     vTaskSuspend(drawTaskHighScoreHandle);
     vTaskSuspend(drawTaskHighScoreInterfaceHandle);
-    vTaskSuspend(uartTaskHandle);
-    vTaskSuspend(drawTaskPauseLevel2Handle);
-    vTaskSuspend(drawTaskPauseLevel3Handle);
 
 	vTaskStartScheduler();
 }

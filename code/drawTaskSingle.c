@@ -9,7 +9,6 @@
 #include "includes.h"
 #include "drawTaskSingle.h"
 #include "math.h"
-#include "determinePlayerPosition.h"
 #include "stdlib.h" // Library for rand-function
 #include "time.h"	// Library for rand-function (seed)
 
@@ -44,7 +43,6 @@ void drawTaskSingle(void * params) {
 			30, 120 }, { 120, 210, 120 }, { 210, 120, 210 }, { 210, 120, 30 } };
 
 //	Next possible states
-//	const unsigned char next_state_signal_pause = PAUSE_MENU_STATE;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	const unsigned char next_state_signal_level2 = SINGLE_PLAYER_LEVEL_2;
 
@@ -322,7 +320,6 @@ void drawTaskSingle(void * params) {
 			restart_lives = life_readin;
 			if (life_count != 0) {
 				if (buttonCount(BUT_E)) {
-//					xQueueSend(StateQueue, &next_state_signal_pause, 100);
 					state_pause = !state_pause;
 				}
 				if (buttonCountWithLiftup(BUT_A)) {

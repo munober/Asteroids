@@ -2,9 +2,8 @@
  * buttons.c
  *
  *  Created on: Nov 6, 2019
- *      Author: lab_espl_stud04
+ *      Author: Teodor Fratiloiu
  */
-
 
 #include "stm32f4xx.h"
 #include "ESPL_functions.h"

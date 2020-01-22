@@ -9,7 +9,6 @@
 #include "includes.h"
 #include "drawTaskSingleLevel2.h"
 #include "math.h"
-#include "determinePlayerPosition.h"
 #include "stdlib.h" // Library for rand-function
 #include "time.h"	// Library for rand-function (seed)
 
@@ -62,7 +61,6 @@ void drawTaskSingleLevel2 (void * params){
 			30, 120 }, { 120, 210, 120 }, { 210, 120, 210 }, { 210, 120, 30 } };
 
 //	Next possible states
-//	const unsigned char next_state_signal_pause = PAUSE_MENU_LEVEL_2;
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
 	const unsigned char next_state_signal_level3 = SINGLE_PLAYER_LEVEL_3;
 

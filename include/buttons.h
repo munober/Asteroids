@@ -1,8 +1,9 @@
 /*
- * buttons.h
+ * stateMachineTask.h
  *
- *  Created on: Nov 14, 2019
- *      Author: lab_espl_stud04
+ *  Created on: Dec 2, 2019
+ *      Author: Teodor Fratioiu
+ *      		Frederik Zumegen
  */
 
 #ifndef INCLUDE_BUTTONS_H_

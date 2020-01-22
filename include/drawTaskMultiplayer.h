@@ -1,8 +1,9 @@
 /*
- * drawTaskMultiplayer.h
+ * stateMachineTask.h
  *
- *  Created on: Dec 18, 2019
- *      Author: lab_espl_stud04
+ *  Created on: Dec 2, 2019
+ *      Author: Teodor Fratioiu
+ *      		Frederik Zumegen
  */
 
 #ifndef INCLUDE_DRAWTASKMULTIPLAYER_H_

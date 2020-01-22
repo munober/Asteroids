@@ -1,8 +1,9 @@
 /*
- * drawTaskCheats.h
+ * stateMachineTask.h
  *
- *  Created on: Dec 5, 2019
- *      Author: lab_espl_stud04
+ *  Created on: Dec 2, 2019
+ *      Author: Teodor Fratioiu
+ *      		Frederik Zumegen
  */
 
 #ifndef INCLUDE_DRAWTASKCHEATS_H_

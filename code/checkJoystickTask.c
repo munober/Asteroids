@@ -2,7 +2,7 @@
  * checkJoystickTask.c
  *
  *  Created on: Dec 3, 2019
- *      Author: lab_espl_stud04
+ *      Author: Teodor Fratiloiu
  */
 
 #include <math.h>
