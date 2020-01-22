@@ -62,8 +62,6 @@ void drawTaskSingleLevel3 (void * params){
 
 //	Next possible states
 	const unsigned char next_state_signal_highscoresinterface = HIGHSCORE_INTERFACE_STATE;
-	// const unsigned char next_state_signal_level3 = SINGLE_PLAYER_LEVEL_3;
-	const unsigned char next_state_signal_mainmenu = MAIN_MENU_STATE;
 
 	//	A few buffer, empty strings to print to
 	char str[100]; // buffer for messages to draw to display
@@ -87,8 +85,6 @@ void drawTaskSingleLevel3 (void * params){
 	boolean infinite_respawn = true;
 
 	boolean one_asteroid_hit_small = false;
-	boolean one_asteroid_hit_medium = false;
-	boolean one_asteroid_hit_large = false;
 	int16_t score = LEVEL_THREE_SCORE_THRESHOLD;
 	xQueueReceive(StartingScoreQueue, &score, 0);
 
@@ -106,11 +102,7 @@ void drawTaskSingleLevel3 (void * params){
 
 	TickType_t hit_timestamp;
 	TickType_t hit_saucer_timestamp = xTaskGetTickCount();
-	TickType_t inertia_timer;
-	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
-	const TickType_t delay_hit_laser = 400;
-	const TickType_t inertia_threshold = 2000;
 	const TickType_t shot_delay = 1000;
 
 	// Timer stuff
@@ -124,13 +116,11 @@ void drawTaskSingleLevel3 (void * params){
 	unsigned int thrustCount = 0;
 	int i = 0;
 	int j = 0;
-	int k = 0;
 
 	boolean state_pause = false;
 
 // 	Spawn player in display center
 	struct direction direction;
-	struct direction direction_old;
 	struct players_ship player;
 	struct player_input input;
 	input.thrust = 0;
@@ -387,7 +377,6 @@ void drawTaskSingleLevel3 (void * params){
 	struct coord_flt inertia_speed;
 	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
-	TickType_t inertia_period = 100;
 
 	float angle_x = 0;
 	float angle_y = 0;
@@ -398,10 +387,6 @@ void drawTaskSingleLevel3 (void * params){
 	direction.y1 = -12;
 	direction.x2 = 0;
 	direction.y2 = 6;
-	direction_old.x1 = 0;
-	direction_old.y1 = -12;
-	direction_old.x2 = 0;
-	direction_old.y2 = 6;
 
 // 	This variable is changed with every tick by the joystick angle for player ship rotation
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
@@ -1118,7 +1103,6 @@ void drawTaskSingleLevel3 (void * params){
 									&& (all_asteroids[i]->remain_hits == two)) {
 								asteroids_to_destroy_medium--;
 								score += POINTS_ASTEROID_MEDIUM;
-								one_asteroid_hit_medium = true;
 								all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
 								all_asteroids[i+1]->hit_timestamp = xTaskGetTickCount();
 
@@ -1205,7 +1189,6 @@ void drawTaskSingleLevel3 (void * params){
 								&& (all_asteroids[i]->remain_hits == three)) {
 							asteroids_to_destroy_large--;
 							score += POINTS_ASTEROID_LARGE;
-							one_asteroid_hit_large = true;
 							all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
 							all_asteroids[i+2]->hit_timestamp = xTaskGetTickCount();
 
@@ -1233,7 +1216,6 @@ void drawTaskSingleLevel3 (void * params){
 									&& ((xTaskGetTickCount() - all_asteroids[i]->hit_timestamp) > shot_delay)) {
 								asteroids_to_destroy_medium--;
 								score += POINTS_ASTEROID_MEDIUM;
-								one_asteroid_hit_medium = true;
 								all_asteroids[i]->hit_timestamp = xTaskGetTickCount();
 								all_asteroids[i+1]->hit_timestamp = xTaskGetTickCount();
 

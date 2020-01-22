@@ -26,8 +26,7 @@ void drawTaskHighScore(void * params) {
 	TickType_t delay;
 	delay = 1000;
 	const unsigned char next_state_signal_menu = MAIN_MENU_STATE;
-	struct joystick_angle_pulse joystick_internal;
-	int i, j; // Iterators, used in a lot of places
+	int i; // Iterators, used in a lot of places
 	uint16_t position = 0;
 	struct highscore new_highscore = { {0} };
 	struct highscore new_highscore_mp = { {0} };
@@ -44,7 +43,6 @@ void drawTaskHighScore(void * params) {
 	char user_help[3][70] = {"HIGH SCORES. Press D to exit.", "SINGLEPLAYER", "MULTIPLAYER"};
 	char print[6][30];
 	char print_mp[6][30];
-	int line_y;
 	while (1) {
 		if (xSemaphoreTake(DrawReady, portMAX_DELAY) == pdTRUE) {
 			if (buttonCount(BUT_D))

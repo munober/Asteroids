@@ -87,7 +87,6 @@ void drawTaskSingleLevel2 (void * params){
 	int time_passed = 0; // Simple clock at top of screen
 
 	boolean one_asteroid_hit_small = false;
-	boolean one_asteroid_hit_medium = false;
 	int16_t score = LEVEL_TWO_SCORE_THRESHOLD;
 	xQueueReceive(StartingScoreQueue, &score, 0);
 
@@ -106,11 +105,7 @@ void drawTaskSingleLevel2 (void * params){
 	TickType_t hit_timestamp;
 	TickType_t hit_timestamp_laser;
 	TickType_t hit_saucer_timestamp = xTaskGetTickCount();
-	TickType_t inertia_timer;
-	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
-	const TickType_t delay_hit_laser = 400;
-	const TickType_t inertia_threshold = 2000;
 	const TickType_t shot_delay = 1000;
 
 	// Timer stuff
@@ -124,11 +119,9 @@ void drawTaskSingleLevel2 (void * params){
 	unsigned int thrustCount = 0;
 	int i = 0;
 	int j = 0;
-	int k = 0;
 
 // 	Spawn player in display center
 	struct direction direction;
-	struct direction direction_old;
 	struct players_ship player;
 	struct player_input input;
 	input.thrust = 0;
@@ -142,8 +135,6 @@ void drawTaskSingleLevel2 (void * params){
 //	Number of asteroids to be destroyed in this level
 	int asteroids_to_destroy_small = TO_DESTROY_LEVEL_2_SMALL;
 	int asteroids_to_destroy_medium = TO_DESTROY_LEVEL_2_MEDIUM;
-//	This variable counts how many medium sized asteroids have been hit
-	uint8_t medium_asteroid_hits = 0;
 
 	// Initialize asteroids: max. 10 asteroids are on screen at once
 	// asteroid shape is either 0, 1 or 2
@@ -274,7 +265,6 @@ void drawTaskSingleLevel2 (void * params){
 	struct coord_flt inertia_speed;
 	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
-	TickType_t inertia_period = 100;
 
 	float angle_x = 0;
 	float angle_y = 0;
@@ -285,10 +275,6 @@ void drawTaskSingleLevel2 (void * params){
 	direction.y1 = -12;
 	direction.x2 = 0;
 	direction.y2 = 6;
-	direction_old.x1 = 0;
-	direction_old.y1 = -12;
-	direction_old.x2 = 0;
-	direction_old.y2 = 6;
 
 // 	This variable is changed with every tick by the joystick angle for player ship rotation
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
@@ -1067,7 +1053,6 @@ void drawTaskSingleLevel2 (void * params){
 									&& (all_asteroids[i]->remain_hits == two)) {
 								asteroids_to_destroy_medium--;
 								score += POINTS_ASTEROID_MEDIUM;
-								one_asteroid_hit_medium = true;
 								hit_timestamp_laser = xTaskGetTickCount();
 
 								switch (i) {

@@ -11,8 +11,6 @@
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t HighScoresQueue;
-extern QueueHandle_t HighScoresQueueMP;
-extern QueueHandle_t LeaderboardQueue;
 extern QueueHandle_t JoystickQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;

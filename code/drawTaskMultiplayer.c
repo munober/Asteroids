@@ -14,7 +14,6 @@
 
 extern QueueHandle_t StateQueue;
 extern QueueHandle_t JoystickQueue;
-extern QueueHandle_t LifeCountQueue;
 extern QueueHandle_t StartingScoreQueue;
 extern QueueHandle_t LifeCountQueue1;
 extern QueueHandle_t FPSQueue;
@@ -90,8 +89,6 @@ void drawTaskMultiplayer (void * params){
 	int incr;
 	int incr2;
 	int i = 0;
-	int j = 0;
-	int k = 0;
 	float angle_float_goal = 0;
 	float angle_float_current = 0;
 	float angle_x = 0;
@@ -101,8 +98,6 @@ void drawTaskMultiplayer (void * params){
 	struct coord_flt inertia_speed;
 	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
-	TickType_t score_position_toggle;
-	TickType_t score_position_toggle_2;
 
 //	UART
 /*
@@ -121,19 +116,15 @@ void drawTaskMultiplayer (void * params){
 	const char sync_byte_1 = 253; // used in main menu for master/slave sync
 	const char sync_byte_2 = 254; // used in main menu for master/slave sync
 	const char sync_byte_3 = 255; // ack to remote to tell is slave
-	TickType_t game_start = xTaskGetTickCount();
-	TickType_t sync_period = 200;
 
 	char uart_input = 0;
 	uint8_t to_send_x = ((int) player_local.position.x) / 4 + 1;
 	uint8_t to_send_y = 100 + ((int) player_local.position.y) / 3;
-	uint8_t to_send_sync = sync_byte_1;
 
 	boolean uart_connected = false;
 	boolean state_pause_local = false;
 	boolean state_pause_remote = false;
 	boolean state_quit_remote = false;
-	boolean no_sync = true;
 	boolean ready_to_start = false;
 	int last_received = 0;
 
@@ -770,7 +761,8 @@ void drawTaskMultiplayer (void * params){
 						number_local_shots--;
 						for(incr2 = incr; incr2 < number_local_shots; incr2++){
 							memcpy(&local_shots[incr2], &local_shots[incr2 + 1], sizeof(struct shot));
-						}TickType_t lastTime_1 = xTaskGetTickCount();
+						}
+						lastTime_1 = xTaskGetTickCount();
 						initialize_single_shot(number_local_shots + 1);
 					}
 					else if(local_shots[incr].position.x <= 0){

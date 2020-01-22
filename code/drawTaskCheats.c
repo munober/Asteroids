@@ -34,7 +34,7 @@ void drawTaskCheats(void * params) {
 	char settings [1][20] = {"Granaular: "};
 	char cheats [1][20] = {"Back"};
 	char user_help[1][70] = {"Navigate with joystick, select with E."};
-	char lives_display[1][20];
+	char lives_display[20];
 	char dash [1][5] = {">"};
 	char dash_reverse [1][5] = {"<"};
 

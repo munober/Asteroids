@@ -149,7 +149,7 @@ void frameSwapTask(void * params) {
 		ESPL_DrawLayer();
 		xOldWakeTime = xLastWakeTime;
 		vTaskDelayUntil(&xLastWakeTime, frameratePeriod);
-		xFPS = 1000 / ((int) (xLastWakeTime - xOldWakeTime));
+		xFPS = 1000 / ((uint16_t) (xLastWakeTime - xOldWakeTime));
 		xQueueSend(FPSQueue, &xFPS, 0);
 	}
 }

@@ -82,11 +82,7 @@ void drawTaskSingle(void * params) {
 	TickType_t hit_timestamp;
 	TickType_t hit_timestamp_laser[10] = { {0} };
 	TickType_t hit_saucer_timestamp = xTaskGetTickCount();
-	TickType_t inertia_timer;
-	inertia_timer = xTaskGetTickCount();
 	const TickType_t delay_hit = 1000;
-	const TickType_t delay_hit_laser = 400;
-	const TickType_t inertia_threshold = 4000;
 
 	// Timer stuff
 	const TickType_t one_second = 1000 / portTICK_PERIOD_MS;
@@ -100,8 +96,6 @@ void drawTaskSingle(void * params) {
 	int i, j;
 
 // 	Spawn player in display center
-	struct direction direction;
-	struct direction direction_old;
 	struct players_ship player;
 	struct player_input input;
 	input.thrust = 0;
@@ -243,21 +237,12 @@ void drawTaskSingle(void * params) {
 	struct coord_flt inertia_speed;
 	struct coord_flt inertia_speed_final;
 	TickType_t inertia_start;
-	TickType_t inertia_period = 100;
 
 	float angle_x = 0;
 	float angle_y = 0;
 
 // 	Initial shape and heading of the player ship
 	struct point form_orig[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };
-	direction.x1 = 0;
-	direction.y1 = -12;
-	direction.x2 = 0;
-	direction.y2 = 6;
-	direction_old.x1 = 0;
-	direction_old.y1 = -12;
-	direction_old.x2 = 0;
-	direction_old.y2 = 6;
 
 // 	This variable is changed with every tick by the joystick angle for player ship rotation
 	struct point form[] = { { -6, 6 }, { 0, -12 }, { 6, 6 } };

@@ -13,7 +13,6 @@ extern QueueHandle_t LocalMasterQueue;
 extern QueueHandle_t StartingScoreQueue;
 extern font_t font1;
 extern SemaphoreHandle_t DrawReady;
-extern SemaphoreHandle_t LocalMaster;
 
 #define SINGLEPLAYER_SELECT			1
 #define MULTIPLAYER_SELECT			2
@@ -56,17 +55,13 @@ void drawTaskStartMenu(void * params) {
 	char user_help[1][70];
 	char user_help_content[1][70] = {"Navigate with joystick, select with E."};
 	char user_help_two[1][70];
-	sprintf(user_help[0], " %s", user_help_content);
+	sprintf(user_help[0], "%s", user_help_content);
 	char uart_input = 0;
 	boolean uart_connected = false;
 	boolean is_master = false;
 	boolean remote_is_master = false;
-	boolean send_master = true;
 	const char sync_byte_1 = 253; // when sent: tells remote to be slave
 	const char sync_byte_2 = 254; // alive signal
-	const char sync_byte_3 = 255; // game start signal
-	TickType_t game_start_timer = 0;
-	TickType_t game_start_delay = 3000;
 	int game_starting = 0;
 
 	while (1) {
